@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+export const dynamic = "force-dynamic";
+
+function getAnthropicClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
       system:
