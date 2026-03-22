@@ -99,11 +99,16 @@ export default function CVBuilder() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold flex items-center gap-1.5">
+            <a
+              href="https://inspireambitions.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xl font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            >
               <span className="w-5 h-5 bg-[#d4a843] rotate-45 rounded-sm inline-block shrink-0" />
               <span className="text-[#d4a843] font-bold">Inspire</span>
               <span className="text-[#1a2744] font-bold -ml-1">Ambitions</span>
-            </h1>
+            </a>
             <span className="bg-gold-500/10 text-gold-600 text-xs font-medium px-2 py-0.5 rounded-full hidden sm:inline">
               {t("header.cvBuilder")}
             </span>
@@ -268,6 +273,86 @@ export default function CVBuilder() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 mt-12">
+        <div className="max-w-7xl mx-auto px-4 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Brand */}
+            <div className="space-y-3">
+              <a
+                href="https://inspireambitions.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              >
+                <span className="w-4 h-4 bg-[#d4a843] rotate-45 rounded-sm inline-block shrink-0" />
+                <span className="text-[#d4a843] font-bold text-lg">Inspire</span>
+                <span className="text-white font-bold text-lg -ml-1">Ambitions</span>
+              </a>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Free career tools built by an HR Specialist with 20+ years of GCC experience.
+              </p>
+            </div>
+
+            {/* Career Tools */}
+            <div className="space-y-3">
+              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Career Tools</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="https://inspireambitions.com/dubai-cv-builder/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    Dubai CV Builder
+                  </a>
+                </li>
+                <li>
+                  <a href="https://inspireambitions.com/should-i-take-this-dubai-job/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    Should I Take This Dubai Job?
+                  </a>
+                </li>
+                <li>
+                  <a href="https://inspireambitions.com/dubai-internship-eligibility-checker/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    Dubai Internship Eligibility Checker
+                  </a>
+                </li>
+                <li>
+                  <a href="https://inspireambitions.com/uae-salary-benchmarking-tool/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    UAE Salary Benchmarking Tool
+                  </a>
+                </li>
+                <li>
+                  <a href="https://inspireambitions.com/uae-resignation-letter-generator/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    UAE Resignation Letter Generator
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-3">
+              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Quick Links</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    All Career Tools
+                  </a>
+                </li>
+                <li>
+                  <a href="https://inspireambitions.com" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                    Blog &amp; Articles
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-gray-800 mt-8 pt-6 text-center">
+            <p className="text-xs text-gray-500">
+              &copy; {new Date().getFullYear()} InspireAmbitions.com. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       <SaveToast />
     </div>
