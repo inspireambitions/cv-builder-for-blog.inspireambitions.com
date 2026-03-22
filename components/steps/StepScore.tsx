@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
 import type { ScoreResult } from "@/lib/types";
+import EmailCapture from "@/components/shared/EmailCapture";
 
 // SVG ring constants
 const SIZE = 160;
@@ -114,6 +115,9 @@ export default function StepScore() {
           </div>
         ))}
       </div>
+
+      {/* ── Email Capture ── */}
+      <EmailCapture cvScore={score.total} userName={state.personal.name} />
 
       {/* ── CTA Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
