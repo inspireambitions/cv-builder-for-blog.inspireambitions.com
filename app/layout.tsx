@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "InspireAmbitions CV Builder — Free CV Builder by an HR Director",
+  title: "InspireAmbitions CV Builder — Free CV Builder by an HR Specialist",
   description:
-    "Build a professional, HR-approved CV in minutes. Free JPEG export, no watermark. Built by a practising HR Director with GCC/MENA expertise.",
+    "Build a professional, HR-approved CV in minutes. Free JPEG export, no watermark. Built by a practising HR Specialist with GCC/MENA expertise.",
   keywords: [
     "CV builder",
     "resume builder",
