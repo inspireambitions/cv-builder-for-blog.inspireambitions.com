@@ -13,8 +13,6 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "@anthropic-ai/sdk": "^0.39.0",
-    "stripe": "^17.7.0",
-    "@stripe/stripe-js": "^5.5.0",
     "jspdf": "^2.5.2",
     "html2canvas": "^1.4.1",
     "docx": "^9.2.0",
