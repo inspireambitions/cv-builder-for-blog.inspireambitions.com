@@ -20,7 +20,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
     setDownloading("jpeg");
     setError(null);
     try {
-      await exportJPEG();
+      await exportJPEG(state.personal.name);
     } catch (e) {
       setError("Failed to export JPEG. Please try again.");
       console.error(e);
