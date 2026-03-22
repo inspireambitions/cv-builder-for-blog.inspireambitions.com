@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-700: #2d3d66;
+  --color-navy-800: #1f2d4d;
+  --color-navy-900: #1a2744;
+  --color-green-700: #234428;
+  --color-green-800: #1e3a22;
+  --color-green-900: #1a3320;
+  --color-purple-700: #3d2460;
+  --color-purple-800: #2d1a44;
+  --color-purple-900: #140d22;
+  --color-gold-400: #d4a843;
+  --color-gold-500: #c49a38;
+  --color-gold-600: #b08a2e;
+  --font-family-cormorant: "Cormorant Garamond", Georgia, serif;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+/* CV render area — fixed A4 width for export consistency */
+#cv-render {
+  width: 794px;
+  min-height: 1123px;
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #cv-render,
+  #cv-render * {
+    visibility: visible;
+  }
+  #cv-render {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
