@@ -14,7 +14,7 @@ const FEATURE_INFO = {
   },
   roast: {
     title: "AI CV Roast",
-    description: "Brutally honest HR Director feedback on your CV. No sugar-coating.",
+    description: "Brutally honest HR Specialist feedback on your CV. No sugar-coating.",
   },
   annual: {
     title: "Annual Plan",

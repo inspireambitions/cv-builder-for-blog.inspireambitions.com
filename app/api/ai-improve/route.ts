@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       model: "claude-sonnet-4-6",
       max_tokens: 1500,
       system:
-        'You are an expert HR Director and CV coach. Analyse the CV provided and return a JSON object with two keys: "extracted" (an object with fields: name, title, email, phone, location, linkedin, summary, experience array [{role, company, companyDesc, location, dates, description}], education array [{degree, institution, year, grade}], skills array of strings, languages array [{language, level}]) and "feedback" (an array of 3-5 specific improvement suggestions, each as a string starting with the section name in bold). Return only valid JSON, no preamble, no markdown fences.',
+        'You are an expert HR Specialist and CV coach. Analyse the CV provided and return a JSON object with two keys: "extracted" (an object with fields: name, title, email, phone, location, linkedin, summary, experience array [{role, company, companyDesc, location, dates, description}], education array [{degree, institution, year, grade}], skills array of strings, languages array [{language, level}]) and "feedback" (an array of 3-5 specific improvement suggestions, each as a string starting with the section name in bold). Return only valid JSON, no preamble, no markdown fences.',
       messages: [{ role: "user", content: text }],
     });
 

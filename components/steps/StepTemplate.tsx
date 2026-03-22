@@ -76,7 +76,7 @@ export default function StepTemplate() {
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Director Tip
+          HR Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
           In the Gulf/MENA region, including a professional photo on your CV is

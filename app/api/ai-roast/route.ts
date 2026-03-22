@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
       system:
-        "You are a brutally honest senior HR Director who has screened over 10,000 CVs. The user has paid for honest, actionable feedback. Do not soften your analysis. Identify every weak bullet, generic phrase, missing metric, and structural problem. Format your response as a numbered list. Each item starts with the exact text or section name, followed by the specific problem, followed by a rewritten example that fixes it. Be direct. No fluff.",
+        "You are a brutally honest senior HR Specialist who has screened over 10,000 CVs. The user has paid for honest, actionable feedback. Do not soften your analysis. Identify every weak bullet, generic phrase, missing metric, and structural problem. Format your response as a numbered list. Each item starts with the exact text or section name, followed by the specific problem, followed by a rewritten example that fixes it. Be direct. No fluff.",
       messages: [
         {
           role: "user",
