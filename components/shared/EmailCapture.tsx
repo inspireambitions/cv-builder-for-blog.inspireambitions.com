@@ -109,8 +109,18 @@ export default function EmailCapture({ cvScore, userName }: EmailCaptureProps) {
         className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
         aria-label="Dismiss"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
 
@@ -118,22 +128,22 @@ export default function EmailCapture({ cvScore, userName }: EmailCaptureProps) {
         {/* Headline */}
         <div>
           <p className="text-gold-400 text-sm font-semibold uppercase tracking-wide">
-            Your CV score: {cvScore}/100 ({scoreLabel})
+            Your Gulf CV score: {cvScore}/100 ({scoreLabel})
           </p>
           <h3 className="text-xl md:text-2xl font-bold mt-2 leading-tight">
-            Get weekly tips to raise that score
+            Get your full Gulf CV Audit Report
           </h3>
           <p className="text-gray-300 text-sm mt-2 leading-relaxed">
             Join 2,000+ professionals who receive one actionable career tip
-            every week. Written by an HR Specialist who reviews CVs daily.
-            Unsubscribe anytime.
+            every week. Written by an HR Career Specialist who reviews CVs
+            daily. Unsubscribe anytime.
           </p>
         </div>
 
         {/* What you get */}
         <div className="flex flex-wrap gap-3 text-sm">
           <span className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
-            CV improvement tips
+            Gulf ATS tips
           </span>
           <span className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
             Interview strategies
@@ -144,7 +154,10 @@ export default function EmailCapture({ cvScore, userName }: EmailCaptureProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mt-2">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col sm:flex-row gap-3 mt-2"
+        >
           <input
             type="email"
             value={email}
@@ -162,9 +175,7 @@ export default function EmailCapture({ cvScore, userName }: EmailCaptureProps) {
           </button>
         </form>
 
-        {errorMsg && (
-          <p className="text-red-400 text-sm">{errorMsg}</p>
-        )}
+        {errorMsg && <p className="text-red-400 text-sm">{errorMsg}</p>}
 
         {/* Trust signal */}
         <p className="text-gray-500 text-xs">
