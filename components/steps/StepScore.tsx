@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
-import type { ScoreResult } from "@/lib/types";
+import type { ScoreResult, ScoreLayer } from "@/lib/types";
 import EmailCapture from "@/components/shared/EmailCapture";
 
 // SVG ring constants
@@ -24,6 +24,100 @@ function getLevelDot(level: "green" | "amber" | "red"): string {
   return "bg-red-500";
 }
 
+function getLayerColor(label: string): string {
+  switch (label) {
+    case "Completeness":
+      return "bg-blue-500";
+    case "Content Quality":
+      return "bg-purple-500";
+    case "Gulf Readiness":
+      return "bg-amber-500";
+    case "ATS & Formatting":
+      return "bg-green-500";
+    default:
+      return "bg-gray-500";
+  }
+}
+
+function LayerCard({ layer }: { layer: ScoreLayer }) {
+  const [open, setOpen] = useState(layer.score < layer.max);
+  const pct = Math.round((layer.score / layer.max) * 100);
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={`w-3 h-3 rounded-full ${getLayerColor(layer.label)}`}
+          />
+          <span className="text-sm font-semibold text-gray-900">
+            {layer.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-24 bg-gray-200 rounded-full h-2">
+            <div
+              className={`h-2 rounded-full transition-all duration-500 ${
+                pct >= 75
+                  ? "bg-green-500"
+                  : pct >= 40
+                  ? "bg-amber-500"
+                  : "bg-red-500"
+              }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span className="text-sm font-medium text-gray-700 w-16 text-right">
+            {layer.score}/{layer.max}
+          </span>
+          <svg
+            className={`w-4 h-4 text-gray-400 transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100 px-5 pb-4 space-y-2">
+          {layer.criteria.map((c) => (
+            <div key={c.label} className="py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${getLevelDot(c.level)}`}
+                  />
+                  <span className="text-sm text-gray-700">{c.label}</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {c.score}/{c.max}
+                </span>
+              </div>
+              {c.tip && c.level !== "green" && (
+                <p className="text-xs text-gray-500 mt-1 ml-4">{c.tip}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StepScore() {
   const { state } = useCVState();
   const [score, setScore] = useState<ScoreResult | null>(null);
@@ -39,28 +133,25 @@ export default function StepScore() {
     CIRCUMFERENCE - (score.total / score.max) * CIRCUMFERENCE;
   const color = getScoreColor(score.total);
 
-  const breakdownRows = Object.values(score.breakdown);
+  const isGulf = state.geo === "gulf";
 
   return (
     <div className="space-y-10">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">
-          CV Score & Download
+          {isGulf ? "Gulf CV Score & Analysis" : "CV Score & Download"}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          See how your CV stacks up and access premium features
+          {isGulf
+            ? "See how your CV performs against Gulf ATS systems and recruiter expectations"
+            : "See how your CV stacks up and access premium features"}
         </p>
       </div>
 
-      {/* ── Score Ring ── */}
+      {/* Score Ring */}
       <div className="flex flex-col items-center">
         <div className="relative" style={{ width: SIZE, height: SIZE }}>
-          <svg
-            width={SIZE}
-            height={SIZE}
-            className="-rotate-90"
-          >
-            {/* Background circle */}
+          <svg width={SIZE} height={SIZE} className="-rotate-90">
             <circle
               cx={SIZE / 2}
               cy={SIZE / 2}
@@ -69,7 +160,6 @@ export default function StepScore() {
               stroke="#e5e7eb"
               strokeWidth={STROKE}
             />
-            {/* Progress arc */}
             <circle
               cx={SIZE / 2}
               cy={SIZE / 2}
@@ -83,7 +173,6 @@ export default function StepScore() {
               className="transition-all duration-700 ease-out"
             />
           </svg>
-          {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-4xl font-bold text-gray-900">
               {score.total}
@@ -91,35 +180,64 @@ export default function StepScore() {
             <span className="text-sm text-gray-500">/100</span>
           </div>
         </div>
+        {isGulf && (
+          <p className="text-xs text-gray-500 mt-2 text-center max-w-xs">
+            Scored against Gulf ATS patterns, regional recruiter expectations,
+            and GCC hiring standards
+          </p>
+        )}
       </div>
 
-      {/* ── Score Breakdown ── */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">
-          Score Breakdown
-        </h3>
-        {breakdownRows.map((criterion) => (
-          <div
-            key={criterion.label}
-            className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={`w-2.5 h-2.5 rounded-full ${getLevelDot(criterion.level)}`}
+      {/* Top Tips */}
+      {score.topTips.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
-              <span className="text-sm text-gray-700">{criterion.label}</span>
-            </div>
-            <span className="text-sm font-medium text-gray-900">
-              {criterion.score}/{criterion.max}
-            </span>
-          </div>
-        ))}
+            </svg>
+            Quick wins to boost your score
+          </h3>
+          <ul className="space-y-2">
+            {score.topTips.map((tip, i) => (
+              <li
+                key={i}
+                className="text-sm text-amber-800 flex items-start gap-2"
+              >
+                <span className="text-amber-500 font-bold mt-0.5 shrink-0">
+                  {i + 1}.
+                </span>
+                {tip}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Layered Breakdown */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Detailed Breakdown
+        </h3>
+        <LayerCard layer={score.layers.completeness} />
+        <LayerCard layer={score.layers.contentQuality} />
+        {isGulf && <LayerCard layer={score.layers.gulfSpecific} />}
+        <LayerCard layer={score.layers.atsFormatting} />
       </div>
 
-      {/* ── Email Capture ── */}
+      {/* Email Capture */}
       <EmailCapture cvScore={score.total} userName={state.personal.name} />
 
-      {/* ── CTA Cards ── */}
+      {/* CTA Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Download CV */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col items-center text-center space-y-4 md:col-span-2">
@@ -182,7 +300,7 @@ export default function StepScore() {
           </p>
           <button
             type="button"
-            onClick={() => alert("AI CV Roast — pay gate")}
+            onClick={() => alert("AI CV Roast â pay gate")}
             className="mt-auto bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
           >
             Roast My CV ($2)
@@ -214,7 +332,7 @@ export default function StepScore() {
           </p>
           <button
             type="button"
-            onClick={() => alert("Generate Cover Letter — pay gate")}
+            onClick={() => alert("Generate Cover Letter â pay gate")}
             className="mt-auto bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
           >
             Generate ($2)
@@ -244,12 +362,13 @@ export default function StepScore() {
           <p className="text-sm text-gray-600">
             Practice with an AI recruiter tailored to your role and experience.
             <span className="block mt-1 font-medium text-purple-600">
-              Annual Plan includes 1 live mock interview with an HR specialist on weekends.
+              Annual Plan includes 1 live mock interview with an HR specialist
+              on weekends.
             </span>
           </p>
           <button
             type="button"
-            onClick={() => alert("Mock Interview — Annual Plan required")}
+            onClick={() => alert("Mock Interview â Annual Plan required")}
             className="self-start bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors text-sm"
           >
             Start Interview (Annual Plan)
