@@ -74,25 +74,40 @@ export type TemplateType = "corp" | "min" | "gulf" | "cre";
 export type GeoType = "gulf" | "global";
 export type PlanType = "free" | "payg" | "annual";
 
+/* ââ Score types ââ */
+
+export type ScoreLevel = "green" | "amber" | "red";
+
 export interface ScoreCriterion {
   score: number;
   max: number;
-  level: "green" | "amber" | "red";
+  level: ScoreLevel;
   label: string;
+  tip?: string;
+}
+
+export interface ScoreLayer {
+  label: string;
+  score: number;
+  max: number;
+  criteria: ScoreCriterion[];
 }
 
 export interface ScoreResult {
   total: number;
   max: 100;
-  breakdown: {
-    summary: ScoreCriterion;
-    experience: ScoreCriterion;
-    contact: ScoreCriterion;
-    skills: ScoreCriterion;
-    education: ScoreCriterion;
-    linkedin: ScoreCriterion;
+  layers: {
+    completeness: ScoreLayer;
+    contentQuality: ScoreLayer;
+    gulfSpecific: ScoreLayer;
+    atsFormatting: ScoreLayer;
   };
+  /** Flat array for backward-compatible breakdown rendering */
+  breakdown: Record<string, ScoreCriterion>;
+  topTips: string[];
 }
+
+/* ââ CV state ââ */
 
 export interface CVState {
   step: number;
