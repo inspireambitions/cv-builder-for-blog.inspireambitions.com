@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     formData.append("name", firstName || "");
     formData.append("list", SENDY_LIST_ID);
     formData.append("boolean", "true");
+    formData.append("Source", "CV Builder");
 
     const res = await fetch(`${SENDY_URL}/subscribe`, {
       method: "POST",
