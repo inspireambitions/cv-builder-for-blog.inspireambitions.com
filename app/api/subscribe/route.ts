@@ -11,35 +11,38 @@ export async function POST(req: Request) {
       );
     }
 
-    const res = await fetch("https://api.brevo.com/v3/contacts", {
+    const SENDY_URL = process.env.SENDY_URL || "https://inspire-ambitions.sendybay.com";
+    const SENDY_API_KEY = process.env.SENDY_API_KEY || "";
+    const SENDY_LIST_ID = process.env.SENDY_LIST_ID || "";
+
+    const formData = new URLSearchParams();
+    formData.append("api_key", SENDY_API_KEY);
+    formData.append("email", email);
+    formData.append("name", firstName || "");
+    formData.append("list", SENDY_LIST_ID);
+    formData.append("boolean", "true");
+
+    const res = await fetch(`${SENDY_URL}/subscribe`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.BREVO_API_KEY || "",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        email,
-        attributes: {
-          FIRSTNAME: firstName || "",
-        },
-        listIds: [2],
-        updateEnabled: true,
-      }),
+      body: formData.toString(),
     });
 
-    if (res.ok || res.status === 204) {
-      return NextResponse.json({ success: true });
-    }
+    const text = await res.text();
 
-    const data = await res.json().catch(() => ({}));
-
-    // Brevo returns "duplicate_parameter" for existing contacts
-    if (data.code === "duplicate_parameter") {
-      return NextResponse.json({ success: true, existing: true });
+    // Sendy returns plain text responses when boolean=true
+    // "1" = success, "Already subscribed." = already exists
+    if (text.trim() === "1" || text.includes("Already subscribed")) {
+      return NextResponse.json({
+        success: true,
+        existing: text.includes("Already subscribed"),
+      });
     }
 
     return NextResponse.json(
-      { error: data.message || "Subscription failed" },
+      { error: text || "Subscription failed" },
       { status: 400 }
     );
   } catch {
