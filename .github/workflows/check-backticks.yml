@@ -1,0 +1,41 @@
+name: Check for backtick corruption
+
+on:
+  push:
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+  pull_request:
+    paths:
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
+
+jobs:
+  check-backticks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for corrupted backtick characters
+        run: |
+          echo "Scanning for corrupted backtick patterns..."
+          FOUND=0
+          for file in $(find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -not -path "*/node_modules/*"); do
+            if grep -Pn "\\x27\\x27\\x27" "$file" > /dev/null 2>&1; then
+              echo "WARNING: Possible corrupted backticks in $file"
+              grep -Pn "\\x27\\x27\\x27" "$file"
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 1 ]; then
+            echo ""
+            echo "FAILED: Corrupted backtick characters detected."
+            echo "This happens when editing files in GitHub browser editor."
+            echo "Fix the affected files using a local editor or CLI."
+            exit 1
+          fi
+          echo "PASSED: No corrupted backticks found."
