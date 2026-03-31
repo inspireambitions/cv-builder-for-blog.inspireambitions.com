@@ -7,6 +7,20 @@ function getAnthropicClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
+function extractJSON(text: string): string {
+  let cleaned = text.trim();
+  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) {
+    cleaned = fenceMatch[1].trim();
+  }
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  }
+  return cleaned;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -35,7 +49,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = JSON.parse(content.text);
+    const jsonText = extractJSON(content.text);
+    const parsed = JSON.parse(jsonText);
     return NextResponse.json(parsed);
   } catch (error) {
     console.error("AI Improve error:", error);
@@ -53,3 +68,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
