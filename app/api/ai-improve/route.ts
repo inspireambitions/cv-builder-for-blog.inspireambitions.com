@@ -9,9 +9,15 @@ function getAnthropicClient() {
 
 function extractJSON(text: string): string {
   let cleaned = text.trim();
-  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    cleaned = fenceMatch[1].trim();
+  const bt = String.fromCharCode(96);
+  const fence = bt + bt + bt;
+  const fenceStart = cleaned.indexOf(fence);
+  if (fenceStart !== -1) {
+    const afterFirstFence = cleaned.indexOf("\n", fenceStart);
+    const fenceEnd = cleaned.indexOf(fence, afterFirstFence);
+    if (afterFirstFence !== -1 && fenceEnd !== -1) {
+      cleaned = cleaned.slice(afterFirstFence + 1, fenceEnd).trim();
+    }
   }
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");
@@ -68,4 +74,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
