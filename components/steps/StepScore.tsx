@@ -235,7 +235,7 @@ export default function StepScore() {
       </div>
 
       {/* Email Capture */}
-      <EmailCapture cvScore={score.total} userName={state.personal.name} />
+      <EmailCapture cvScore={score.total} userName={state.personal.name} cvState={state} scoreResult={score} />
 
       {/* CTA Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
