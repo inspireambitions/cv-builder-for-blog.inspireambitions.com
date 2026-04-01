@@ -162,22 +162,19 @@ export default function EmailCapture({
     setErrorMsg("");
 
     try {
-      // Send full score report via WordPress email system
+      // Send full score report via proxy to WordPress email system
       const emailContent = buildCVEmailHTML(cvState, scoreResult);
-      const wpData = new FormData();
-      wpData.append("action", "tool_email_results");
-      wpData.append("email", email);
-      wpData.append("tool", "CV Builder");
-      wpData.append(
-        "subject",
-        `Your CV Score: ${cvScore}/100 — ${userName || "CV Report"}`
-      );
-      wpData.append("content", emailContent);
 
-      const wpRes = await fetch(
-        "https://inspireambitions.com/wp-admin/admin-ajax.php",
-        { method: "POST", body: wpData }
-      );
+      const wpRes = await fetch("/api/email-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          tool: "CV Builder",
+          subject: `Your CV Score: ${cvScore}/100 — ${userName || "CV Report"}`,
+          content: emailContent,
+        }),
+      });
 
       // Also subscribe via local API
       await fetch("/api/subscribe", {
