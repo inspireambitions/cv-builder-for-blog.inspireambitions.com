@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
 import { calculateScore } from "@/lib/score";
 import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
+import { trackToolEvent } from "@/lib/analytics";
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const [email, setEmail] = useState(state.personal.email || "");
   const [unlocked, setUnlocked] = useState(false);
   const [captureStatus, setCaptureStatus] = useState<"idle" | "loading">("idle");
+  const promptTracked = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,6 +29,11 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
 
     if (!email && state.personal.email) {
       setEmail(state.personal.email);
+    }
+
+    if (localStorage.getItem("ia-email-subscribed") !== "1" && !promptTracked.current) {
+      promptTracked.current = true;
+      trackToolEvent("email_prompt_seen", { surface: "cv_download_modal" });
     }
   }, [email, isOpen, state.personal.email]);
 
@@ -44,6 +51,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
 
     setCaptureStatus("loading");
     setError(null);
+    trackToolEvent("email_submitted", { surface: "cv_download_modal" });
 
     try {
       const score = calculateScore(state);
@@ -57,10 +65,11 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           tool: "CV Builder",
           subject: `Your CV Score: ${score.total}/100 - ${state.personal.name || "CV Report"}`,
           content,
+          source: "cv-builder-download",
         }),
       });
 
-      await fetch("/api/subscribe", {
+      const subscribeRes = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -73,6 +82,15 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
       if (!emailRes.ok) {
         setError("Could not send your CV report. Please try again.");
         return;
+      }
+
+      let emailData: { data?: { subscribed?: boolean } } | null = null;
+      try {
+        emailData = await emailRes.json();
+      } catch {}
+      trackToolEvent("email_report_sent", { surface: "cv_download_modal" });
+      if (emailData?.data?.subscribed || subscribeRes?.ok) {
+        trackToolEvent("sendy_subscribed", { surface: "cv_download_modal" });
       }
 
       localStorage.setItem("ia-email-subscribed", "1");

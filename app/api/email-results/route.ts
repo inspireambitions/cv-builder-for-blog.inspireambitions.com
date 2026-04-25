@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { email, tool, subject, content } = await request.json();
+    const { email, tool, subject, content, source } = await request.json();
 
     if (!email || !email.includes("@") || !content) {
       return NextResponse.json(
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     wpData.append("tool", tool || "CV Builder");
     wpData.append("subject", subject || "Your CV Score Report");
     wpData.append("content", content);
-    wpData.append("source", "cv-builder");
+    wpData.append("source", source || "cv-builder");
 
     const wpRes = await fetch(
       "https://inspireambitions.com/wp-admin/admin-ajax.php",

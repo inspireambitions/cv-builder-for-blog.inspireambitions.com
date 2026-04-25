@@ -10,6 +10,7 @@ import Corporate from "@/components/templates/Corporate";
 import Minimal from "@/components/templates/Minimal";
 import Gulf from "@/components/templates/Gulf";
 import Creative from "@/components/templates/Creative";
+import { trackToolEvent } from "@/lib/analytics";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
@@ -111,6 +112,7 @@ export default function StepStart() {
       return;
     }
 
+    trackToolEvent("tool_started", { surface: "cv_file_upload" });
     setMode("analysing");
 
     const text = await new Promise<string>((resolve, reject) => {
@@ -154,7 +156,18 @@ export default function StepStart() {
         // Ignore parse errors
       }
     }
+    trackToolEvent("tool_started", { surface: "cv_ai_improve" });
     nextStep();
+  }
+
+  function handleBuildManually() {
+    trackToolEvent("tool_started", { surface: "cv_manual_start" });
+    nextStep();
+  }
+
+  function handleUploadMode() {
+    trackToolEvent("tool_started", { surface: "cv_upload_start" });
+    setMode("upload");
   }
 
   function onDrop(e: React.DragEvent) {
@@ -208,7 +221,7 @@ export default function StepStart() {
             </button>
           )}
           <button
-            onClick={() => nextStep()}
+            onClick={handleBuildManually}
             className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-6 py-2.5 rounded-lg transition-colors"
           >
             Build Manually
@@ -242,13 +255,13 @@ export default function StepStart() {
         {mode === "hero" && (
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => nextStep()}
+              onClick={handleBuildManually}
               className="bg-gold-500 hover:bg-gold-600 text-white font-semibold text-lg px-8 py-3.5 rounded-xl shadow-lg shadow-gold-500/20 transition-all hover:shadow-xl hover:shadow-gold-500/30"
             >
               Build My CV &mdash; Free
             </button>
             <button
-              onClick={() => setMode("upload")}
+              onClick={handleUploadMode}
               className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all"
             >
               Upload &amp; AI Improve

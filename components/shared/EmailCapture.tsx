@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { CVState, ScoreResult, ScoreLayer } from "@/lib/types";
+import { trackToolEvent } from "@/lib/analytics";
 
 const DISMISSED_KEY = "ia-email-dismissed";
 const SUBSCRIBED_KEY = "ia-email-subscribed";
@@ -83,8 +84,14 @@ export function buildCVEmailHTML(state: CVState, score: ScoreResult): string {
     html += `</table>`;
   }
 
-  html += `<div style="text-align:center;margin-top:24px;">
-<a href="https://cv.inspireambitions.com" style="display:inline-block;background:#d4a843;color:#ffffff;padding:12px 32px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Continue Building Your CV</a>
+  html += `<div style="text-align:center;margin-top:24px;padding:18px;background:#f8fafc;border-radius:10px;">
+<p style="margin:0 0 10px;color:#334155;font-size:14px;font-weight:600;">Make your CV stronger before your next application</p>
+<a href="https://inspireambitions.com/how-to-write-a-cv-for-dubai-what-nobody-in-hr-will-tell-you/?utm_source=email&utm_medium=tool_result&utm_campaign=cv_builder_result&utm_content=cv_builder_primary_cta" style="display:inline-block;background:#d4a843;color:#ffffff;padding:12px 32px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">Improve Your Dubai CV</a>
+<p style="margin:14px 0 0;font-size:12px;line-height:1.7;">
+<a href="https://inspireambitions.com/hiring-manager-eye-tracking-cv-2026/?utm_source=email&utm_medium=tool_result&utm_campaign=cv_builder_result&utm_content=cv_builder_related_1" style="color:#2563eb;text-decoration:none;">See what hiring managers notice first</a><br>
+<a href="https://inspireambitions.com/jargon-vs-plain-language-cv-2026/?utm_source=email&utm_medium=tool_result&utm_campaign=cv_builder_result&utm_content=cv_builder_related_2" style="color:#2563eb;text-decoration:none;">Fix jargon and weak CV language</a><br>
+<a href="https://inspireambitions.com/interview-prep/?utm_source=email&utm_medium=tool_result&utm_campaign=cv_builder_result&utm_content=cv_builder_related_3" style="color:#2563eb;text-decoration:none;">Prepare for the interview stage</a>
+</p>
 </div>`;
 
   return html;
@@ -115,6 +122,7 @@ export default function EmailCapture({
     const wasSubscribed = localStorage.getItem(SUBSCRIBED_KEY);
     if (!wasDismissed && !wasSubscribed) {
       setDismissed(false);
+      trackToolEvent("email_prompt_seen", { surface: "cv_score_email_card" });
     }
   }, []);
 
@@ -160,6 +168,7 @@ export default function EmailCapture({
 
     setStatus("loading");
     setErrorMsg("");
+    trackToolEvent("email_submitted", { surface: "cv_score_email_card" });
 
     try {
       // Send full score report via proxy to WordPress email system
@@ -173,11 +182,12 @@ export default function EmailCapture({
           tool: "CV Builder",
           subject: `Your CV Score: ${cvScore}/100 — ${userName || "CV Report"}`,
           content: emailContent,
+          source: "cv-builder-score-card",
         }),
       });
 
       // Also subscribe via local API
-      await fetch("/api/subscribe", {
+      const subscribeRes = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -187,6 +197,14 @@ export default function EmailCapture({
       }).catch(() => {});
 
       if (wpRes.ok) {
+        let wpData: { data?: { subscribed?: boolean } } | null = null;
+        try {
+          wpData = await wpRes.json();
+        } catch {}
+        trackToolEvent("email_report_sent", { surface: "cv_score_email_card" });
+        if (wpData?.data?.subscribed || subscribeRes?.ok) {
+          trackToolEvent("sendy_subscribed", { surface: "cv_score_email_card" });
+        }
         setStatus("success");
         localStorage.setItem(SUBSCRIBED_KEY, "1");
       } else {
