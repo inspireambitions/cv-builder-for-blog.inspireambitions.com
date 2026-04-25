@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
+import { calculateScore } from "@/lib/score";
+import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -13,8 +15,75 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const { state } = useCVState();
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState(state.personal.email || "");
+  const [unlocked, setUnlocked] = useState(false);
+  const [captureStatus, setCaptureStatus] = useState<"idle" | "loading">("idle");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setError(null);
+    setUnlocked(localStorage.getItem("ia-email-subscribed") === "1");
+
+    if (!email && state.personal.email) {
+      setEmail(state.personal.email);
+    }
+  }, [email, isOpen, state.personal.email]);
 
   if (!isOpen) return null;
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (!normalizedEmail.includes("@")) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
+    setCaptureStatus("loading");
+    setError(null);
+
+    try {
+      const score = calculateScore(state);
+      const content = buildCVEmailHTML(state, score);
+
+      const emailRes = await fetch("/api/email-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          tool: "CV Builder",
+          subject: `Your CV Score: ${score.total}/100 - ${state.personal.name || "CV Report"}`,
+          content,
+        }),
+      });
+
+      await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          firstName: state.personal.name.split(" ")[0] || "",
+          source: "CV Builder Download",
+        }),
+      }).catch(() => {});
+
+      if (!emailRes.ok) {
+        setError("Could not send your CV report. Please try again.");
+        return;
+      }
+
+      localStorage.setItem("ia-email-subscribed", "1");
+      setUnlocked(true);
+    } catch (err) {
+      console.error(err);
+      setError("Network error. Please try again.");
+    } finally {
+      setCaptureStatus("idle");
+    }
+  }
 
   async function handleJPEG() {
     setDownloading("jpeg");
@@ -71,10 +140,12 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         </button>
 
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Download Your CV
+          {unlocked ? "Download Your CV" : "Email your CV report"}
         </h2>
         <p className="text-sm text-gray-500 mb-6">
-          Choose your preferred format. All formats are free during our launch period.
+          {unlocked
+            ? "Choose your preferred format. All formats are free during our launch period."
+            : "We will send your score report and improvement checklist, then unlock JPEG, PDF, and Word downloads."}
         </p>
 
         {error && (
@@ -83,6 +154,30 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           </div>
         )}
 
+        {!unlocked ? (
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            />
+            <button
+              type="submit"
+              disabled={captureStatus === "loading"}
+              className="w-full bg-gold-500 hover:bg-gold-600 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              {captureStatus === "loading"
+                ? "Sending report..."
+                : "Email My Report & Unlock Downloads"}
+            </button>
+            <p className="text-xs text-gray-400 text-center">
+              No spam. Weekly career tips only. Unsubscribe anytime.
+            </p>
+          </form>
+        ) : (
         <div className="space-y-3">
           {/* JPEG - Free */}
           <button
@@ -156,10 +251,13 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             </span>
           </button>
         </div>
+        )}
 
-        <p className="text-xs text-gray-400 text-center mt-6">
-          All formats are free during our launch period. Premium plans coming soon.
-        </p>
+        {unlocked && (
+          <p className="text-xs text-gray-400 text-center mt-6">
+            All formats are free during our launch period. Premium plans coming soon.
+          </p>
+        )}
       </div>
     </div>
   );

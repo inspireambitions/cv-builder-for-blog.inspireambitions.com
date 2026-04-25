@@ -6,7 +6,7 @@ import type { CVState, ScoreResult, ScoreLayer } from "@/lib/types";
 const DISMISSED_KEY = "ia-email-dismissed";
 const SUBSCRIBED_KEY = "ia-email-subscribed";
 
-function buildCVEmailHTML(state: CVState, score: ScoreResult): string {
+export function buildCVEmailHTML(state: CVState, score: ScoreResult): string {
   const color =
     score.total >= 75 ? "#22c55e" : score.total >= 50 ? "#f59e0b" : "#ef4444";
   const label =

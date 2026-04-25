@@ -5,6 +5,7 @@ import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
 import type { ScoreResult, ScoreLayer } from "@/lib/types";
 import EmailCapture from "@/components/shared/EmailCapture";
+import DownloadModal from "@/components/modals/DownloadModal";
 
 // SVG ring constants
 const SIZE = 160;
@@ -121,6 +122,7 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
 export default function StepScore() {
   const { state } = useCVState();
   const [score, setScore] = useState<ScoreResult | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   useEffect(() => {
     const result = calculateScore(state);
@@ -262,7 +264,7 @@ export default function StepScore() {
           </p>
           <button
             type="button"
-            onClick={() => alert("Download modal")}
+            onClick={() => setShowDownloadModal(true)}
             className="bg-gold-500 hover:bg-gold-600 text-white font-medium px-8 py-3 rounded-lg transition-colors text-base"
           >
             Download CV
@@ -375,6 +377,11 @@ export default function StepScore() {
           </button>
         </div>
       </div>
+
+      <DownloadModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+      />
     </div>
   );
 }
