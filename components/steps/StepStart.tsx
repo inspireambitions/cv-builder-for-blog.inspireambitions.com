@@ -14,6 +14,11 @@ import { trackToolEvent } from "@/lib/analytics";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
+type FeedbackItem = {
+  title: string;
+  body: string;
+};
+
 type AiExtractedCv = {
   name?: unknown;
   title?: unknown;
@@ -34,6 +39,13 @@ const LANGUAGE_LEVELS: CVState["languages"][number]["level"][] = [
   "Professional",
   "Conversational",
   "Basic",
+];
+
+const DEFAULT_FEEDBACK: FeedbackItem[] = [
+  {
+    title: "Review complete",
+    body: "Your CV was analysed successfully. Review the suggestions below before applying the improved version.",
+  },
 ];
 
 const TEMPLATES: {
@@ -123,6 +135,36 @@ function asStringArray(value: unknown): string[] {
     : [];
 }
 
+function cleanFeedbackText(value: string): string {
+  return value.replace(/\*\*/g, "").replace(/\s+/g, " ").trim();
+}
+
+function parseFeedbackItem(value: unknown): FeedbackItem | null {
+  const text = cleanFeedbackText(asString(value));
+  if (!text) return null;
+
+  const separatorIndex = text.indexOf(":");
+  if (separatorIndex > 0 && separatorIndex < 70) {
+    return {
+      title: text.slice(0, separatorIndex).trim(),
+      body: text.slice(separatorIndex + 1).trim(),
+    };
+  }
+
+  return {
+    title: "Recommendation",
+    body: text,
+  };
+}
+
+function normalizeFeedback(value: unknown): FeedbackItem[] {
+  const items = Array.isArray(value)
+    ? value.map(parseFeedbackItem).filter((item): item is FeedbackItem => Boolean(item))
+    : [parseFeedbackItem(value)].filter((item): item is FeedbackItem => Boolean(item));
+
+  return items.length ? items : DEFAULT_FEEDBACK;
+}
+
 function asLanguageLevel(value: unknown): CVState["languages"][number]["level"] {
   const level = asString(value);
   return LANGUAGE_LEVELS.includes(level as CVState["languages"][number]["level"])
@@ -204,7 +246,7 @@ export default function StepStart() {
   const [mode, setMode] = useState<Mode>("hero");
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string>("");
+  const [feedback, setFeedback] = useState<FeedbackItem[]>(DEFAULT_FEEDBACK);
   const [aiData, setAiData] = useState<Record<string, unknown> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -243,15 +285,19 @@ export default function StepStart() {
         throw new Error(data.error ?? "API request failed");
       }
 
-      setFeedback(data.feedback ?? "AI analysis complete. Review the suggestions below.");
+      setFeedback(normalizeFeedback(data.feedback));
       setAiData(data);
       setMode("feedback");
     } catch (error) {
-      setFeedback(
-        error instanceof Error
-          ? error.message
-          : "We couldn\u2019t reach the AI service right now. You can still build your CV manually with our guided steps."
-      );
+      setFeedback([
+        {
+          title: "Analysis unavailable",
+          body:
+            error instanceof Error
+              ? error.message
+              : "We couldn\u2019t reach the AI service right now. You can still build your CV manually with our guided steps.",
+        },
+      ]);
       setAiData(null);
       setMode("feedback");
     }
@@ -308,30 +354,102 @@ export default function StepStart() {
 
   // --- Feedback mode: show AI results ---
   if (mode === "feedback") {
+    const hasAiResult = Boolean(aiData);
+
     return (
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6 max-w-3xl mx-auto">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold ${
+              hasAiResult
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                hasAiResult ? "bg-emerald-500" : "bg-amber-500"
+              }`}
+            />
+            {hasAiResult ? "CV read successfully" : "Manual build is still available"}
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl font-bold text-gray-900">
             AI Analysis Complete
           </h2>
+          <p className="mt-3 text-base md:text-lg text-gray-600">
+            {hasAiResult
+              ? "We pulled out the main CV details and found the highest-impact fixes to make before export."
+              : "The AI could not complete this file, but you can still build your CV manually with the guided steps."}
+          </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-gray-700 whitespace-pre-wrap">{feedback}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 md:p-7">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">
+                Recommended fixes
+              </h3>
+              <p className="text-sm text-gray-500">
+                Start with these before downloading or sharing your CV.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-gold-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gold-700">
+              {feedback.length} {feedback.length === 1 ? "tip" : "tips"}
+            </span>
+          </div>
+
+          <ol className="mt-5 space-y-3">
+            {feedback.map((item, index) => (
+              <li
+                key={`${item.title}-${index}`}
+                className="rounded-xl border border-gray-200 bg-gray-50/70 p-4"
+              >
+                <div className="flex gap-4">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-gold-700 shadow-sm ring-1 ring-gold-100">
+                    {index + 1}
+                  </span>
+                  <div className="space-y-1">
+                    <h4 className="text-base font-semibold text-gray-900">
+                      {item.title}
+                    </h4>
+                    <p className="text-sm md:text-base leading-7 text-gray-600">
+                      {item.body}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
+
+        {hasAiResult && (
+          <div className="rounded-2xl bg-gray-900 p-5 md:p-6 text-white shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-lg font-bold">Ready to edit the improved CV?</h3>
+                <p className="mt-1 text-sm leading-6 text-gray-300">
+                  The next step imports the extracted details into the builder. You can edit every section before exporting.
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/10 px-4 py-3 text-sm text-gray-200">
+                No changes are final yet.
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {aiData && (
+          {hasAiResult && (
             <button
               onClick={handleUseImproved}
-              className="bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
+              className="bg-gold-500 hover:bg-gold-600 text-white font-semibold px-7 py-3 rounded-xl shadow-lg shadow-gold-500/20 transition-colors"
             >
               Use Improved Version
             </button>
           )}
           <button
             onClick={handleBuildManually}
-            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-6 py-2.5 rounded-lg transition-colors"
+            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-7 py-3 rounded-xl transition-colors"
           >
             Build Manually
           </button>
