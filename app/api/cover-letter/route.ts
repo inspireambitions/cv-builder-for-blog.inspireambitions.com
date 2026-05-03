@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
-
-function getAnthropicClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +23,7 @@ export async function POST(req: NextRequest) {
       userContent += `\n\nJob description:\n${jobDescription}`;
 
     const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-6",
+      model: ANTHROPIC_MODEL,
       max_tokens: 1500,
       system:
         "You are an expert career writer and HR professional. Using the CV data provided, write a professional cover letter. If a job description is provided, tailor the letter to match the role keywords and requirements. The letter should be 3 short paragraphs: opening (hook + role), middle (top 2-3 achievements relevant to the role), close (call to action). Use British English. No more than 350 words.",
