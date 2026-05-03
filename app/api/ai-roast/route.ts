@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
-
-function getAnthropicClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-6",
+      model: ANTHROPIC_MODEL,
       max_tokens: 2000,
       system:
         "You are a brutally honest senior HR Specialist who has screened over 10,000 CVs. The user has paid for honest, actionable feedback. Do not soften your analysis. Identify every weak bullet, generic phrase, missing metric, and structural problem. Format your response as a numbered list. Each item starts with the exact text or section name, followed by the specific problem, followed by a rewritten example that fixes it. Be direct. No fluff.",
