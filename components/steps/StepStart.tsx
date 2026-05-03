@@ -115,29 +115,28 @@ export default function StepStart() {
     trackToolEvent("tool_started", { surface: "cv_file_upload" });
     setMode("analysing");
 
-    const text = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsText(file);
-    });
-
     try {
-      const res = await fetch("/api/ai-improve", {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/ai-improve-file", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: formData,
       });
 
-      if (!res.ok) throw new Error("API request failed");
-
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "API request failed");
+      }
+
       setFeedback(data.feedback ?? "AI analysis complete. Review the suggestions below.");
       setAiData(data);
       setMode("feedback");
-    } catch {
+    } catch (error) {
       setFeedback(
-        "We couldn\u2019t reach the AI service right now. You can still build your CV manually with our guided steps."
+        error instanceof Error
+          ? error.message
+          : "We couldn\u2019t reach the AI service right now. You can still build your CV manually with our guided steps."
       );
       setAiData(null);
       setMode("feedback");
@@ -308,7 +307,7 @@ export default function StepStart() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                 onChange={onFileInput}
                 className="hidden"
               />

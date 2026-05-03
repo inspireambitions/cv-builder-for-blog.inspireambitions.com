@@ -50,12 +50,16 @@ export function validateFileUpload(file: File): { valid: boolean; error?: string
   }
   const validTypes = [
     "application/pdf",
-    "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
   ];
-  if (!validTypes.includes(file.type)) {
-    return { valid: false, error: "Please upload a PDF, Word (.docx), or text file" };
+  const validExtensions = [".pdf", ".docx", ".txt"];
+  const lowerName = file.name.toLowerCase();
+  if (
+    !validTypes.includes(file.type) &&
+    !validExtensions.some((extension) => lowerName.endsWith(extension))
+  ) {
+    return { valid: false, error: "Please upload a PDF, DOCX, or text file" };
   }
   return { valid: true };
 }
