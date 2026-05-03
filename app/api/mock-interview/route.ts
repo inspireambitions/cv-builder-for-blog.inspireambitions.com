@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
-
-function getAnthropicClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
 
 const SYSTEM_PROMPT =
     "You are a senior recruiter conducting a structured competency-based interview. You have reviewed the candidate's CV. Ask one question at a time. Start with an introduction, then ask behavioural questions using the STAR method. After 5 questions, provide a brief summary of strengths and areas to improve. Keep each response under 150 words.";
@@ -37,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-6",
+      model: ANTHROPIC_MODEL,
       max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages,
