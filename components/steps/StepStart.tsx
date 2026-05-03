@@ -14,6 +14,28 @@ import { trackToolEvent } from "@/lib/analytics";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
+type AiExtractedCv = {
+  name?: unknown;
+  title?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  location?: unknown;
+  linkedin?: unknown;
+  summary?: unknown;
+  experience?: unknown;
+  education?: unknown;
+  skills?: unknown;
+  languages?: unknown;
+};
+
+const LANGUAGE_LEVELS: CVState["languages"][number]["level"][] = [
+  "Native",
+  "Fluent",
+  "Professional",
+  "Conversational",
+  "Basic",
+];
+
 const TEMPLATES: {
   key: CVState["template"];
   name: string;
@@ -85,6 +107,98 @@ const FEATURES = [
   },
 ];
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map(asString).filter(Boolean)
+    : [];
+}
+
+function asLanguageLevel(value: unknown): CVState["languages"][number]["level"] {
+  const level = asString(value);
+  return LANGUAGE_LEVELS.includes(level as CVState["languages"][number]["level"])
+    ? (level as CVState["languages"][number]["level"])
+    : "Professional";
+}
+
+function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): CVState {
+  const extracted = asRecord(aiData.extracted) as AiExtractedCv;
+  const skills = asStringArray(extracted.skills);
+  const experience = Array.isArray(extracted.experience)
+    ? extracted.experience
+        .map((item, index) => {
+          const entry = asRecord(item);
+          return {
+            id: `ai-exp-${index + 1}`,
+            role: asString(entry.role),
+            company: asString(entry.company),
+            companyDesc: asString(entry.companyDesc),
+            location: asString(entry.location),
+            dates: asString(entry.dates),
+            description: asString(entry.description),
+            gap: "",
+          };
+        })
+        .filter((entry) => entry.role || entry.company || entry.description)
+    : [];
+
+  const education = Array.isArray(extracted.education)
+    ? extracted.education
+        .map((item, index) => {
+          const entry = asRecord(item);
+          return {
+            id: `ai-edu-${index + 1}`,
+            degree: asString(entry.degree),
+            institution: asString(entry.institution),
+            year: asString(entry.year),
+            grade: asString(entry.grade),
+          };
+        })
+        .filter((entry) => entry.degree || entry.institution)
+    : [];
+
+  const languages = Array.isArray(extracted.languages)
+    ? extracted.languages
+        .map((item, index) => {
+          const entry = asRecord(item);
+          return {
+            id: `ai-lang-${index + 1}`,
+            language: asString(entry.language),
+            level: asLanguageLevel(entry.level),
+          };
+        })
+        .filter((entry) => entry.language)
+    : [];
+
+  return {
+    ...prev,
+    personal: {
+      ...prev.personal,
+      name: asString(extracted.name) || prev.personal.name,
+      title: asString(extracted.title) || prev.personal.title,
+      email: asString(extracted.email) || prev.personal.email,
+      phone: asString(extracted.phone) || prev.personal.phone,
+      location: asString(extracted.location) || prev.personal.location,
+      linkedin: asString(extracted.linkedin) || prev.personal.linkedin,
+    },
+    summary: asString(extracted.summary) || prev.summary,
+    experience: experience.length ? experience : prev.experience,
+    education: education.length ? education : prev.education,
+    skills: skills.length ? skills : prev.skills,
+    languages: languages.length ? languages : prev.languages,
+    score: null,
+  };
+}
+
 export default function StepStart() {
   const { nextStep, updateField, setState } = useCVState();
   const [mode, setMode] = useState<Mode>("hero");
@@ -146,11 +260,7 @@ export default function StepStart() {
   function handleUseImproved() {
     if (aiData) {
       try {
-        setState((prev) => ({
-          ...prev,
-          ...(aiData as Record<string, unknown>),
-          step: prev.step,
-        }));
+        setState((prev) => applyAiDataToCvState(prev, aiData));
       } catch {
         // Ignore parse errors
       }
