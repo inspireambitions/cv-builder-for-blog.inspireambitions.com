@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
-
-function getAnthropicClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
 
 function extractJSON(text: string): string {
   let cleaned = text.trim();
@@ -40,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-6",
+      model: ANTHROPIC_MODEL,
       max_tokens: 1500,
       system:
         'You are an expert HR Specialist and CV coach. Analyse the CV provided and return a JSON object with two keys: "extracted" (an object with fields: name, title, email, phone, location, linkedin, summary, experience array [{role, company, companyDesc, location, dates, description}], education array [{degree, institution, year, grade}], skills array of strings, languages array [{language, level}]) and "feedback" (an array of 3-5 specific improvement suggestions, each as a string starting with the section name in bold). Return only valid JSON, no preamble, no markdown fences.',
