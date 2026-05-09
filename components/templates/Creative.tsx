@@ -1,9 +1,16 @@
 "use client";
 
 import type { CVState } from "@/lib/types";
+import {
+  formatSectorCredential,
+  getSelectedSectorCredentials,
+  getUAEHeaderParts,
+} from "@/lib/uae";
 
 export default function Creative({ state }: { state: CVState }) {
   const { personal, photo, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = state;
+  const uaeHeaderParts = getUAEHeaderParts(state);
+  const sectorCredentials = getSelectedSectorCredentials(state);
 
   const filledExperience = experience.filter(e => e.role.trim() || e.company.trim());
   const filledEducation = education.filter(e => e.degree.trim() || e.institution.trim());
@@ -65,6 +72,11 @@ export default function Creative({ state }: { state: CVState }) {
           {personal.linkedin.trim() && (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6, wordBreak: "break-all" }}>
               <span style={{ marginRight: 6 }}>{"\uD83D\uDD17"}</span>{personal.linkedin}
+            </div>
+          )}
+          {uaeHeaderParts.length > 0 && (
+            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", marginTop: 8, lineHeight: 1.4 }}>
+              {uaeHeaderParts.join(" | ")}
             </div>
           )}
         </div>
@@ -154,9 +166,14 @@ export default function Creative({ state }: { state: CVState }) {
         )}
 
         {/* Certifications */}
-        {filledCerts.length > 0 && (
+        {(filledCerts.length > 0 || sectorCredentials.length > 0) && (
           <section style={{ marginBottom: 22 }}>
-            <MainHeading>Certifications</MainHeading>
+            <MainHeading>Certifications & Credentials</MainHeading>
+            {sectorCredentials.map((credential) => (
+              <div key={credential.authority} style={{ marginBottom: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{formatSectorCredential(credential)}</div>
+              </div>
+            ))}
             {filledCerts.map((c) => (
               <div key={c.id} style={{ marginBottom: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>

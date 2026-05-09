@@ -11,6 +11,11 @@ import {
 } from "docx";
 import { saveAs } from "file-saver";
 import type { CVState } from "./types";
+import {
+  formatSectorCredential,
+  getSelectedSectorCredentials,
+  getUAEHeaderParts,
+} from "./uae";
 
 function sectionHeading(text: string): Paragraph {
   return new Paragraph({
@@ -61,6 +66,23 @@ export async function exportWord(state: CVState) {
       new Paragraph({
         children: [
           new TextRun({ text: contactParts.join("  |  "), size: 20, color: "444444" }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      })
+    );
+  }
+
+  const uaeHeaderParts = getUAEHeaderParts(state);
+  if (uaeHeaderParts.length > 0) {
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: uaeHeaderParts.join("  |  "),
+            size: 20,
+            color: "2f6f45",
+          }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 200 },
@@ -163,8 +185,23 @@ export async function exportWord(state: CVState) {
   }
 
   // Certifications
-  if (state.certifications.length > 0) {
-    children.push(sectionHeading("Professional Certifications"));
+  const sectorCredentials = getSelectedSectorCredentials(state);
+  if (state.certifications.length > 0 || sectorCredentials.length > 0) {
+    children.push(sectionHeading("Professional Certifications & Credentials"));
+    for (const credential of sectorCredentials) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: formatSectorCredential(credential),
+              bold: true,
+              size: 22,
+            }),
+          ],
+          spacing: { before: 60, after: 40 },
+        })
+      );
+    }
     for (const cert of state.certifications) {
       children.push(
         new Paragraph({

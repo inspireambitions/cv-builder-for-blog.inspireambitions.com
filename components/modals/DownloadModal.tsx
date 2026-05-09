@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
-import { calculateScore } from "@/lib/score";
-import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
 import { trackToolEvent } from "@/lib/analytics";
 
 interface DownloadModalProps {
@@ -12,133 +10,41 @@ interface DownloadModalProps {
   onClose: () => void;
 }
 
+type DownloadFormat = "pdf" | "word" | "jpeg";
+
 export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const { state } = useCVState();
-  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<DownloadFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState(state.personal.email || "");
-  const [unlocked, setUnlocked] = useState(false);
-  const [captureStatus, setCaptureStatus] = useState<"idle" | "loading">("idle");
-  const promptTracked = useRef(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    setError(null);
-    setUnlocked(localStorage.getItem("ia-email-subscribed") === "1");
-
-    if (!email && state.personal.email) {
-      setEmail(state.personal.email);
-    }
-
-    if (localStorage.getItem("ia-email-subscribed") !== "1" && !promptTracked.current) {
-      promptTracked.current = true;
-      trackToolEvent("email_prompt_seen", { surface: "cv_download_modal" });
-    }
-  }, [email, isOpen, state.personal.email]);
+  const [showMoreFormats, setShowMoreFormats] = useState(false);
 
   if (!isOpen) return null;
 
-  async function handleUnlock(e: React.FormEvent) {
-    e.preventDefault();
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    if (!normalizedEmail.includes("@")) {
-      setError("Enter a valid email address.");
-      return;
-    }
-
-    setCaptureStatus("loading");
+  async function runDownload(format: DownloadFormat) {
+    setDownloading(format);
     setError(null);
-    trackToolEvent("email_submitted", { surface: "cv_download_modal" });
+    trackToolEvent("cv_download_started", { format });
 
     try {
-      const score = calculateScore(state);
-      const content = buildCVEmailHTML(state, score);
-
-      const emailRes = await fetch("/api/email-results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          tool: "CV Builder",
-          subject: `Your CV Score: ${score.total}/100 - ${state.personal.name || "CV Report"}`,
-          content,
-          source: "cv-builder-download",
-        }),
-      });
-
-      const subscribeRes = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          firstName: state.personal.name.split(" ")[0] || "",
-          source: "CV Builder Download",
-        }),
-      }).catch(() => {});
-
-      if (!emailRes.ok) {
-        setError("Could not send your CV report. Please try again.");
-        return;
+      if (format === "pdf") {
+        const { exportPDF } = await import("@/lib/export-pdf");
+        await exportPDF(state);
       }
-
-      let emailData: { data?: { subscribed?: boolean } } | null = null;
-      try {
-        emailData = await emailRes.json();
-      } catch {}
-      trackToolEvent("email_report_sent", { surface: "cv_download_modal" });
-      if (emailData?.data?.subscribed || subscribeRes?.ok) {
-        trackToolEvent("sendy_subscribed", { surface: "cv_download_modal" });
+      if (format === "word") {
+        const { exportWord } = await import("@/lib/export-word");
+        await exportWord(state);
       }
-
-      localStorage.setItem("ia-email-subscribed", "1");
-      setUnlocked(true);
-    } catch (err) {
-      console.error(err);
-      setError("Network error. Please try again.");
+      if (format === "jpeg") {
+        await exportJPEG(state.personal.name);
+      }
+      trackToolEvent("cv_download_completed", { format });
+    } catch (e) {
+      setError("Download failed. Please try again.");
+      console.error(e);
+      trackToolEvent("cv_download_failed", { format });
     } finally {
-      setCaptureStatus("idle");
+      setDownloading(null);
     }
-  }
-
-  async function handleJPEG() {
-    setDownloading("jpeg");
-    setError(null);
-    try {
-      await exportJPEG(state.personal.name);
-    } catch (e) {
-      setError("Failed to export JPEG. Please try again.");
-      console.error(e);
-    }
-    setDownloading(null);
-  }
-
-  async function handlePDF() {
-    setDownloading("pdf");
-    setError(null);
-    try {
-      const { exportPDF } = await import("@/lib/export-pdf");
-      await exportPDF(state.personal.name);
-    } catch (e) {
-      setError("Failed to export PDF. Please try again.");
-      console.error(e);
-    }
-    setDownloading(null);
-  }
-
-  async function handleWord() {
-    setDownloading("word");
-    setError(null);
-    try {
-      const { exportWord } = await import("@/lib/export-word");
-      await exportWord(state);
-    } catch (e) {
-      setError("Failed to export Word document. Please try again.");
-      console.error(e);
-    }
-    setDownloading(null);
   }
 
   return (
@@ -148,134 +54,108 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+          className="absolute right-4 top-4 min-h-10 min-w-10 rounded-full text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Close download dialog"
         >
           x
         </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {unlocked ? "Download Your CV" : "Email your CV report"}
+        <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
+          Free. No signup. No watermark.
+        </span>
+
+        <h2 className="mt-4 text-2xl font-bold text-gray-900">
+          Download Your CV
         </h2>
-        <p className="text-sm text-gray-500 mb-6">
-          {unlocked
-            ? "Choose your preferred format. All formats are free during our launch period."
-            : "We will send your score report and improvement checklist, then unlock JPEG, PDF, and Word downloads."}
+        <p className="mt-2 text-sm leading-6 text-gray-500">
+          Choose PDF for ATS systems or Word when you want an editable file.
+          Both are free and available immediately.
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {!unlocked ? (
-          <form onSubmit={handleUnlock} className="space-y-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-            />
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={() => runDownload("pdf")}
+            disabled={downloading !== null}
+            className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-lg font-semibold text-gray-900">
+                  Download PDF
+                </div>
+                <p className="mt-0.5 text-sm text-gray-600">
+                  ATS-safe, single-column, selectable text.
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-emerald-700">
+                {downloading === "pdf" ? "Exporting..." : "Free"}
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => runDownload("word")}
+            disabled={downloading !== null}
+            className="w-full rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-lg font-semibold text-gray-900">
+                  Download Word (.docx)
+                </div>
+                <p className="mt-0.5 text-sm text-gray-600">
+                  Editable in Microsoft Word and Google Docs.
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-emerald-700">
+                {downloading === "word" ? "Exporting..." : "Free"}
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowMoreFormats((value) => !value)}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            {showMoreFormats ? "Hide more formats" : "More formats"}
+          </button>
+
+          {showMoreFormats && (
             <button
-              type="submit"
-              disabled={captureStatus === "loading"}
-              className="w-full bg-gold-500 hover:bg-gold-600 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+              onClick={() => runDownload("jpeg")}
+              disabled={downloading !== null}
+              className="w-full rounded-xl border border-gray-200 p-4 text-left transition-colors hover:border-gray-300 disabled:opacity-60"
             >
-              {captureStatus === "loading"
-                ? "Sending report..."
-                : "Email My Report & Unlock Downloads"}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="font-semibold text-gray-900">
+                    JPEG Preview Image
+                  </div>
+                  <p className="mt-0.5 text-sm text-gray-500">
+                    Useful for quick visual sharing, not recommended for ATS.
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-gray-600">
+                  {downloading === "jpeg" ? "Exporting..." : "Download"}
+                </span>
+              </div>
             </button>
-            <p className="text-xs text-gray-400 text-center">
-              No spam. Weekly career tips only. Unsubscribe anytime.
-            </p>
-          </form>
-        ) : (
-        <div className="space-y-3">
-          {/* JPEG - Free */}
-          <button
-            onClick={handleJPEG}
-            disabled={downloading === "jpeg"}
-            className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-green-400 transition-colors group"
-          >
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-gray-900">
-                  JPEG Image
-                </span>
-                <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  FREE
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Quick preview image. Great for sharing on social media.
-              </p>
-            </div>
-            <span className="text-green-600 group-hover:text-green-700 font-medium">
-              {downloading === "jpeg" ? "Exporting..." : "Download"}
-            </span>
-          </button>
-
-          {/* PDF - Free */}
-          <button
-            onClick={handlePDF}
-            disabled={downloading === "pdf"}
-            className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-green-400 transition-colors group"
-          >
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-gray-900">
-                  PDF Document
-                </span>
-                <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  FREE
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 mt-0.5">
-                ATS-friendly format. Recommended for job applications.
-              </p>
-            </div>
-            <span className="text-green-600 group-hover:text-green-700 font-medium">
-              {downloading === "pdf" ? "Exporting..." : "Download"}
-            </span>
-          </button>
-
-          {/* Word - Free */}
-          <button
-            onClick={handleWord}
-            disabled={downloading === "word"}
-            className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl hover:border-green-400 transition-colors group"
-          >
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-gray-900">
-                  Word Document
-                </span>
-                <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  FREE
-                </span>
-              </div>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Editable .docx format. Easy to customise further.
-              </p>
-            </div>
-            <span className="text-green-600 group-hover:text-green-700 font-medium">
-              {downloading === "word" ? "Exporting..." : "Download"}
-            </span>
-          </button>
+          )}
         </div>
-        )}
 
-        {unlocked && (
-          <p className="text-xs text-gray-400 text-center mt-6">
-            All formats are free during our launch period. Premium plans coming soon.
-          </p>
-        )}
+        <p className="mt-6 text-center text-xs text-gray-400">
+          Your CV stays in your browser. No card, no forced signup, no watermark.
+        </p>
       </div>
     </div>
   );

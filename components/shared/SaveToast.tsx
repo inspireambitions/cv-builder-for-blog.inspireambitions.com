@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 export default function SaveToast() {
   const [visible, setVisible] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     function handleSaved() {

@@ -62,7 +62,15 @@ function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["sta
 }
 
 export default function CVBuilder() {
-  const { state, goToStep, nextStep, prevStep } = useCVState();
+  const {
+    state,
+    goToStep,
+    nextStep,
+    prevStep,
+    resetState,
+    restoredAt,
+    dismissRestoreBanner,
+  } = useCVState();
   const { t, dir, locale } = useLocale();
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
@@ -121,6 +129,34 @@ export default function CVBuilder() {
           </div>
         </div>
       </header>
+
+      {/* Restore banner */}
+      {restoredAt && (
+        <div className="border-b border-emerald-100 bg-emerald-50">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 text-sm text-emerald-950 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              We restored your CV from{" "}
+              {new Date(restoredAt).toLocaleString()}.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={dismissRestoreBanner}
+                className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white hover:bg-emerald-800"
+              >
+                Continue
+              </button>
+              <button
+                type="button"
+                onClick={resetState}
+                className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100"
+              >
+                Start fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar */}
       {state.step > 0 && (

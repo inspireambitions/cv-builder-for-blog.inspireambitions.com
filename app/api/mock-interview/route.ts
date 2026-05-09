@@ -9,7 +9,7 @@ const SYSTEM_PROMPT =
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { cvData, jobTitle, message, history } = body;
+    const { cvData, jobTitle, history } = body;
 
     if (!cvData || typeof cvData !== "object") {
       return NextResponse.json(

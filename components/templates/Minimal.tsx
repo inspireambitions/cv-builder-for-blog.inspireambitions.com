@@ -1,11 +1,18 @@
 "use client";
 
 import type { CVState } from "@/lib/types";
+import {
+  formatSectorCredential,
+  getSelectedSectorCredentials,
+  getUAEHeaderParts,
+} from "@/lib/uae";
 
 export default function Minimal({ state }: { state: CVState }) {
   const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = state;
 
   const contactParts = [personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean);
+  const uaeHeaderParts = getUAEHeaderParts(state);
+  const sectorCredentials = getSelectedSectorCredentials(state);
 
   const filledExperience = experience.filter(e => e.role.trim() || e.company.trim());
   const filledEducation = education.filter(e => e.degree.trim() || e.institution.trim());
@@ -17,8 +24,6 @@ export default function Minimal({ state }: { state: CVState }) {
   const filledProjects = projects.filter(p => p.name.trim());
   const filledPublications = publications.filter(p => p.title.trim());
   const filledMemberships = memberships.filter(m => m.org.trim());
-
-  const hasExtras = filledAchievements.length > 0 || filledVolunteer.length > 0 || filledProjects.length > 0 || filledPublications.length > 0 || filledMemberships.length > 0;
 
   return (
     <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 14, color: "#2d2d2d", padding: "48px 56px" }}>
@@ -37,6 +42,11 @@ export default function Minimal({ state }: { state: CVState }) {
         {contactParts.length > 0 && (
           <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
             {contactParts.join("  \u00b7  ")}
+          </div>
+        )}
+        {uaeHeaderParts.length > 0 && (
+          <div style={{ fontSize: 12, color: "#4b7d55", marginTop: 6 }}>
+            {uaeHeaderParts.join("  \u00b7  ")}
           </div>
         )}
         <div style={{ height: 1, backgroundColor: "#e5e7eb", marginTop: 20 }} />
@@ -130,9 +140,14 @@ export default function Minimal({ state }: { state: CVState }) {
           )}
 
           {/* Certifications */}
-          {filledCerts.length > 0 && (
+          {(filledCerts.length > 0 || sectorCredentials.length > 0) && (
             <section style={{ marginBottom: 24 }}>
-              <MinimalHeading>Certifications</MinimalHeading>
+              <MinimalHeading>Certifications & Credentials</MinimalHeading>
+              {sectorCredentials.map((credential) => (
+                <div key={credential.authority} style={{ marginBottom: 8 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{formatSectorCredential(credential)}</div>
+                </div>
+              ))}
               {filledCerts.map((c) => (
                 <div key={c.id} style={{ marginBottom: 8 }}>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>

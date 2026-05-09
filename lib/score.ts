@@ -25,6 +25,16 @@ function allText(state: CVState): string {
     state.summary,
     state.personal.title,
     state.personal.location,
+    state.personal.visa_status,
+    state.personal.notice_period,
+    state.personal.noc_available,
+    state.personal.nationality,
+    state.personal.arabic_proficiency,
+    ...state.personal.sector_credentials.flatMap((c) => [
+      c.authority,
+      c.license_no,
+      c.expiry_date,
+    ]),
     ...state.experience.flatMap((e) => [e.role, e.company, e.companyDesc, e.location, e.description, e.gap]),
     ...state.education.flatMap((e) => [e.degree, e.institution]),
     ...state.certifications.flatMap((c) => [c.name, c.issuer]),
@@ -160,8 +170,13 @@ function contentQualityLayer(state: CVState): ScoreLayer {
 
 function scoreVisaNotice(state: CVState): ScoreCriterion {
   const text = allText(state);
-  const hasVisa = hasAnyPattern(text, VISA_PATTERNS);
-  const hasNotice = hasAnyPattern(text, NOTICE_PERIOD_PATTERNS);
+  const hasVisa =
+    Boolean(state.personal.visa_status && state.personal.visa_status !== "Prefer not to say") ||
+    hasAnyPattern(text, VISA_PATTERNS);
+  const hasNotice =
+    Boolean(state.personal.notice_period.trim()) ||
+    Boolean(state.personal.availability_date.trim()) ||
+    hasAnyPattern(text, NOTICE_PERIOD_PATTERNS);
   let s = 0;
   if (hasVisa && hasNotice) s = 6;
   else if (hasVisa || hasNotice) s = 3;
@@ -170,7 +185,9 @@ function scoreVisaNotice(state: CVState): ScoreCriterion {
 
 function scoreArabicLanguage(state: CVState): ScoreCriterion {
   const langText = state.languages.map((l) => l.language).join(" ");
-  const hasArabic = hasAnyPattern(langText, ARABIC_LANGUAGE_PATTERNS);
+  const hasArabic =
+    Boolean(state.personal.arabic_proficiency && state.personal.arabic_proficiency !== "None") ||
+    hasAnyPattern(langText, ARABIC_LANGUAGE_PATTERNS);
   const s = hasArabic ? 4 : 0;
   return { score: s, max: 4, level: level(s, 4), label: "Arabic Language", tip: s < 4 ? "If you speak any Arabic, add it to your languages section. Even 'Basic' scores points with Gulf employers." : undefined };
 }

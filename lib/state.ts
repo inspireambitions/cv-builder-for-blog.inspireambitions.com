@@ -22,19 +22,62 @@ interface CVContextValue {
   nextStep: () => void;
   prevStep: () => void;
   resetState: () => void;
+  restoredAt: string | null;
+  dismissRestoreBanner: () => void;
 }
 
 const CVContext = createContext<CVContextValue | null>(null);
 
 const STORAGE_KEY = "inspireambitions-cv-state";
+const STORAGE_VERSION = 2;
+const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function loadSavedState(): CVState | null {
+interface StoredDraft {
+  version: number;
+  savedAt: string;
+  state: CVState;
+}
+
+function normalizeState(value: unknown): CVState | null {
+  if (!value || typeof value !== "object") return null;
+  const incoming = value as Partial<CVState>;
+  const personal = incoming.personal ?? {};
+
+  return {
+    ...defaultCVState,
+    ...incoming,
+    personal: {
+      ...defaultCVState.personal,
+      ...personal,
+      sector_credentials: Array.isArray(
+        (personal as Partial<CVState["personal"]>).sector_credentials
+      )
+        ? (personal as Partial<CVState["personal"]>).sector_credentials ?? []
+        : [],
+    },
+    score: null,
+  };
+}
+
+function loadSavedState(): { state: CVState; savedAt: string } | null {
   if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { ...defaultCVState, ...parsed };
+      const savedAt =
+        typeof parsed?.savedAt === "string"
+          ? parsed.savedAt
+          : new Date().toISOString();
+      const savedTime = new Date(savedAt).getTime();
+      if (Number.isFinite(savedTime) && Date.now() - savedTime > DRAFT_TTL_MS) {
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+
+      const draftState = parsed?.state ? parsed.state : parsed;
+      const state = normalizeState(draftState);
+      return state ? { state, savedAt } : null;
     }
   } catch {
     // Ignore parse errors
@@ -45,30 +88,37 @@ function loadSavedState(): CVState | null {
 export function CVProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CVState>(defaultCVState);
   const [hydrated, setHydrated] = useState(false);
-  const saveTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const [restoredAt, setRestoredAt] = useState<string | null>(null);
+  const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from localStorage on mount
   useEffect(() => {
-    const saved = loadSavedState();
-    if (saved) {
-      setState(saved);
+    const draft = loadSavedState();
+    if (draft) {
+      setState(draft.state);
+      setRestoredAt(draft.savedAt);
     }
     setHydrated(true);
   }, []);
 
-  // Save to localStorage on every state change (debounced 1s)
+  // Save to localStorage on every state change (debounced 300ms)
   useEffect(() => {
     if (!hydrated) return;
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       try {
         const toSave = { ...state, score: null }; // Don't persist computed score
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        const draft: StoredDraft = {
+          version: STORAGE_VERSION,
+          savedAt: new Date().toISOString(),
+          state: toSave,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
         window.dispatchEvent(new Event("cv-saved"));
       } catch {
         // Storage full or unavailable
       }
-    }, 1000);
+    }, 300);
     return () => {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
     };
@@ -109,6 +159,11 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const resetState = useCallback(() => {
     setState(defaultCVState);
     localStorage.removeItem(STORAGE_KEY);
+    setRestoredAt(null);
+  }, []);
+
+  const dismissRestoreBanner = useCallback(() => {
+    setRestoredAt(null);
   }, []);
 
   return React.createElement(
@@ -123,6 +178,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
         nextStep,
         prevStep,
         resetState,
+        restoredAt,
+        dismissRestoreBanner,
       },
     },
     children

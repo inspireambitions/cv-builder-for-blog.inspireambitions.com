@@ -31,6 +31,73 @@ export interface LangEntry {
   level: "Native" | "Fluent" | "Professional" | "Conversational" | "Basic";
 }
 
+export type VisaStatus =
+  | ""
+  | "Employment"
+  | "Golden"
+  | "Investor"
+  | "Visit"
+  | "Cancelled"
+  | "Outside UAE"
+  | "Prefer not to say";
+
+export type NocAvailable = "" | "Yes" | "No" | "Not applicable";
+
+export type ArabicProficiency =
+  | ""
+  | "None"
+  | "Basic"
+  | "Conversational"
+  | "Fluent"
+  | "Native";
+
+export type MaritalStatus =
+  | ""
+  | "Single"
+  | "Married"
+  | "Divorced"
+  | "Widowed"
+  | "Prefer not to say";
+
+export type SectorCredentialAuthority =
+  | "DHA"
+  | "DOH"
+  | "MOH"
+  | "RERA"
+  | "KHDA"
+  | "ADEK"
+  | "WPS"
+  | "MOHRE"
+  | "VAT"
+  | "SOCPA"
+  | "Other";
+
+export interface SectorCredentialEntry {
+  authority: SectorCredentialAuthority;
+  license_no: string;
+  expiry_date: string;
+}
+
+export interface PersonalDetails {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  visa_status: VisaStatus;
+  notice_period: string;
+  availability_date: string;
+  noc_available: NocAvailable;
+  nationality: string;
+  include_date_of_birth: boolean;
+  date_of_birth: string;
+  include_marital_status: boolean;
+  marital_status: MaritalStatus;
+  arabic_proficiency: ArabicProficiency;
+  sector_credentials: SectorCredentialEntry[];
+}
+
 export interface AchievementEntry {
   id: string;
   title: string;
@@ -114,14 +181,7 @@ export interface CVState {
   template: TemplateType;
   geo: GeoType;
   photo: string | null;
-  personal: {
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin: string;
-  };
+  personal: PersonalDetails;
   summary: string;
   experience: ExpEntry[];
   education: EduEntry[];
@@ -149,6 +209,17 @@ export const defaultCVState: CVState = {
     phone: "",
     location: "",
     linkedin: "",
+    visa_status: "",
+    notice_period: "",
+    availability_date: "",
+    noc_available: "",
+    nationality: "",
+    include_date_of_birth: false,
+    date_of_birth: "",
+    include_marital_status: false,
+    marital_status: "",
+    arabic_proficiency: "",
+    sector_credentials: [],
   },
   summary: "",
   experience: [

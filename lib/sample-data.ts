@@ -12,6 +12,23 @@ export const sampleCVState: CVState = {
     phone: "+971 50 123 4567",
     location: "Dubai, UAE",
     linkedin: "https://linkedin.com/in/sarah-alrashid",
+    visa_status: "Golden",
+    notice_period: "30 days",
+    availability_date: "",
+    noc_available: "Not applicable",
+    nationality: "United Arab Emirates",
+    include_date_of_birth: false,
+    date_of_birth: "",
+    include_marital_status: false,
+    marital_status: "",
+    arabic_proficiency: "Native",
+    sector_credentials: [
+      {
+        authority: "MOHRE",
+        license_no: "",
+        expiry_date: "",
+      },
+    ],
   },
   summary:
     "Results-driven Programme Manager with 10+ years delivering complex transformation initiatives across the GCC. Led portfolios valued at $120M+ across financial services, infrastructure, and government sectors. Proven track record of reducing delivery timelines by 23% through agile adoption and building high-performing cross-functional teams of 50+. CIPD and PMP certified with deep expertise in stakeholder management at C-suite level.",

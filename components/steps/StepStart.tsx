@@ -89,8 +89,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
     ),
-    title: "Free JPEG Export",
-    desc: "Download your CV as a high-resolution image. No watermark. No credit card. No catch.",
+    title: "Free PDF & Word Export",
+    desc: "Download ATS-safe PDF and editable Word files. No signup. No watermark. No credit card.",
   },
   {
     icon: (
@@ -532,7 +532,7 @@ export default function StepStart() {
 
         {/* Subheadline */}
         <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          The world&apos;s most HR-credible CV builder. Free JPEG export. No watermark. No credit card.
+          The world&apos;s most HR-credible CV builder. Free ATS-safe PDF and Word export. No watermark. No credit card.
         </p>
 
         {/* CTAs */}

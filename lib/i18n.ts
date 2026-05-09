@@ -10,7 +10,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "hero.badge": "Built by an HR Specialist",
     "hero.headline": "Build a CV That Gets You Hired",
     "hero.subheadline":
-      "The world's most HR-credible CV builder. Free JPEG export. No watermark. No credit card.",
+      "The world's most HR-credible CV builder. Free ATS-safe PDF and Word export. No watermark. No credit card.",
     "hero.buildCta": "Build My CV — Free",
     "hero.uploadCta": "Upload & AI Improve",
     "hero.trust1": "Free forever",
@@ -24,9 +24,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     "feature.hrApproved": "HR Specialist Approved",
     "feature.hrApprovedDesc":
       "Every tip, prompt, and scoring criterion written by a practising HR Specialist who screens CVs daily.",
-    "feature.freeExport": "Free JPEG Export",
+    "feature.freeExport": "Free PDF & Word Export",
     "feature.freeExportDesc":
-      "Download your CV as a high-resolution image. No watermark. No credit card. No catch.",
+      "Download ATS-safe PDF and editable Word files. No signup. No watermark. No credit card.",
     "feature.gulfReady": "Gulf/MENA Ready",
     "feature.gulfReadyDesc":
       "The only CV builder with a dedicated GCC template. Photo support, Arabic-friendly layouts.",
@@ -129,13 +129,13 @@ export const translations: Record<Locale, Record<string, string>> = {
     // Score (Step 8)
     "score.title": "Your CV Score",
     "score.download": "Download Your CV",
-    "score.roast": "AI CV Roast",
-    "score.roastDesc": "Get brutally honest HR feedback on your CV",
+    "score.roast": "CV Rewrite",
+    "score.roastDesc": "Improve a bullet or section without losing your original wording.",
     "score.coverLetter": "Generate Cover Letter",
     "score.coverLetterDesc":
       "AI-powered cover letter tailored to your experience",
     "score.mockInterview": "Mock Interview",
-    "score.mockInterviewDesc": "Practice with an AI recruiter. Annual Plan includes 1 live session with an HR specialist on weekends.",
+    "score.mockInterviewDesc": "Practice with an AI recruiter tailored to your role and experience.",
 
     // Navigation
     "nav.back": "Back",
@@ -146,8 +146,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     // Download modal
     "download.title": "Download Your CV",
     "download.subtitle":
-      "Choose your preferred format. JPEG is always free.",
-    "download.jpeg": "JPEG Image",
+      "Choose PDF for ATS systems or Word when you want an editable file.",
+    "download.jpeg": "JPEG Preview Image",
     "download.jpegDesc":
       "High-resolution image. Perfect for sharing online.",
     "download.pdf": "PDF Document",

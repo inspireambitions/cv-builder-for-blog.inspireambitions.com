@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inspireambitions.com/schemas/uae-cv.json",
+  "title": "Inspire Ambitions UAE CV Personal Details",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "visa_status": {
+      "type": "string",
+      "enum": [
+        "",
+        "Employment",
+        "Golden",
+        "Investor",
+        "Visit",
+        "Cancelled",
+        "Outside UAE",
+        "Prefer not to say"
+      ]
+    },
+    "notice_period": {
+      "type": "string",
+      "examples": ["Immediate", "30 days"]
+    },
+    "availability_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "noc_available": {
+      "type": "string",
+      "enum": ["", "Yes", "No", "Not applicable"]
+    },
+    "nationality": {
+      "type": "string",
+      "description": "Optional nationality value selected from an ISO country-name list or left blank."
+    },
+    "include_date_of_birth": {
+      "type": "boolean",
+      "default": false
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "include_marital_status": {
+      "type": "boolean",
+      "default": false
+    },
+    "marital_status": {
+      "type": "string",
+      "enum": [
+        "",
+        "Single",
+        "Married",
+        "Divorced",
+        "Widowed",
+        "Prefer not to say"
+      ]
+    },
+    "arabic_proficiency": {
+      "type": "string",
+      "enum": ["", "None", "Basic", "Conversational", "Fluent", "Native"]
+    },
+    "sector_credentials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["authority", "license_no", "expiry_date"],
+        "properties": {
+          "authority": {
+            "type": "string",
+            "enum": [
+              "DHA",
+              "DOH",
+              "MOH",
+              "RERA",
+              "KHDA",
+              "ADEK",
+              "WPS",
+              "MOHRE",
+              "VAT",
+              "SOCPA",
+              "Other"
+            ]
+          },
+          "license_no": {
+            "type": "string"
+          },
+          "expiry_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": []
+}
