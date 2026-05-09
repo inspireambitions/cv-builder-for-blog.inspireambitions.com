@@ -7,6 +7,7 @@ import type {
   SectorCredentialEntry,
   VisaStatus,
 } from "./types";
+import { formatDateForUAE } from "./format";
 
 export const VISA_STATUS_OPTIONS: VisaStatus[] = [
   "",
@@ -97,7 +98,7 @@ export function formatSectorCredential(
 ): string {
   const details = [
     credential.license_no ? `Licence: ${credential.license_no}` : "",
-    credential.expiry_date ? `Expiry: ${credential.expiry_date}` : "",
+    credential.expiry_date ? `Expiry: ${formatDateForUAE(credential.expiry_date)}` : "",
   ].filter(Boolean);
 
   return details.length
@@ -113,7 +114,7 @@ export function getUAEHeaderParts(state: CVState): string[] {
       : "",
     personal.notice_period ? `Notice: ${personal.notice_period}` : "",
     personal.availability_date
-      ? `Available: ${personal.availability_date}`
+      ? `Available: ${formatDateForUAE(personal.availability_date)}`
       : "",
     personal.noc_available ? `NOC: ${personal.noc_available}` : "",
     personal.nationality && personal.nationality !== "Prefer not to say"
@@ -123,7 +124,7 @@ export function getUAEHeaderParts(state: CVState): string[] {
       ? `Arabic: ${personal.arabic_proficiency}`
       : "",
     personal.include_date_of_birth && personal.date_of_birth
-      ? `Date of birth: ${personal.date_of_birth}`
+      ? `Date of birth: ${formatDateForUAE(personal.date_of_birth)}`
       : "",
     personal.include_marital_status && personal.marital_status
       ? `Marital status: ${personal.marital_status}`

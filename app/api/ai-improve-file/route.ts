@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { PDFParse } from "pdf-parse";
 import { getPath as getPdfWorkerPath } from "pdf-parse/worker";
+import sharp from "sharp";
 import { analyseCvImage, analyseCvText } from "@/lib/ai-improve";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,9 @@ function isImage(file: File, extension: string) {
     file.type === "image/jpeg" ||
     file.type === "image/png" ||
     file.type === "image/webp" ||
-    ["jpg", "jpeg", "png", "webp"].includes(extension)
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    ["jpg", "jpeg", "png", "webp", "heic", "heif"].includes(extension)
   );
 }
 
@@ -99,7 +102,34 @@ async function extractTextFromFile(file: File) {
     throw new Error("Legacy .doc files are not supported. Please save the file as PDF or DOCX, then upload again.");
   }
 
-  throw new Error("Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file.");
+  throw new Error("Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file.");
+}
+
+async function normaliseImageForVision(file: File) {
+  const extension = getExtension(file.name);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mustConvert =
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    extension === "heic" ||
+    extension === "heif";
+
+  if (!mustConvert && ["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return {
+      base64: buffer.toString("base64"),
+      mediaType: file.type,
+    };
+  }
+
+  const jpeg = await sharp(buffer, { limitInputPixels: 16_000_000 })
+    .rotate()
+    .jpeg({ quality: 88, mozjpeg: true })
+    .toBuffer();
+
+  return {
+    base64: jpeg.toString("base64"),
+    mediaType: "image/jpeg",
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -109,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     if (!(file instanceof File)) {
       return NextResponse.json(
-        { error: "Missing CV file. Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file." },
+        { error: "Missing CV file. Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file." },
         { status: 400 }
       );
     }
@@ -123,10 +153,8 @@ export async function POST(req: NextRequest) {
 
     const extension = getExtension(file.name);
     if (isImage(file, extension)) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      return NextResponse.json(
-        await analyseCvImage(buffer.toString("base64"), file.type || "image/jpeg")
-      );
+      const image = await normaliseImageForVision(file);
+      return NextResponse.json(await analyseCvImage(image.base64, image.mediaType));
     }
 
     const text = await extractTextFromFile(file);
@@ -135,7 +163,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "We could not extract enough readable text from this CV. Please upload a text-based PDF, DOCX, TXT, or RTF file, or a clearer JPG/PNG screenshot.",
+            "We could not extract enough readable text from this CV. Please upload a text-based PDF, DOCX, TXT, or RTF file, or a clearer image screenshot.",
         },
         { status: 422 }
       );
@@ -150,7 +178,7 @@ export async function POST(req: NextRequest) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to analyse this CV file. Please try a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file.",
+            : "Failed to analyse this CV file. Please try a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file.",
       },
       { status: 500 }
     );

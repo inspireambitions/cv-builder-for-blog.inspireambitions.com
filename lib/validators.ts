@@ -57,14 +57,16 @@ export function validateFileUpload(file: File): { valid: boolean; error?: string
     "image/jpeg",
     "image/png",
     "image/webp",
+    "image/heic",
+    "image/heif",
   ];
-  const validExtensions = [".pdf", ".docx", ".txt", ".rtf", ".jpg", ".jpeg", ".png", ".webp"];
+  const validExtensions = [".pdf", ".docx", ".txt", ".rtf", ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
   const lowerName = file.name.toLowerCase();
   if (
     !validTypes.includes(file.type) &&
     !validExtensions.some((extension) => lowerName.endsWith(extension))
   ) {
-    return { valid: false, error: "Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file" };
+    return { valid: false, error: "Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file" };
   }
   return { valid: true };
 }
@@ -74,8 +76,14 @@ export function validateImageUpload(file: File): { valid: boolean; error?: strin
   if (file.size > maxSize) {
     return { valid: false, error: "Image must be under 5MB" };
   }
-  if (!file.type.startsWith("image/")) {
-    return { valid: false, error: "Please upload a JPEG or PNG image" };
+  const lowerName = file.name.toLowerCase();
+  if (
+    !file.type.startsWith("image/") &&
+    ![".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"].some((extension) =>
+      lowerName.endsWith(extension)
+    )
+  ) {
+    return { valid: false, error: "Please upload a JPG, PNG, WEBP, HEIC, or HEIF image" };
   }
   return { valid: true };
 }

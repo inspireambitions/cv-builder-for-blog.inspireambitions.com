@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "start:test": "node scripts/prepare-standalone.mjs && PORT=3215 HOSTNAME=127.0.0.1 node .next/standalone/server.js",
+    "lint": "next lint",
+    "check:perf": "node scripts/check-performance-budget.mjs",
+    "test:e2e": "playwright test",
+    "ci": "npm run build && npm run check:perf && npm run test:e2e"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -18,7 +22,8 @@
     "next": "^15.3.0",
     "pdf-parse": "^2.4.5",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "sharp": "^0.34.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
@@ -28,6 +33,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "axe-core": "^4.10.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.3.0",
     "postcss": "^8.5.0",

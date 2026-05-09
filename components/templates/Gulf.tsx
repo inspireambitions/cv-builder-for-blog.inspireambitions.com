@@ -84,9 +84,9 @@ export default function Gulf({ state }: { state: CVState }) {
                 <div key={exp.id} style={{ marginBottom: 16 }}>
                   {exp.role.trim() && <div style={{ fontWeight: 700, fontSize: 15, color: "#1a3320" }}>{exp.role}</div>}
                   {exp.company.trim() && <div style={{ fontSize: 14, color: "#333" }}>{exp.company}</div>}
-                  {exp.companyDesc.trim() && <div style={{ fontSize: 12, fontStyle: "italic", color: "#4a7c54", marginTop: 1 }}>{exp.companyDesc}</div>}
+                  {exp.companyDesc.trim() && <div style={{ fontSize: 12, fontStyle: "italic", color: "#3f6b47", marginTop: 1 }}>{exp.companyDesc}</div>}
                   {(exp.location.trim() || exp.dates.trim()) && (
-                    <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
                       {[exp.location, exp.dates].filter(Boolean).join("  |  ")}
                     </div>
                   )}
@@ -98,7 +98,7 @@ export default function Gulf({ state }: { state: CVState }) {
                     </ul>
                   )}
                   {exp.gap.trim() && (
-                    <div style={{ fontSize: 12, fontStyle: "italic", color: "#777", marginTop: 4 }}>{exp.gap}</div>
+                    <div style={{ fontSize: 12, fontStyle: "italic", color: "#666", marginTop: 4 }}>{exp.gap}</div>
                   )}
                 </div>
               ))}
@@ -113,7 +113,7 @@ export default function Gulf({ state }: { state: CVState }) {
                 <div key={edu.id} style={{ marginBottom: 10 }}>
                   {edu.degree.trim() && <div style={{ fontWeight: 700, fontSize: 14 }}>{edu.degree}</div>}
                   {edu.institution.trim() && <div style={{ fontSize: 13, color: "#444" }}>{edu.institution}</div>}
-                  <div style={{ fontSize: 12, color: "#888" }}>
+                  <div style={{ fontSize: 12, color: "#666" }}>
                     {[edu.year, edu.grade].filter(s => s.trim()).join("  |  ")}
                   </div>
                 </div>
@@ -166,7 +166,7 @@ export default function Gulf({ state }: { state: CVState }) {
                 {filledLanguages.map((l) => (
                   <div key={l.id} style={{ fontSize: 13, marginBottom: 4 }}>
                     <span style={{ fontWeight: 600 }}>{l.language}</span>
-                    <span style={{ color: "#4a7c54", marginLeft: 6 }}>{l.level}</span>
+                    <span style={{ color: "#3f6b47", marginLeft: 6 }}>{l.level}</span>
                   </div>
                 ))}
               </section>
@@ -180,7 +180,7 @@ export default function Gulf({ state }: { state: CVState }) {
                   <div key={a.id} style={{ marginBottom: 8 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{a.title}</div>
                     {a.body.trim() && <div style={{ fontSize: 12, color: "#555" }}>{a.body}</div>}
-                    <div style={{ fontSize: 11, color: "#888" }}>
+                    <div style={{ fontSize: 11, color: "#666" }}>
                       {[a.awardingBody, a.year].filter(s => s.trim()).join(" | ")}
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default function Gulf({ state }: { state: CVState }) {
                   <div key={v.id} style={{ marginBottom: 8 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{v.role}</div>
                     {v.org.trim() && <div style={{ fontSize: 12, color: "#555" }}>{v.org}</div>}
-                    {v.dates.trim() && <div style={{ fontSize: 11, color: "#888" }}>{v.dates}</div>}
+                    {v.dates.trim() && <div style={{ fontSize: 11, color: "#666" }}>{v.dates}</div>}
                     {v.impact.trim() && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>{v.impact}</div>}
                   </div>
                 ))}

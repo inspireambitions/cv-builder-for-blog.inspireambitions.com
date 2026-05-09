@@ -121,6 +121,15 @@ export default function CVBuilder() {
     }
   }, [state]);
 
+  const handleDeleteDraft = useCallback(() => {
+    const confirmed = window.confirm(
+      "Delete this saved CV draft from this browser? This cannot be undone."
+    );
+    if (!confirmed) return;
+    resetState();
+    trackToolEvent("cv_draft_deleted", { surface: "cv_builder_header" });
+  }, [resetState]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -133,8 +142,8 @@ export default function CVBuilder() {
               rel="noopener noreferrer"
               className="text-xl font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity"
             >
-              <span className="w-5 h-5 bg-[#d4a843] rotate-45 rounded-sm inline-block shrink-0" />
-              <span className="text-[#d4a843] font-bold">Inspire</span>
+              <span className="w-5 h-5 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
+              <span className="text-[#6f5314] font-bold">Inspire</span>
               <span className="text-[#1a2744] font-bold -ml-1">Ambitions</span>
             </a>
             <span className="bg-gold-500/10 text-gold-600 text-xs font-medium px-2 py-0.5 rounded-full hidden sm:inline">
@@ -142,7 +151,7 @@ export default function CVBuilder() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 hidden md:inline">
+            <span className="text-xs text-gray-600 hidden md:inline">
               {t("header.tagline")}
             </span>
             {state.step > 0 && (
@@ -162,6 +171,15 @@ export default function CVBuilder() {
                   : "Resume link"}
               </button>
             )}
+            {state.step > 0 && (
+              <button
+                type="button"
+                onClick={handleDeleteDraft}
+                className="hidden min-h-10 items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 md:inline-flex"
+              >
+                Delete draft
+              </button>
+            )}
             <LanguageToggle />
           </div>
         </div>
@@ -176,7 +194,7 @@ export default function CVBuilder() {
               {new Date(restoredAt).toLocaleString()}.
             </p>
             <p className="text-xs text-emerald-800 sm:ml-auto">
-              Autosave is active. Use Resume link to continue on another device.
+              Autosave is active. Resume links are encrypted in the private URL fragment and never sent to our server.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -259,7 +277,7 @@ export default function CVBuilder() {
                       Continue on another device
                     </p>
                     <p className="mt-1 text-xs leading-5 text-emerald-800">
-                      Copy a private encrypted resume link. No account needed.
+                      Copy an encrypted resume link. The private CV data stays in the URL fragment, not server logs.
                     </p>
                   </div>
                   <button
@@ -275,6 +293,13 @@ export default function CVBuilder() {
                       : resumeLinkStatus === "error"
                       ? "Try again"
                       : "Copy Resume Link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteDraft}
+                    className="min-h-11 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
+                  >
+                    Delete saved draft
                   </button>
                 </div>
               </div>
@@ -380,7 +405,7 @@ export default function CVBuilder() {
       )}
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 mt-12">
+      <footer className="bg-gray-900 text-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Brand */}
@@ -391,11 +416,11 @@ export default function CVBuilder() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
               >
-                <span className="w-4 h-4 bg-[#d4a843] rotate-45 rounded-sm inline-block shrink-0" />
-                <span className="text-[#d4a843] font-bold text-lg">Inspire</span>
+                <span className="w-4 h-4 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
+                <span className="text-[#d7bd78] font-bold text-lg">Inspire</span>
                 <span className="text-white font-bold text-lg -ml-1">Ambitions</span>
               </a>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-300 leading-relaxed">
                 Free career tools built by an HR Specialist with 20+ years of GCC experience.
               </p>
             </div>
@@ -405,27 +430,27 @@ export default function CVBuilder() {
               <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Career Tools</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="https://inspireambitions.com/dubai-cv-builder/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/dubai-cv-builder/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     Dubai CV Builder
                   </a>
                 </li>
                 <li>
-                  <a href="https://inspireambitions.com/should-i-take-this-dubai-job/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/should-i-take-this-dubai-job/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     Should I Take This Dubai Job?
                   </a>
                 </li>
                 <li>
-                  <a href="https://inspireambitions.com/dubai-internship-eligibility-checker/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/dubai-internship-eligibility-checker/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     Dubai Internship Eligibility Checker
                   </a>
                 </li>
                 <li>
-                  <a href="https://inspireambitions.com/uae-salary-benchmarking-tool/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/uae-salary-benchmarking-tool/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     UAE Salary Benchmarking Tool
                   </a>
                 </li>
                 <li>
-                  <a href="https://inspireambitions.com/uae-resignation-letter-generator/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/uae-resignation-letter-generator/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     UAE Resignation Letter Generator
                   </a>
                 </li>
@@ -437,12 +462,12 @@ export default function CVBuilder() {
               <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Quick Links</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     All Career Tools
                   </a>
                 </li>
                 <li>
-                  <a href="https://inspireambitions.com" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-white transition-colors">
+                  <a href="https://inspireambitions.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     Blog &amp; Articles
                   </a>
                 </li>
@@ -452,7 +477,7 @@ export default function CVBuilder() {
 
           {/* Bottom bar */}
           <div className="border-t border-gray-800 mt-8 pt-6 text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               &copy; {new Date().getFullYear()} InspireAmbitions.com. All rights reserved.
             </p>
           </div>

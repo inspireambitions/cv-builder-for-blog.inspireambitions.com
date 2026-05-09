@@ -33,7 +33,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
     });
   });
 
-  await page.goto("http://localhost:3015");
+  await page.goto("/");
   await page.getByRole("button", { name: /Build My CV/ }).click();
   await page.getByRole("button", { name: /Next Step/ }).click();
 
@@ -98,13 +98,14 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   await expect(page.getByRole("button", { name: "Email My Report & Unlock Downloads" })).toBeVisible();
   await page.getByLabel("Email address").fill("mariam.hassan@example.com");
   await page.getByRole("button", { name: "Email My Report & Unlock Downloads" }).click();
-  await expect(page.getByRole("button", { name: "Download PDF" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Download Word (.docx)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "ATS Word (.docx)" })).toBeVisible();
 
   const pdfDownloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download PDF" }).click();
+  await page.getByRole("button", { name: "Download ATS-safe PDF" }).click();
   const pdfDownload = await pdfDownloadPromise;
-  expect(pdfDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV\.pdf$/);
+  expect(pdfDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV_ATS\.pdf$/);
   await mkdir("test-results/cv-builder-p0", { recursive: true });
   const pdfPath = "test-results/cv-builder-p0/mariam-hassan.pdf";
   await pdfDownload.saveAs(pdfPath);
@@ -115,9 +116,9 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   expect(parsedPdf.text).toContain("Visa: Employment");
 
   const wordDownloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download Word (.docx)" }).click();
+  await page.getByRole("button", { name: "ATS Word (.docx)" }).click();
   const wordDownload = await wordDownloadPromise;
-  expect(wordDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV\.docx$/);
+  expect(wordDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV_ATS\.docx$/);
   const wordPath = "test-results/cv-builder-p0/mariam-hassan.docx";
   await wordDownload.saveAs(wordPath);
   expect((await stat(wordPath)).size).toBeGreaterThan(1000);
@@ -127,7 +128,7 @@ test("CV builder fits a mobile viewport and preview opens without horizontal pag
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://localhost:3015");
+  await page.goto("/");
   await page.getByRole("button", { name: /Build My CV/ }).click();
   await page.getByRole("button", { name: /Next Step/ }).click();
   await page.getByPlaceholder("e.g. Sarah Al-Mansoori").fill("Mariam Hassan");

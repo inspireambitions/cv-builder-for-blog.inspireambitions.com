@@ -7,21 +7,28 @@ import { trackToolEvent } from "@/lib/analytics";
 import { validateEmail } from "@/lib/validators";
 import { calculateScore } from "@/lib/score";
 import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
+import { reportClientError } from "@/lib/error-reporting";
 
 interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type DownloadFormat = "pdf" | "word" | "jpeg";
+type DownloadFormat = "pdf_ats" | "pdf_recruiter" | "word_ats" | "word_recruiter" | "jpeg";
 
 const DOWNLOAD_GATE_KEY = "ia-cv-download-email-unlocked";
+const MAX_EXPORT_ATTEMPTS = 3;
+
+async function wait(ms: number) {
+  await new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const { state } = useCVState();
   const [downloading, setDownloading] = useState<DownloadFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showMoreFormats, setShowMoreFormats] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [email, setEmail] = useState("");
   const [emailStatus, setEmailStatus] = useState<
     "idle" | "loading" | "unlocked" | "error"
@@ -99,29 +106,58 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
 
   async function runDownload(format: DownloadFormat) {
     setDownloading(format);
+    setAttempt(1);
     setError(null);
     trackToolEvent("cv_download_started", { format });
 
     try {
-      if (format === "pdf") {
-        const { exportPDF } = await import("@/lib/export-pdf");
-        await exportPDF(state);
-      }
-      if (format === "word") {
-        const { exportWord } = await import("@/lib/export-word");
-        await exportWord(state);
-      }
-      if (format === "jpeg") {
-        await exportJPEG(state.personal.name);
+      for (let tryNumber = 1; tryNumber <= MAX_EXPORT_ATTEMPTS; tryNumber += 1) {
+        setAttempt(tryNumber);
+        try {
+          if (format === "pdf_ats") {
+            const { exportPDF } = await import("@/lib/export-pdf");
+            await exportPDF(state, { mode: "ats" });
+          }
+          if (format === "pdf_recruiter") {
+            const { exportPDF } = await import("@/lib/export-pdf");
+            await exportPDF(state, { mode: "recruiter" });
+          }
+          if (format === "word_ats") {
+            const { exportWord } = await import("@/lib/export-word");
+            await exportWord(state, { mode: "ats" });
+          }
+          if (format === "word_recruiter") {
+            const { exportWord } = await import("@/lib/export-word");
+            await exportWord(state, { mode: "recruiter" });
+          }
+          if (format === "jpeg") {
+            await exportJPEG(state.personal.name);
+          }
+          break;
+        } catch (error) {
+          if (tryNumber === MAX_EXPORT_ATTEMPTS) throw error;
+          trackToolEvent("cv_download_retry", { format });
+          await wait(500 * tryNumber);
+        }
       }
       trackToolEvent("cv_download_completed", { format });
     } catch (e) {
-      setError("Download failed. Please try again.");
+      setError("Export failed after retries. Your CV is still saved; please try again.");
       console.error(e);
+      reportClientError("cv_download_failed", {
+        format,
+        message: e instanceof Error ? e.message : String(e),
+      });
       trackToolEvent("cv_download_failed", { format });
     } finally {
       setDownloading(null);
+      setAttempt(0);
     }
+  }
+
+  function downloadStatus(format: DownloadFormat) {
+    if (downloading !== format) return "Unlocked";
+    return attempt > 1 ? `Retrying ${attempt}/${MAX_EXPORT_ATTEMPTS}...` : "Exporting...";
   }
 
   return (
@@ -192,44 +228,74 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         ) : (
         <div className="mt-6 space-y-3">
           <button
-            onClick={() => runDownload("pdf")}
+            onClick={() => runDownload("pdf_ats")}
             disabled={downloading !== null}
             className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Download PDF
+                  Download ATS-safe PDF
                 </div>
                 <p className="mt-0.5 text-sm text-gray-600">
-                  ATS-safe, single-column, selectable text.
+                  No photo, no columns, selectable text for applicant tracking systems.
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
-                {downloading === "pdf" ? "Exporting..." : "Unlocked"}
+                {downloadStatus("pdf_ats")}
               </span>
             </div>
           </button>
 
           <button
-            onClick={() => runDownload("word")}
+            onClick={() => runDownload("pdf_recruiter")}
             disabled={downloading !== null}
             className="w-full rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Download Word (.docx)
+                  Download Recruiter-ready PDF
                 </div>
                 <p className="mt-0.5 text-sm text-gray-600">
-                  Editable in Microsoft Word and Google Docs.
+                  Keeps your professional photo where the selected CV design supports it.
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
-                {downloading === "word" ? "Exporting..." : "Unlocked"}
+                {downloadStatus("pdf_recruiter")}
               </span>
             </div>
           </button>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => runDownload("word_ats")}
+              disabled={downloading !== null}
+              className="rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+            >
+              <div className="font-semibold text-gray-900">ATS Word (.docx)</div>
+              <p className="mt-0.5 text-sm text-gray-600">
+                Editable, text-first version.
+              </p>
+              <span className="mt-2 inline-block text-sm font-semibold text-emerald-700">
+                {downloadStatus("word_ats")}
+              </span>
+            </button>
+
+            <button
+              onClick={() => runDownload("word_recruiter")}
+              disabled={downloading !== null}
+              className="rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+            >
+              <div className="font-semibold text-gray-900">Recruiter Word</div>
+              <p className="mt-0.5 text-sm text-gray-600">
+                Editable version with photo when available.
+              </p>
+              <span className="mt-2 inline-block text-sm font-semibold text-emerald-700">
+                {downloadStatus("word_recruiter")}
+              </span>
+            </button>
+          </div>
 
           <button
             type="button"
@@ -255,7 +321,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-gray-600">
-                  {downloading === "jpeg" ? "Exporting..." : "Download"}
+                  {downloading === "jpeg" ? downloadStatus("jpeg") : "Download"}
                 </span>
               </div>
             </button>

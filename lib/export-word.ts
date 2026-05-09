@@ -8,9 +8,13 @@ import {
   HeadingLevel,
   AlignmentType,
   BorderStyle,
+  ImageRun,
 } from "docx";
 import { saveAs } from "file-saver";
 import type { CVState } from "./types";
+import type { ExportOptions } from "./export-options";
+import { isRecruiterReady } from "./export-options";
+import { normaliseUAEPhoneForDisplay } from "./format";
 import {
   formatSectorCredential,
   getSelectedSectorCredentials,
@@ -28,8 +32,44 @@ function sectionHeading(text: string): Paragraph {
   });
 }
 
-export async function exportWord(state: CVState) {
+function photoRunFromDataUrl(value: string) {
+  const match = value.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/i);
+  if (!match) return null;
+  const [, type, base64] = match;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new ImageRun({
+    type: type.toLowerCase() === "png" ? "png" : "jpg",
+    data: bytes,
+    transformation: { width: 92, height: 92 },
+    altText: {
+      title: "Professional photo",
+      description: "Candidate professional photo",
+      name: "professional-photo",
+    },
+  });
+}
+
+export async function exportWord(state: CVState, options: ExportOptions = {}) {
   const children: Paragraph[] = [];
+  const recruiterReady = isRecruiterReady(options);
+
+  if (recruiterReady && state.photo) {
+    const photo = photoRunFromDataUrl(state.photo);
+    if (photo) {
+      children.push(
+        new Paragraph({
+          children: [photo],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        })
+      );
+    }
+  }
 
   // Header: Name & Title
   children.push(
@@ -57,7 +97,7 @@ export async function exportWord(state: CVState) {
   // Contact line
   const contactParts = [
     state.personal.email,
-    state.personal.phone,
+    normaliseUAEPhoneForDisplay(state.personal.phone),
     state.personal.location,
     state.personal.linkedin,
   ].filter(Boolean);
@@ -336,12 +376,23 @@ export async function exportWord(state: CVState) {
   }
 
   const doc = new Document({
-    sections: [{ properties: {}, children }],
+    sections: [
+      {
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838 },
+            margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 },
+          },
+        },
+        children,
+      },
+    ],
   });
 
   const blob = await Packer.toBlob(doc);
+  const suffix = recruiterReady ? "_Recruiter" : "_ATS";
   const filename = state.personal.name
-    ? `${state.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV.docx`
-    : "InspireAmbitions_CV.docx";
+    ? `${state.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV${suffix}.docx`
+    : `InspireAmbitions_CV${suffix}.docx`;
   saveAs(blob, filename);
 }

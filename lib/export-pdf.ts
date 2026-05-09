@@ -2,23 +2,33 @@
 
 import { saveAs } from "file-saver";
 import type { CVState } from "./types";
+import type { ExportOptions } from "./export-options";
+import { isRecruiterReady } from "./export-options";
+import { normaliseUAEPhoneForDisplay } from "./format";
 import {
   formatSectorCredential,
   getSelectedSectorCredentials,
   getUAEHeaderParts,
 } from "./uae";
 
-function filenameFor(state: CVState, extension: string): string {
+function filenameFor(state: CVState, extension: string, suffix = ""): string {
+  const safeSuffix = suffix ? `_${suffix}` : "";
   return state.personal.name
-    ? `${state.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV.${extension}`
-    : `InspireAmbitions_CV.${extension}`;
+    ? `${state.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV${safeSuffix}.${extension}`
+    : `InspireAmbitions_CV${safeSuffix}.${extension}`;
 }
 
 function stripBulletPrefix(value: string): string {
   return value.replace(/^[-•]\s*/, "").trim();
 }
 
-export async function exportPDF(state: CVState) {
+function imageTypeFromDataUrl(value: string): "JPEG" | "PNG" | "WEBP" {
+  if (value.startsWith("data:image/png")) return "PNG";
+  if (value.startsWith("data:image/webp")) return "WEBP";
+  return "JPEG";
+}
+
+export async function exportPDF(state: CVState, options: ExportOptions = {}) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
@@ -31,6 +41,7 @@ export async function exportPDF(state: CVState) {
   const marginX = 18;
   const maxWidth = pageWidth - marginX * 2;
   let y = 18;
+  const recruiterReady = isRecruiterReady(options);
 
   function ensureSpace(needed = 10) {
     if (y + needed <= pageHeight - 18) return;
@@ -94,6 +105,14 @@ export async function exportPDF(state: CVState) {
     y += 4;
   }
 
+  if (recruiterReady && state.photo) {
+    try {
+      pdf.addImage(state.photo, imageTypeFromDataUrl(state.photo), marginX, 16, 24, 24);
+    } catch {
+      // Keep the text export working even if a browser cannot decode the image.
+    }
+  }
+
   writeLines(state.personal.name || "Your Name", {
     size: 20,
     style: "bold",
@@ -110,7 +129,7 @@ export async function exportPDF(state: CVState) {
 
   const contactParts = [
     state.personal.email,
-    state.personal.phone,
+    normaliseUAEPhoneForDisplay(state.personal.phone),
     state.personal.location,
     state.personal.linkedin,
   ].filter(Boolean);
@@ -252,5 +271,5 @@ export async function exportPDF(state: CVState) {
   }
 
   const blob = pdf.output("blob");
-  saveAs(blob, filenameFor(state, "pdf"));
+  saveAs(blob, filenameFor(state, "pdf", recruiterReady ? "Recruiter" : "ATS"));
 }

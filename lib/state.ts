@@ -17,6 +17,7 @@ import React from "react";
 interface CVContextValue {
   state: CVState;
   setState: React.Dispatch<React.SetStateAction<CVState>>;
+  hydrated: boolean;
   updateField: (partial: Partial<CVState>) => void;
   updatePersonal: (partial: Partial<CVState["personal"]>) => void;
   goToStep: (step: number) => void;
@@ -30,14 +31,19 @@ interface CVContextValue {
 const CVContext = createContext<CVContextValue | null>(null);
 
 const STORAGE_KEY = "inspireambitions-cv-state";
-const STORAGE_VERSION = 2;
+const DRAFTS_KEY = "inspireambitions-cv-drafts";
+const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
+const STORAGE_VERSION = 3;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface StoredDraft {
+  id?: string;
   version: number;
   savedAt: string;
   state: CVState;
 }
+
+type DraftStore = Record<string, StoredDraft>;
 
 function normalizeState(value: unknown): CVState | null {
   if (!value || typeof value !== "object") return null;
@@ -60,38 +66,83 @@ function normalizeState(value: unknown): CVState | null {
   };
 }
 
+function getActiveDraftId() {
+  if (typeof window === "undefined") return "default";
+  const existing = localStorage.getItem(ACTIVE_DRAFT_ID_KEY);
+  if (existing) return existing;
+  const nextId =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `draft-${Date.now()}`;
+  localStorage.setItem(ACTIVE_DRAFT_ID_KEY, nextId);
+  return nextId;
+}
+
+function loadDraftStore(): DraftStore {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(DRAFTS_KEY);
+    return raw ? (JSON.parse(raw) as DraftStore) : {};
+  } catch {
+    return {};
+  }
+}
+
 function saveDraft(state: CVState) {
   if (typeof window === "undefined") return null;
   const toSave = { ...state, score: null };
+  const id = getActiveDraftId();
   const draft: StoredDraft = {
+    id,
     version: STORAGE_VERSION,
     savedAt: new Date().toISOString(),
     state: toSave,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  const drafts = loadDraftStore();
+  drafts[id] = draft;
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
   window.dispatchEvent(new Event("cv-saved"));
   return draft.savedAt;
+}
+
+function validateStoredDraft(parsed: unknown): { state: CVState; savedAt: string } | null {
+  if (!parsed || typeof parsed !== "object") return null;
+  const draft = parsed as Partial<StoredDraft>;
+  const savedAt =
+    typeof draft.savedAt === "string" ? draft.savedAt : new Date().toISOString();
+  const savedTime = new Date(savedAt).getTime();
+  if (Number.isFinite(savedTime) && Date.now() - savedTime > DRAFT_TTL_MS) {
+    return null;
+  }
+
+  const draftState = draft.state ? draft.state : parsed;
+  const state = normalizeState(draftState);
+  return state ? { state, savedAt } : null;
 }
 
 function loadSavedState(): { state: CVState; savedAt: string } | null {
   if (typeof window === "undefined") return null;
   try {
+    const draftId = localStorage.getItem(ACTIVE_DRAFT_ID_KEY);
+    const drafts = loadDraftStore();
+    if (draftId && drafts[draftId]) {
+      const stored = validateStoredDraft(drafts[draftId]);
+      if (stored) return stored;
+      delete drafts[draftId];
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      const savedAt =
-        typeof parsed?.savedAt === "string"
-          ? parsed.savedAt
-          : new Date().toISOString();
-      const savedTime = new Date(savedAt).getTime();
-      if (Number.isFinite(savedTime) && Date.now() - savedTime > DRAFT_TTL_MS) {
+      const stored = validateStoredDraft(parsed);
+      if (!stored) {
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
-
-      const draftState = parsed?.state ? parsed.state : parsed;
-      const state = normalizeState(draftState);
-      return state ? { state, savedAt } : null;
+      saveDraft(stored.state);
+      return stored;
     }
   } catch {
     // Ignore parse errors
@@ -223,6 +274,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const resetState = useCallback(() => {
     setState(defaultCVState);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DRAFTS_KEY);
+    localStorage.removeItem(ACTIVE_DRAFT_ID_KEY);
     setRestoredAt(null);
   }, []);
 
@@ -236,6 +289,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       value: {
         state,
         setState,
+        hydrated,
         updateField,
         updatePersonal,
         goToStep,

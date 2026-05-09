@@ -34,6 +34,7 @@ export default function StepPersonal() {
   const [phoneStatus, setPhoneStatus] = useState<FieldStatus>({});
   const [linkedinStatus, setLinkedinStatus] = useState<FieldStatus>({});
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoProcessing, setPhotoProcessing] = useState(false);
 
   const showPhoto = template === "gulf" || template === "cre";
   const selectedCredentialAuthorities = new Set(
@@ -105,14 +106,29 @@ export default function StepPersonal() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateField({ photo: reader.result as string });
-    };
-    reader.onerror = () => {
-      setPhotoError("Failed to read image file");
-    };
-    reader.readAsDataURL(file);
+    setPhotoProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/normalise-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok || typeof data.dataUrl !== "string") {
+        throw new Error(data.error || "Failed to process image");
+      }
+      updateField({ photo: data.dataUrl });
+    } catch (error) {
+      setPhotoError(
+        error instanceof Error
+          ? error.message
+          : "Failed to process image. Try JPG or PNG."
+      );
+    } finally {
+      setPhotoProcessing(false);
+      e.target.value = "";
+    }
   }
 
   return (
@@ -555,12 +571,13 @@ export default function StepPersonal() {
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
-                className="text-sm font-medium text-gold-600 hover:text-gold-700"
+                disabled={photoProcessing}
+                className="text-sm font-medium text-gold-600 hover:text-gold-700 disabled:opacity-60"
               >
-                {state.photo ? "Change photo" : "Upload photo"}
+                {photoProcessing ? "Preparing photo..." : state.photo ? "Change photo" : "Upload photo"}
               </button>
               <p className="mt-1 text-xs text-gray-500">
-                JPEG or PNG, max 5 MB. Will be displayed in a circle.
+                JPG, PNG, WEBP or iPhone HEIC, max 5 MB. We strip EXIF metadata and crop for CV use.
               </p>
               {photoError && (
                 <p className="mt-1 text-sm text-red-600">{photoError}</p>
@@ -569,7 +586,7 @@ export default function StepPersonal() {
             <input
               ref={photoInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               onChange={handlePhotoUpload}
               className="hidden"
             />

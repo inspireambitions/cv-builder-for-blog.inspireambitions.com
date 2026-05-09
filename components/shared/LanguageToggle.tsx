@@ -12,7 +12,7 @@ export default function LanguageToggle() {
         className={`px-2 py-0.5 rounded transition-colors ${
           locale === "en"
             ? "bg-gold-500 text-white font-medium"
-            : "text-gray-500 hover:text-gray-700"
+            : "text-gray-700 hover:text-gray-900"
         }`}
       >
         EN
@@ -22,7 +22,7 @@ export default function LanguageToggle() {
         className={`px-2 py-0.5 rounded transition-colors ${
           locale === "ar"
             ? "bg-gold-500 text-white font-medium"
-            : "text-gray-500 hover:text-gray-700"
+            : "text-gray-700 hover:text-gray-900"
         }`}
       >
         عربي

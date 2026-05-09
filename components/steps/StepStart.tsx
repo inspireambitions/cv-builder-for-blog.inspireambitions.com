@@ -299,7 +299,7 @@ function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): C
 }
 
 export default function StepStart() {
-  const { nextStep, updateField, setState } = useCVState();
+  const { nextStep, updateField, setState, hydrated } = useCVState();
   const [mode, setMode] = useState<Mode>("hero");
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -540,13 +540,15 @@ export default function StepStart() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={handleBuildManually}
-              className="bg-gold-500 hover:bg-gold-600 text-white font-semibold text-lg px-8 py-3.5 rounded-xl shadow-lg shadow-gold-500/20 transition-all hover:shadow-xl hover:shadow-gold-500/30"
+              disabled={!hydrated}
+              className="bg-gold-500 hover:bg-gold-600 text-white font-semibold text-lg px-8 py-3.5 rounded-xl shadow-lg shadow-gold-500/20 transition-all hover:shadow-xl hover:shadow-gold-500/30 disabled:cursor-wait disabled:opacity-60"
             >
               Build My CV &mdash; Free
             </button>
             <button
               onClick={handleUploadMode}
-              className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all"
+              disabled={!hydrated}
+              className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all disabled:cursor-wait disabled:opacity-60"
             >
               Upload &amp; AI Improve
             </button>
@@ -587,12 +589,12 @@ export default function StepStart() {
                 Drag &amp; drop your file here, or click to browse
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                PDF, DOCX, TXT, RTF, JPG, PNG or WEBP &mdash; Max 5 MB
+                PDF, DOCX, TXT, RTF, JPG, PNG, WEBP or iPhone HEIC &mdash; Max 5 MB
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.docx,.txt,.rtf,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/rtf,application/rtf,image/jpeg,image/png,image/webp"
+                accept=".pdf,.docx,.txt,.rtf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/rtf,application/rtf,image/jpeg,image/png,image/webp,image/heic,image/heif"
                 onChange={onFileInput}
                 className="hidden"
               />
