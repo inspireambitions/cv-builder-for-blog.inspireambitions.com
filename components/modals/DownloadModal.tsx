@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
 import { trackToolEvent } from "@/lib/analytics";
+import { validateEmail } from "@/lib/validators";
+import { calculateScore } from "@/lib/score";
+import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -12,13 +15,87 @@ interface DownloadModalProps {
 
 type DownloadFormat = "pdf" | "word" | "jpeg";
 
+const DOWNLOAD_GATE_KEY = "ia-cv-download-email-unlocked";
+
 export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const { state } = useCVState();
   const [downloading, setDownloading] = useState<DownloadFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showMoreFormats, setShowMoreFormats] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState<
+    "idle" | "loading" | "unlocked" | "error"
+  >("idle");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const unlockedEmail = localStorage.getItem(DOWNLOAD_GATE_KEY);
+    if (unlockedEmail) {
+      setEmail(unlockedEmail);
+      setEmailStatus("unlocked");
+    } else {
+      setEmailStatus("idle");
+    }
+    trackToolEvent("email_prompt_seen", { surface: "cv_download_gate" });
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  async function unlockDownloads(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const validation = validateEmail(email);
+    if (!validation.valid) {
+      setError(validation.warning ?? "Please enter a valid email address.");
+      return;
+    }
+
+    setEmailStatus("loading");
+    setError(null);
+    trackToolEvent("email_submitted", { surface: "cv_download_gate" });
+
+    try {
+      const score = calculateScore(state);
+      const emailContent = buildCVEmailHTML(state, score);
+      const userName = state.personal.name || "CV Report";
+      const firstName = userName.split(" ")[0] || "";
+
+      const wpRes = await fetch("/api/email-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          tool: "CV Builder",
+          subject: `Your CV Score: ${score.total}/100 — ${userName}`,
+          content: emailContent,
+          source: "cv-builder-download-gate",
+        }),
+      });
+
+      const subscribeRes = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          firstName,
+          source: "cv-builder-download-gate",
+        }),
+      }).catch(() => null);
+
+      if (!wpRes.ok && !subscribeRes?.ok) {
+        throw new Error("Email capture failed.");
+      }
+
+      localStorage.setItem(DOWNLOAD_GATE_KEY, email.toLowerCase().trim());
+      setEmailStatus("unlocked");
+      trackToolEvent("email_report_sent", { surface: "cv_download_gate" });
+      if (subscribeRes?.ok) {
+        trackToolEvent("sendy_subscribed", { surface: "cv_download_gate" });
+      }
+    } catch {
+      setEmailStatus("error");
+      setError("We could not unlock downloads. Please check your email and try again.");
+    }
+  }
 
   async function runDownload(format: DownloadFormat) {
     setDownloading(format);
@@ -64,15 +141,15 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         </button>
 
         <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
-          Free. No signup. No watermark.
+          Free. Email gated. No card.
         </span>
 
         <h2 className="mt-4 text-2xl font-bold text-gray-900">
           Download Your CV
         </h2>
         <p className="mt-2 text-sm leading-6 text-gray-500">
-          Choose PDF for ATS systems or Word when you want an editable file.
-          Both are free and available immediately.
+          Enter your email once to receive your CV score report and unlock PDF,
+          Word, and preview image downloads.
         </p>
 
         {error && (
@@ -81,6 +158,38 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           </div>
         )}
 
+        {emailStatus !== "unlocked" ? (
+          <form onSubmit={unlockDownloads} className="mt-6 space-y-4">
+            <label className="block">
+              <span className="text-sm font-semibold text-gray-700">
+                Email address
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+                className="mt-2 min-h-12 w-full rounded-xl border border-gray-300 px-4 text-base text-gray-900 outline-none transition-colors focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20"
+                autoComplete="email"
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={emailStatus === "loading"}
+              className="min-h-12 w-full rounded-xl bg-gold-500 px-4 text-base font-semibold text-white transition-colors hover:bg-gold-600 disabled:opacity-60"
+            >
+              {emailStatus === "loading"
+                ? "Unlocking downloads..."
+                : "Email My Report & Unlock Downloads"}
+            </button>
+            <p className="text-xs leading-5 text-gray-500">
+              Free download, no card, no watermark. We will email your report
+              and may send practical career guidance from Inspire Ambitions.
+              Unsubscribe anytime.
+            </p>
+          </form>
+        ) : (
         <div className="mt-6 space-y-3">
           <button
             onClick={() => runDownload("pdf")}
@@ -97,7 +206,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
-                {downloading === "pdf" ? "Exporting..." : "Free"}
+                {downloading === "pdf" ? "Exporting..." : "Unlocked"}
               </span>
             </div>
           </button>
@@ -117,7 +226,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
-                {downloading === "word" ? "Exporting..." : "Free"}
+                {downloading === "word" ? "Exporting..." : "Unlocked"}
               </span>
             </div>
           </button>
@@ -152,9 +261,10 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             </button>
           )}
         </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-gray-400">
-          Your CV stays in your browser. No card, no forced signup, no watermark.
+          Your CV stays in your browser. Downloads stay free after email unlock.
         </p>
       </div>
     </div>

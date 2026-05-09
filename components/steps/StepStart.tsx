@@ -90,7 +90,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Free PDF & Word Export",
-    desc: "Download ATS-safe PDF and editable Word files. No signup. No watermark. No credit card.",
+    desc: "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
   },
   {
     icon: (
@@ -532,7 +532,7 @@ export default function StepStart() {
 
         {/* Subheadline */}
         <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          The world&apos;s most HR-credible CV builder. Free ATS-safe PDF and Word export. No watermark. No credit card.
+          The world&apos;s most HR-credible CV builder. Free ATS-safe PDF and Word export by email. No watermark. No credit card.
         </p>
 
         {/* CTAs */}
@@ -587,12 +587,12 @@ export default function StepStart() {
                 Drag &amp; drop your file here, or click to browse
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                PDF, DOCX, or TXT &mdash; Max 5 MB
+                PDF, DOCX, TXT, RTF, JPG, PNG or WEBP &mdash; Max 5 MB
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                accept=".pdf,.docx,.txt,.rtf,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/rtf,application/rtf,image/jpeg,image/png,image/webp"
                 onChange={onFileInput}
                 className="hidden"
               />

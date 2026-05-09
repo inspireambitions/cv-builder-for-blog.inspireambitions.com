@@ -4,6 +4,8 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { useCVState } from "@/lib/state";
 import { STEPS } from "@/lib/constants";
 import { useLocale } from "@/lib/locale";
+import { createResumeLink } from "@/lib/resume-link";
+import { trackToolEvent } from "@/lib/analytics";
 import LanguageToggle from "./shared/LanguageToggle";
 
 import StepStart from "./steps/StepStart";
@@ -75,6 +77,9 @@ export default function CVBuilder() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
   const [showPreview, setShowPreview] = useState(false);
+  const [resumeLinkStatus, setResumeLinkStatus] = useState<
+    "idle" | "copying" | "copied" | "error"
+  >("idle");
 
   // Sync html dir/lang on mount & locale change
   useEffect(() => {
@@ -101,6 +106,21 @@ export default function CVBuilder() {
   const CurrentStep = STEP_COMPONENTS[state.step] || StepStart;
   const isLastStep = state.step === 8;
 
+  const handleCopyResumeLink = useCallback(async () => {
+    setResumeLinkStatus("copying");
+    try {
+      const link = await createResumeLink(state);
+      await navigator.clipboard.writeText(link);
+      setResumeLinkStatus("copied");
+      trackToolEvent("cv_resume_link_copied", { surface: "cv_builder_header" });
+      window.setTimeout(() => setResumeLinkStatus("idle"), 2500);
+    } catch {
+      setResumeLinkStatus("error");
+      trackToolEvent("cv_resume_link_failed", { surface: "cv_builder_header" });
+      window.setTimeout(() => setResumeLinkStatus("idle"), 3500);
+    }
+  }, [state]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -125,6 +145,23 @@ export default function CVBuilder() {
             <span className="text-xs text-gray-400 hidden md:inline">
               {t("header.tagline")}
             </span>
+            {state.step > 0 && (
+              <button
+                type="button"
+                onClick={handleCopyResumeLink}
+                disabled={resumeLinkStatus === "copying"}
+                className="hidden min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-60 sm:inline-flex"
+                aria-label="Copy private resume link"
+              >
+                {resumeLinkStatus === "copying"
+                  ? "Saving..."
+                  : resumeLinkStatus === "copied"
+                  ? "Link copied"
+                  : resumeLinkStatus === "error"
+                  ? "Try again"
+                  : "Resume link"}
+              </button>
+            )}
             <LanguageToggle />
           </div>
         </div>
@@ -137,6 +174,9 @@ export default function CVBuilder() {
             <p>
               We restored your CV from{" "}
               {new Date(restoredAt).toLocaleString()}.
+            </p>
+            <p className="text-xs text-emerald-800 sm:ml-auto">
+              Autosave is active. Use Resume link to continue on another device.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -210,6 +250,35 @@ export default function CVBuilder() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
               <CurrentStep />
             </div>
+
+            {state.step > 0 && (
+              <div className="mb-6 rounded-xl border border-emerald-100 bg-emerald-50 p-4 sm:hidden">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-950">
+                      Continue on another device
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-emerald-800">
+                      Copy a private encrypted resume link. No account needed.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyResumeLink}
+                    disabled={resumeLinkStatus === "copying"}
+                    className="min-h-11 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
+                  >
+                    {resumeLinkStatus === "copying"
+                      ? "Saving..."
+                      : resumeLinkStatus === "copied"
+                      ? "Link copied"
+                      : resumeLinkStatus === "error"
+                      ? "Try again"
+                      : "Copy Resume Link"}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Navigation Buttons */}
             {state.step > 0 && (

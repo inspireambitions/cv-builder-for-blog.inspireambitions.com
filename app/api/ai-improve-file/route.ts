@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { PDFParse } from "pdf-parse";
 import { getPath as getPdfWorkerPath } from "pdf-parse/worker";
-import { analyseCvText } from "@/lib/ai-improve";
+import { analyseCvImage, analyseCvText } from "@/lib/ai-improve";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -30,8 +30,31 @@ function isPdf(file: File, extension: string) {
   return file.type === "application/pdf" || extension === "pdf";
 }
 
+function isRtf(file: File, extension: string) {
+  return file.type === "text/rtf" || file.type === "application/rtf" || extension === "rtf";
+}
+
+function isImage(file: File, extension: string) {
+  return (
+    file.type === "image/jpeg" ||
+    file.type === "image/png" ||
+    file.type === "image/webp" ||
+    ["jpg", "jpeg", "png", "webp"].includes(extension)
+  );
+}
+
 function normaliseExtractedText(text: string) {
   return text.replace(/\u0000/g, " ").replace(/[ \t]+/g, " ").trim();
+}
+
+function stripRtf(text: string) {
+  return normaliseExtractedText(
+    text
+      .replace(/\\'[0-9a-fA-F]{2}/g, " ")
+      .replace(/\\[a-zA-Z]+-?\d* ?/g, " ")
+      .replace(/[{}]/g, " ")
+      .replace(/\s+/g, " ")
+  );
 }
 
 async function extractPdfText(file: File) {
@@ -68,11 +91,15 @@ async function extractTextFromFile(file: File) {
     return extractDocxText(file);
   }
 
-  if (extension === "doc" || file.type === "application/msword") {
-    throw new Error("Legacy .doc files are not supported. Please upload a PDF, DOCX, or TXT file.");
+  if (isRtf(file, extension)) {
+    return stripRtf(await file.text());
   }
 
-  throw new Error("Please upload a PDF, DOCX, or TXT file.");
+  if (extension === "doc" || file.type === "application/msword") {
+    throw new Error("Legacy .doc files are not supported. Please save the file as PDF or DOCX, then upload again.");
+  }
+
+  throw new Error("Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file.");
 }
 
 export async function POST(req: NextRequest) {
@@ -82,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     if (!(file instanceof File)) {
       return NextResponse.json(
-        { error: "Missing CV file. Please upload a PDF, DOCX, or TXT file." },
+        { error: "Missing CV file. Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file." },
         { status: 400 }
       );
     }
@@ -94,13 +121,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const extension = getExtension(file.name);
+    if (isImage(file, extension)) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      return NextResponse.json(
+        await analyseCvImage(buffer.toString("base64"), file.type || "image/jpeg")
+      );
+    }
+
     const text = await extractTextFromFile(file);
 
     if (text.length < MIN_EXTRACTED_CHARS) {
       return NextResponse.json(
         {
           error:
-            "We could not extract enough readable text from this CV. Please upload a text-based PDF, DOCX, or TXT file.",
+            "We could not extract enough readable text from this CV. Please upload a text-based PDF, DOCX, TXT, or RTF file, or a clearer JPG/PNG screenshot.",
         },
         { status: 422 }
       );
@@ -115,7 +150,7 @@ export async function POST(req: NextRequest) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to analyse this CV file. Please try a PDF, DOCX, or TXT file.",
+            : "Failed to analyse this CV file. Please try a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file.",
       },
       { status: 500 }
     );

@@ -52,14 +52,19 @@ export function validateFileUpload(file: File): { valid: boolean; error?: string
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
+    "text/rtf",
+    "application/rtf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
   ];
-  const validExtensions = [".pdf", ".docx", ".txt"];
+  const validExtensions = [".pdf", ".docx", ".txt", ".rtf", ".jpg", ".jpeg", ".png", ".webp"];
   const lowerName = file.name.toLowerCase();
   if (
     !validTypes.includes(file.type) &&
     !validExtensions.some((extension) => lowerName.endsWith(extension))
   ) {
-    return { valid: false, error: "Please upload a PDF, DOCX, or text file" };
+    return { valid: false, error: "Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, or WEBP file" };
   }
   return { valid: true };
 }

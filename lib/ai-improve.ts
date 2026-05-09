@@ -38,3 +38,38 @@ export async function analyseCvText(text: string) {
 
   return JSON.parse(extractJSON(content.text));
 }
+
+export async function analyseCvImage(base64Data: string, mediaType: string) {
+  const supportedMediaType = mediaType === "image/webp" ? "image/webp" : mediaType === "image/png" ? "image/png" : "image/jpeg";
+  const message = await getAnthropicClient().messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 1500,
+    system: AI_IMPROVE_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: supportedMediaType,
+              data: base64Data,
+            },
+          },
+          {
+            type: "text",
+            text: "Read this CV image or screenshot and extract the same structured CV data and feedback as requested. If text is unclear, return the readable parts and specific feedback about missing information.",
+          },
+        ],
+      },
+    ],
+  });
+
+  const content = message.content[0];
+  if (content.type !== "text") {
+    throw new Error("Unexpected response format from AI");
+  }
+
+  return JSON.parse(extractJSON(content.text));
+}

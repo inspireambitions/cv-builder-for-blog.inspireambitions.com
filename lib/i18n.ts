@@ -10,7 +10,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "hero.badge": "Built by an HR Specialist",
     "hero.headline": "Build a CV That Gets You Hired",
     "hero.subheadline":
-      "The world's most HR-credible CV builder. Free ATS-safe PDF and Word export. No watermark. No credit card.",
+      "The world's most HR-credible CV builder. Free ATS-safe PDF and Word export by email. No watermark. No credit card.",
     "hero.buildCta": "Build My CV — Free",
     "hero.uploadCta": "Upload & AI Improve",
     "hero.trust1": "Free forever",
@@ -26,7 +26,7 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Every tip, prompt, and scoring criterion written by a practising HR Specialist who screens CVs daily.",
     "feature.freeExport": "Free PDF & Word Export",
     "feature.freeExportDesc":
-      "Download ATS-safe PDF and editable Word files. No signup. No watermark. No credit card.",
+      "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
     "feature.gulfReady": "Gulf/MENA Ready",
     "feature.gulfReadyDesc":
       "The only CV builder with a dedicated GCC template. Photo support, Arabic-friendly layouts.",

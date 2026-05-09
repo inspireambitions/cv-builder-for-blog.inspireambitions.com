@@ -145,7 +145,7 @@ export default function StepScore() {
         <p className="mt-1 text-sm text-gray-600">
           {isGulf
             ? "See how your CV performs against Gulf ATS systems and recruiter expectations"
-            : "See how your CV stacks up before exporting your free PDF or Word file"}
+            : "See how your CV stacks up before exporting your free PDF or Word file after email unlock"}
         </p>
       </div>
 
@@ -256,14 +256,15 @@ export default function StepScore() {
             Download Your CV
           </h3>
           <p className="text-sm text-gray-600">
-            Export your polished CV as a selectable-text PDF or editable Word document. No signup, no card, no watermark.
+            Export your polished CV as a selectable-text PDF or editable Word
+            document after email unlock. No card, no watermark.
           </p>
           <button
             type="button"
             onClick={() => setShowDownloadModal(true)}
             className="bg-gold-500 hover:bg-gold-600 text-white font-medium px-8 py-3 rounded-lg transition-colors text-base"
           >
-            Download CV
+            Email &amp; Download CV
           </button>
         </div>
       </div>

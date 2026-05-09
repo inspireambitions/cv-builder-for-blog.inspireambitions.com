@@ -11,6 +11,7 @@ import {
 import type { ReactNode } from "react";
 import type { CVState } from "./types";
 import { defaultCVState } from "./types";
+import { readResumeLinkFromHash, removeResumeHash } from "./resume-link";
 import React from "react";
 
 interface CVContextValue {
@@ -59,6 +60,19 @@ function normalizeState(value: unknown): CVState | null {
   };
 }
 
+function saveDraft(state: CVState) {
+  if (typeof window === "undefined") return null;
+  const toSave = { ...state, score: null };
+  const draft: StoredDraft = {
+    version: STORAGE_VERSION,
+    savedAt: new Date().toISOString(),
+    state: toSave,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  window.dispatchEvent(new Event("cv-saved"));
+  return draft.savedAt;
+}
+
 function loadSavedState(): { state: CVState; savedAt: string } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -90,31 +104,55 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [restoredAt, setRestoredAt] = useState<string | null>(null);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestState = useRef<CVState>(defaultCVState);
 
-  // Hydrate from localStorage on mount
+  // Hydrate from an encrypted resume link first, then localStorage.
   useEffect(() => {
-    const draft = loadSavedState();
-    if (draft) {
-      setState(draft.state);
-      setRestoredAt(draft.savedAt);
+    let mounted = true;
+
+    async function hydrateDraft() {
+      try {
+        const linkedDraft = await readResumeLinkFromHash();
+        if (linkedDraft && mounted) {
+          const linkedState = normalizeState(linkedDraft.state);
+          if (linkedState) {
+            setState(linkedState);
+            latestState.current = linkedState;
+            const savedAt = saveDraft(linkedState) ?? linkedDraft.savedAt;
+            setRestoredAt(savedAt);
+            removeResumeHash();
+            setHydrated(true);
+            return;
+          }
+        }
+      } catch {
+        // Fall back to the local draft if the shared link is damaged.
+      }
+
+      if (!mounted) return;
+      const draft = loadSavedState();
+      if (draft) {
+        setState(draft.state);
+        latestState.current = draft.state;
+        setRestoredAt(draft.savedAt);
+      }
+      setHydrated(true);
     }
-    setHydrated(true);
+
+    hydrateDraft();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Save to localStorage on every state change (debounced 300ms)
+  // Save to localStorage on every state change (debounced 300ms, flushed on exit).
   useEffect(() => {
+    latestState.current = state;
     if (!hydrated) return;
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       try {
-        const toSave = { ...state, score: null }; // Don't persist computed score
-        const draft: StoredDraft = {
-          version: STORAGE_VERSION,
-          savedAt: new Date().toISOString(),
-          state: toSave,
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-        window.dispatchEvent(new Event("cv-saved"));
+        saveDraft(latestState.current);
       } catch {
         // Storage full or unavailable
       }
@@ -123,6 +161,32 @@ export function CVProvider({ children }: { children: ReactNode }) {
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
     };
   }, [state, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const flushDraft = () => {
+      try {
+        saveDraft(latestState.current);
+      } catch {
+        // Storage full or unavailable
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushDraft();
+    };
+
+    window.addEventListener("pagehide", flushDraft);
+    window.addEventListener("beforeunload", flushDraft);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pagehide", flushDraft);
+      window.removeEventListener("beforeunload", flushDraft);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [hydrated]);
 
   const updateField = useCallback((partial: Partial<CVState>) => {
     setState((prev) => ({ ...prev, ...partial }));

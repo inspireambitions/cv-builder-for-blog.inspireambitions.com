@@ -17,8 +17,21 @@
 }
 
 @layer base {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
   }
 }
 

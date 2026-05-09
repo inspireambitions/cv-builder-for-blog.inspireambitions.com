@@ -2,9 +2,37 @@ import { expect, test } from "@playwright/test";
 import { mkdir, readFile, stat } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 
-test("P0 CV builder path restores drafts and downloads PDF/DOCX without email gate", async ({
+test("P0 CV builder path restores drafts, gates downloads by email, and exports PDF/DOCX", async ({
+  context,
   page,
 }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        value: "",
+        async writeText(text: string) {
+          this.value = text;
+          (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink = text;
+        },
+      },
+      configurable: true,
+    });
+  });
+  await page.route("**/api/email-results", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: { subscribed: true } }),
+    });
+  });
+  await page.route("**/api/subscribe", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true }),
+    });
+  });
+
   await page.goto("http://localhost:3015");
   await page.getByRole("button", { name: /Build My CV/ }).click();
   await page.getByRole("button", { name: /Next Step/ }).click();
@@ -44,17 +72,34 @@ test("P0 CV builder path restores drafts and downloads PDF/DOCX without email ga
   );
   await page.getByRole("button", { name: "Continue" }).click();
 
+  await page.getByRole("button", { name: "Copy private resume link" }).click();
+  await expect(page.getByRole("button", { name: "Copy private resume link" })).toContainText("Link copied");
+  const resumeLink = await page.evaluate(
+    () => (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink
+  );
+  expect(resumeLink).toContain("#resume=");
+
+  const restorePage = await context.newPage();
+  await restorePage.goto(resumeLink ?? "");
+  await expect(restorePage.getByText("We restored your CV from")).toBeVisible();
+  await expect(restorePage.getByPlaceholder("e.g. Sarah Al-Mansoori")).toHaveValue(
+    "Mariam Hassan"
+  );
+  await restorePage.close();
+
   for (let index = 0; index < 6; index += 1) {
     await page.getByRole("button", { name: /Next Step/ }).click();
   }
 
   await expect(
-    page.getByText("No signup, no card, no watermark")
+    page.getByText("after email unlock. No card, no watermark")
   ).toBeVisible();
-  await page.getByRole("button", { name: "Download CV" }).click();
+  await page.getByRole("button", { name: "Email & Download CV" }).click();
+  await expect(page.getByRole("button", { name: "Email My Report & Unlock Downloads" })).toBeVisible();
+  await page.getByLabel("Email address").fill("mariam.hassan@example.com");
+  await page.getByRole("button", { name: "Email My Report & Unlock Downloads" }).click();
   await expect(page.getByRole("button", { name: "Download PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Word (.docx)" })).toBeVisible();
-  await expect(page.getByText("Email My Report")).toHaveCount(0);
 
   const pdfDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PDF" }).click();
@@ -76,4 +121,28 @@ test("P0 CV builder path restores drafts and downloads PDF/DOCX without email ga
   const wordPath = "test-results/cv-builder-p0/mariam-hassan.docx";
   await wordDownload.saveAs(wordPath);
   expect((await stat(wordPath)).size).toBeGreaterThan(1000);
+});
+
+test("CV builder fits a mobile viewport and preview opens without horizontal page overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("http://localhost:3015");
+  await page.getByRole("button", { name: /Build My CV/ }).click();
+  await page.getByRole("button", { name: /Next Step/ }).click();
+  await page.getByPlaceholder("e.g. Sarah Al-Mansoori").fill("Mariam Hassan");
+
+  await expect
+    .poll(async () =>
+      page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
+    )
+    .toBe(true);
+
+  await page.getByRole("button", { name: "Preview" }).click();
+  await expect(page.locator("[data-preview-container]").last()).toBeVisible();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
+    )
+    .toBe(true);
 });
