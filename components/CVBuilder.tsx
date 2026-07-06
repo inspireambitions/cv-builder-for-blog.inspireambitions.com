@@ -430,8 +430,8 @@ export default function CVBuilder() {
               <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Career Tools</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="https://inspireambitions.com/dubai-cv-builder/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    Dubai CV Builder
+                  <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
+                    More free career tools
                   </a>
                 </li>
                 <li>
