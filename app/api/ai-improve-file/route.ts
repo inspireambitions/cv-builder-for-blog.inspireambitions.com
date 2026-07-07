@@ -4,6 +4,7 @@ import { PDFParse } from "pdf-parse";
 import { getPath as getPdfWorkerPath } from "pdf-parse/worker";
 import sharp from "sharp";
 import { analyseCvImage, analyseCvText } from "@/lib/ai-improve";
+import { getPublicAnthropicErrorMessage } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -175,10 +176,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to analyse this CV file. Please try a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file.",
+        error: getPublicAnthropicErrorMessage(error),
       },
       { status: 500 }
     );
