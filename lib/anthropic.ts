@@ -1,8 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  type Message,
+  type MessageCreateParamsNonStreaming,
+} from "@anthropic-ai/sdk/resources/messages";
 
-const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-6";
+const FALLBACK_ANTHROPIC_MODEL = "claude-sonnet-5";
+const DEFAULT_ANTHROPIC_MODEL = FALLBACK_ANTHROPIC_MODEL;
 const RETIRED_MODEL_REPLACEMENTS: Record<string, string> = {
-  "claude-sonnet-4-20250514": "claude-sonnet-4-6",
+  "claude-sonnet-4-20250514": FALLBACK_ANTHROPIC_MODEL,
 };
 
 const configuredModel = process.env.ANTHROPIC_MODEL || DEFAULT_ANTHROPIC_MODEL;
@@ -18,18 +23,24 @@ type AnthropicLikeError = Error & {
   };
 };
 
-export function getPublicAnthropicErrorMessage(error: unknown) {
+function isModelNotFoundError(error: unknown) {
   const maybeError = error as Partial<AnthropicLikeError>;
   const message = error instanceof Error ? error.message : "";
   const providerType = maybeError.error?.type ?? "";
   const providerMessage = maybeError.error?.message ?? "";
   const combined = `${providerType} ${providerMessage} ${message}`.toLowerCase();
 
-  if (
+  return (
     maybeError.status === 404 ||
     combined.includes("not_found_error") ||
     combined.includes("model:")
-  ) {
+  );
+}
+
+export function getPublicAnthropicErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (isModelNotFoundError(error)) {
     return "AI analysis is temporarily unavailable. You can still build your CV manually with the guided steps.";
   }
 
@@ -48,4 +59,30 @@ export function getAnthropicClient() {
   }
 
   return new Anthropic({ apiKey });
+}
+
+export async function createAnthropicMessage(
+  params: MessageCreateParamsNonStreaming
+): Promise<Message> {
+  const client = getAnthropicClient();
+  const primaryModel = RETIRED_MODEL_REPLACEMENTS[params.model] || params.model;
+
+  try {
+    return await client.messages.create({
+      ...params,
+      model: primaryModel,
+    });
+  } catch (error) {
+    if (
+      isModelNotFoundError(error) &&
+      primaryModel !== FALLBACK_ANTHROPIC_MODEL
+    ) {
+      return client.messages.create({
+        ...params,
+        model: FALLBACK_ANTHROPIC_MODEL,
+      });
+    }
+
+    throw error;
+  }
 }

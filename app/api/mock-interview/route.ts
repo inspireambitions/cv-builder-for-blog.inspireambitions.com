@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
+import { ANTHROPIC_MODEL, createAnthropicMessage } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       messages.push({ role: "user", content: startContent });
     }
 
-    const response = await getAnthropicClient().messages.create({
+    const response = await createAnthropicMessage({
       model: ANTHROPIC_MODEL,
       max_tokens: 1500,
       system: SYSTEM_PROMPT,

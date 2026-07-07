@@ -1,4 +1,4 @@
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/lib/anthropic";
+import { ANTHROPIC_MODEL, createAnthropicMessage } from "@/lib/anthropic";
 
 export const AI_IMPROVE_SYSTEM_PROMPT =
   'You are an expert HR Specialist and CV coach. Analyse the CV provided and return a JSON object with two keys: "extracted" (an object with fields: name, title, email, phone, location, linkedin, summary, experience array [{role, company, companyDesc, location, dates, description}], education array [{degree, institution, year, grade}], skills array of strings, languages array [{language, level}]) and "feedback" (an array of 3-5 specific improvement suggestions, each as a string starting with the section name in bold). Safety rules: extract only facts visible in the uploaded CV or image; never invent licence numbers, DHA/DOH/MOH/RERA credentials, employers, dates, job titles, education, salary, nationality, visa status, or legal status; if a field is unclear or missing, leave it empty and mention the gap in feedback; do not imply a professional licence exists unless it is explicitly shown. Return only valid JSON, no preamble, no markdown fences.';
@@ -24,7 +24,7 @@ export function extractJSON(text: string): string {
 }
 
 export async function analyseCvText(text: string) {
-  const message = await getAnthropicClient().messages.create({
+  const message = await createAnthropicMessage({
     model: ANTHROPIC_MODEL,
     max_tokens: 1500,
     system: AI_IMPROVE_SYSTEM_PROMPT,
@@ -41,7 +41,7 @@ export async function analyseCvText(text: string) {
 
 export async function analyseCvImage(base64Data: string, mediaType: string) {
   const supportedMediaType = mediaType === "image/webp" ? "image/webp" : mediaType === "image/png" ? "image/png" : "image/jpeg";
-  const message = await getAnthropicClient().messages.create({
+  const message = await createAnthropicMessage({
     model: ANTHROPIC_MODEL,
     max_tokens: 1500,
     system: AI_IMPROVE_SYSTEM_PROMPT,
