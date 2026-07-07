@@ -1,4 +1,8 @@
-import { ANTHROPIC_MODEL, createAnthropicMessage } from "@/lib/anthropic";
+import {
+  ANTHROPIC_MODEL,
+  createAnthropicMessage,
+  getAnthropicTextContent,
+} from "@/lib/anthropic";
 
 export const AI_IMPROVE_SYSTEM_PROMPT =
   'You are an expert HR Specialist and CV coach. Analyse the CV provided and return a JSON object with two keys: "extracted" (an object with fields: name, title, email, phone, location, linkedin, summary, experience array [{role, company, companyDesc, location, dates, description}], education array [{degree, institution, year, grade}], skills array of strings, languages array [{language, level}]) and "feedback" (an array of 3-5 specific improvement suggestions, each as a string starting with the section name in bold). Safety rules: extract only facts visible in the uploaded CV or image; never invent licence numbers, DHA/DOH/MOH/RERA credentials, employers, dates, job titles, education, salary, nationality, visa status, or legal status; if a field is unclear or missing, leave it empty and mention the gap in feedback; do not imply a professional licence exists unless it is explicitly shown. Return only valid JSON, no preamble, no markdown fences.';
@@ -31,12 +35,7 @@ export async function analyseCvText(text: string) {
     messages: [{ role: "user", content: text }],
   });
 
-  const content = message.content[0];
-  if (content.type !== "text") {
-    throw new Error("Unexpected response format from AI");
-  }
-
-  return JSON.parse(extractJSON(content.text));
+  return JSON.parse(extractJSON(getAnthropicTextContent(message)));
 }
 
 export async function analyseCvImage(base64Data: string, mediaType: string) {
@@ -66,10 +65,5 @@ export async function analyseCvImage(base64Data: string, mediaType: string) {
     ],
   });
 
-  const content = message.content[0];
-  if (content.type !== "text") {
-    throw new Error("Unexpected response format from AI");
-  }
-
-  return JSON.parse(extractJSON(content.text));
+  return JSON.parse(extractJSON(getAnthropicTextContent(message)));
 }

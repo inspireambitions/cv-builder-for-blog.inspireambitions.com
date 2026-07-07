@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ANTHROPIC_MODEL, createAnthropicMessage } from "@/lib/anthropic";
+import {
+  ANTHROPIC_MODEL,
+  createAnthropicMessage,
+  getAnthropicTextContent,
+} from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 
@@ -30,15 +34,7 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: userContent }],
     });
 
-    const content = message.content[0];
-    if (content.type !== "text") {
-      return NextResponse.json(
-        { error: "Unexpected response format from AI" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ coverLetter: content.text });
+    return NextResponse.json({ coverLetter: getAnthropicTextContent(message) });
   } catch (error) {
     console.error("Cover Letter error:", error);
     return NextResponse.json(

@@ -86,3 +86,13 @@ export async function createAnthropicMessage(
     throw error;
   }
 }
+
+export function getAnthropicTextContent(message: Message) {
+  const textBlock = message.content.find((block) => block.type === "text");
+
+  if (!textBlock) {
+    throw new Error("Unexpected response format from AI");
+  }
+
+  return textBlock.text;
+}

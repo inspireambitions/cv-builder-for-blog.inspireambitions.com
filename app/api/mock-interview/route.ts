@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ANTHROPIC_MODEL, createAnthropicMessage } from "@/lib/anthropic";
+import {
+  ANTHROPIC_MODEL,
+  createAnthropicMessage,
+  getAnthropicTextContent,
+} from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 
@@ -39,15 +43,7 @@ export async function POST(req: NextRequest) {
       messages,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
-      return NextResponse.json(
-        { error: "Unexpected response format from AI" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ reply: content.text });
+    return NextResponse.json({ reply: getAnthropicTextContent(response) });
   } catch (error) {
     console.error("Mock Interview error:", error);
     return NextResponse.json(
