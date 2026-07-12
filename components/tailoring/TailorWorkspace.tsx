@@ -60,7 +60,7 @@ export default function TailorWorkspace() {
   }
 
   function applyTailoredVersion() {
-    if (!result?.integrity.passed) return;
+    if (!result?.integrity.passed || !result.review.approved) return;
     const final = result.review.final;
     const byExperience = new Map(final.experience.map((entry) => [entry.experienceId, entry]));
     setState((current) => ({
@@ -187,6 +187,12 @@ export default function TailorWorkspace() {
             : "Evidence check failed. This version cannot be applied."}
         </div>
 
+        {!result.review.approved && (
+          <div className="border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950" role="alert">
+            The senior reviewer did not approve this version. It cannot be applied or used for an application pack. Review the notes, add stronger evidence to your CV, then run the review again.
+          </div>
+        )}
+
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wide text-gray-500">Tailored summary</h4>
           <p className="mt-3 border-l-4 border-gold-500 pl-4 text-base leading-7 text-gray-800">{final.summary.text}</p>
@@ -229,24 +235,27 @@ export default function TailorWorkspace() {
           </div>
         )}
 
-        <ApplicationPack
-          result={result}
-          jobTitle={jobTitle}
-          company={company}
-          jobDescription={jobDescription}
-        />
-
-        <OutcomeFeedback />
+        {result.review.approved && (
+          <>
+            <ApplicationPack
+              result={result}
+              jobTitle={jobTitle}
+              company={company}
+              jobDescription={jobDescription}
+            />
+            <OutcomeFeedback />
+          </>
+        )}
 
         <div className="flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row sm:justify-between">
           <button type="button" onClick={() => setView("input")} className="min-h-12 border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Change Vacancy</button>
           <button
             type="button"
             onClick={applyTailoredVersion}
-            disabled={!result.integrity.passed || applied}
+            disabled={!result.integrity.passed || !result.review.approved || applied}
             className="min-h-12 bg-gold-500 px-6 text-sm font-semibold text-white hover:bg-gold-600 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
-            {applied ? "Tailored Version Applied" : "Apply to My CV"}
+            {applied ? "Tailored Version Applied" : result.review.approved ? "Apply to My CV" : "Review Not Approved"}
           </button>
         </div>
       </div>

@@ -89,6 +89,29 @@ test("provider load failure preserves trust in plain language", async ({ page })
   await expect(page.getByText("The review service is busy. Your CV is safe and unchanged. Please wait one minute, then try again.", { exact: true })).toBeVisible();
 });
 
+test("reviewer rejection cannot be applied or turned into an application pack", async ({ page }) => {
+  const rejectedResult: TailoringResult = {
+    draftProvider: "grok-4.5",
+    reviewProvider: "claude-sonnet-5",
+    evidence: buildEvidenceLedger(sampleCVState),
+    review: { approved: false, confidence: 61, corrections: [], warnings: ["Add stronger evidence."], final: validDraft() },
+    integrity: { passed: true, findings: [] },
+    generatedAt: new Date().toISOString(),
+  };
+  await page.addInitScript((cvState) => {
+    localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 3, savedAt: new Date().toISOString(), state: { ...cvState, step: 8 } }));
+  }, sampleCVState);
+  await page.route("**/api/tailor", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rejectedResult) });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Tailor to a Job" }).click();
+  await page.getByPlaceholder(/Paste the vacancy/).fill("We need a senior hotel operations manager to lead guest services, manage budgets, coach teams, improve service standards and coordinate departments across a busy UAE luxury hotel operation.");
+  await page.getByRole("button", { name: "Run Premium Review" }).click();
+  await expect(page.getByRole("button", { name: "Review Not Approved" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Build Application Pack" })).toHaveCount(0);
+});
+
 test("premium tailoring workspace is usable on mobile and applies a verified result", async ({ page }) => {
   const result: TailoringResult = {
     draftProvider: "grok-4.5",
