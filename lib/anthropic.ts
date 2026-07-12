@@ -96,3 +96,15 @@ export function getAnthropicTextContent(message: Message) {
 
   return textBlock.text;
 }
+
+export function getAnthropicToolInput<T>(message: Message, toolName: string): T {
+  const toolBlock = message.content.find(
+    (block) => block.type === "tool_use" && block.name === toolName
+  );
+
+  if (!toolBlock || toolBlock.type !== "tool_use") {
+    throw new Error("Unexpected structured response from AI");
+  }
+
+  return toolBlock.input as T;
+}

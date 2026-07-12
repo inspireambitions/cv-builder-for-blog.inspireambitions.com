@@ -1,9 +1,8 @@
 import {
   ANTHROPIC_MODEL,
   createAnthropicMessage,
-  getAnthropicTextContent,
+  getAnthropicToolInput,
 } from "@/lib/anthropic";
-import { extractJSON } from "@/lib/ai-improve";
 import { buildEvidenceLedger, validateTailoringDraft } from "@/lib/evidence";
 import type {
   EvidenceItem,
@@ -13,6 +12,7 @@ import type {
   TailoringReview,
 } from "@/lib/tailoring-types";
 import { createXaiStructuredCompletion } from "@/lib/xai";
+import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 
 const bulletSchema = {
   type: "object",
@@ -86,6 +86,32 @@ export const TAILORING_DRAFT_SCHEMA = {
     "gaps",
     "trimmingNotes",
   ],
+  additionalProperties: false,
+} satisfies Record<string, unknown>;
+
+const TAILORING_REVIEW_SCHEMA = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    confidence: { type: "number", minimum: 0, maximum: 100 },
+    corrections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          target: { type: "string" },
+          replacement: { type: "string" },
+          evidenceIds: { type: "array", items: { type: "string" } },
+          reason: { type: "string" },
+        },
+        required: ["target", "replacement", "evidenceIds", "reason"],
+        additionalProperties: false,
+      },
+    },
+    warnings: { type: "array", items: { type: "string" } },
+    final: TAILORING_DRAFT_SCHEMA,
+  },
+  required: ["approved", "confidence", "corrections", "warnings", "final"],
   additionalProperties: false,
 } satisfies Record<string, unknown>;
 
@@ -174,20 +200,16 @@ export function trimDraftForRelevance(draft: TailoringDraft, jobDescription: str
 }
 
 async function sonnetDraft(request: TailoringRequest, evidence: EvidenceItem[]) {
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const message = await createAnthropicMessage({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 4200,
-      system: `${DRAFT_SYSTEM}\nReturn valid JSON matching this JSON Schema:\n${JSON.stringify(TAILORING_DRAFT_SCHEMA)}${attempt ? "\nYour previous response was malformed. Return compact JSON only. Check every comma, quote and closing bracket." : ""}`,
-      messages: [{ role: "user", content: draftingInput(request, evidence) }],
-    });
-    try {
-      return JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringDraft;
-    } catch (error) {
-      if (attempt === 1) throw error;
-    }
-  }
-  throw new Error("Sonnet could not produce a valid draft");
+  const toolName = "submit_cv_tailoring_draft";
+  const message = await createAnthropicMessage({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 4200,
+    system: DRAFT_SYSTEM,
+    messages: [{ role: "user", content: draftingInput(request, evidence) }],
+    tools: [{ name: toolName, description: "Submit the complete evidence-backed CV tailoring draft.", input_schema: TAILORING_DRAFT_SCHEMA as Tool.InputSchema }],
+    tool_choice: { type: "tool", name: toolName },
+  });
+  return getAnthropicToolInput<TailoringDraft>(message, toolName);
 }
 
 async function createDraft(request: TailoringRequest, evidence: EvidenceItem[]) {
@@ -232,26 +254,16 @@ Draft schema: ${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`;
     null,
     2
   );
-  let review: TailoringReview | undefined;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const message = await createAnthropicMessage({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 5200,
-      system: `${reviewSystem}${attempt ? "\nYour previous response was malformed. Return compact JSON only. Check every comma, quote and closing bracket." : ""}`,
-      messages: [
-        {
-          role: "user",
-          content: reviewInput,
-        },
-      ],
-    });
-    try {
-      review = JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringReview;
-      break;
-    } catch (error) {
-      if (attempt === 1) throw error;
-    }
-  }
+  const toolName = "submit_senior_cv_review";
+  const message = await createAnthropicMessage({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 5200,
+    system: reviewSystem,
+    messages: [{ role: "user", content: reviewInput }],
+    tools: [{ name: toolName, description: "Submit the complete senior review and final evidence-backed draft.", input_schema: TAILORING_REVIEW_SCHEMA as Tool.InputSchema }],
+    tool_choice: { type: "tool", name: toolName },
+  });
+  const review = getAnthropicToolInput<TailoringReview>(message, toolName);
   if (
     !review ||
     typeof review !== "object" ||
