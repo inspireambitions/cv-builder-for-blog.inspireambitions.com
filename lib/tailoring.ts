@@ -241,6 +241,7 @@ async function createDraft(request: TailoringRequest, evidence: EvidenceItem[]) 
         schemaName: "uae_cv_tailoring_draft",
         schema: TAILORING_DRAFT_SCHEMA,
         timeoutMs: 40_000,
+        maxTokens: 4200,
       })
     );
     return { draft, provider: "grok-4.5" as const };

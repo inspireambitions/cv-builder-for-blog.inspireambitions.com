@@ -1,6 +1,11 @@
 const XAI_API_URL = "https://api.x.ai/v1/chat/completions";
 export const XAI_MODEL = process.env.XAI_MODEL || "grok-4.5";
 
+const configuredMaxTokens = Number(process.env.XAI_MAX_OUTPUT_TOKENS || 4200);
+const XAI_MAX_OUTPUT_TOKENS = Number.isFinite(configuredMaxTokens)
+  ? Math.min(6000, Math.max(1000, Math.floor(configuredMaxTokens)))
+  : 4200;
+
 type XaiResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
@@ -11,6 +16,7 @@ export async function createXaiStructuredCompletion<T>(options: {
   schemaName: string;
   schema: Record<string, unknown>;
   timeoutMs?: number;
+  maxTokens?: number;
 }): Promise<T> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) throw new Error("XAI_API_KEY is not configured");
@@ -26,6 +32,10 @@ export async function createXaiStructuredCompletion<T>(options: {
       },
       body: JSON.stringify({
         model: XAI_MODEL,
+        max_tokens: Math.min(
+          XAI_MAX_OUTPUT_TOKENS,
+          Math.max(1000, Math.floor(options.maxTokens || XAI_MAX_OUTPUT_TOKENS))
+        ),
         reasoning_effort: "medium",
         temperature: 0.2,
         messages: [
