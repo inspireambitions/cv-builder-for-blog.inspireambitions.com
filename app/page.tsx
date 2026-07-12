@@ -57,6 +57,35 @@ export default function Home() {
           <div className="h-1.5 w-2/3 bg-gray-200" aria-hidden="true" />
         </div>
       </section>
+      <section className="border-t border-gray-200 bg-white py-14">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 md:grid-cols-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-950">Built for Gulf applications</h2>
+            <p className="mt-3 leading-relaxed text-gray-600">Capture the details Gulf recruiters expect, including location, notice period, visa status, nationality, languages and relevant licences.</p>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-950">Evidence before polish</h2>
+            <p className="mt-3 leading-relaxed text-gray-600">Tailoring uses the facts already in your CV. Unsupported claims and invented achievements are rejected before a reviewed version can be applied.</p>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-950">Useful exports, no trap</h2>
+            <p className="mt-3 leading-relaxed text-gray-600">Build without an account or card. JPEG remains anonymous, while free PDF and editable Word downloads ask for an email once per device.</p>
+          </div>
+        </div>
+      </section>
+      <section className="bg-gray-50 py-14">
+        <div className="mx-auto max-w-3xl px-4">
+          <h2 className="text-center text-2xl font-bold text-gray-950">From first draft to a job-ready CV</h2>
+          <ol className="mt-8 grid gap-5 sm:grid-cols-3">
+            <li className="border-s-4 border-gold-600 ps-4"><strong className="block text-gray-950">1. Add your evidence</strong><span className="mt-1 block text-sm text-gray-600">Start fresh or upload an existing CV.</span></li>
+            <li className="border-s-4 border-gold-600 ps-4"><strong className="block text-gray-950">2. Tailor carefully</strong><span className="mt-1 block text-sm text-gray-600">Match your real experience to a vacancy.</span></li>
+            <li className="border-s-4 border-gold-600 ps-4"><strong className="block text-gray-950">3. Review and export</strong><span className="mt-1 block text-sm text-gray-600">Check the score, preview the CV and choose your format.</span></li>
+          </ol>
+        </div>
+      </section>
+      <footer className="border-t border-gray-200 bg-white py-8 text-center text-sm text-gray-600">
+        <p>Built by a practising Gulf HR Career Specialist. Your CV draft stays in your browser unless you choose a server-assisted feature.</p>
+      </footer>
     </main>
   );
 }
