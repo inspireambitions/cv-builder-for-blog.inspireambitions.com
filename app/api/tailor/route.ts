@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { tailorCv } from "@/lib/tailoring";
 import type { TailoringRequest } from "@/lib/tailoring-types";
 
@@ -10,17 +11,19 @@ const WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 5;
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
 
-function getClientKey(req: NextRequest) {
-  return (
+function getClientKey(req: NextRequest, request: TailoringRequest) {
+  const email = request.cvData?.personal?.email?.trim().toLowerCase();
+  const identity = email || (
     req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown"
   );
+  return createHash("sha256").update(identity).digest("hex");
 }
 
-function isRateLimited(req: NextRequest) {
+function isRateLimited(req: NextRequest, request: TailoringRequest) {
   const now = Date.now();
-  const key = getClientKey(req);
+  const key = getClientKey(req, request);
   const current = requestWindows.get(key);
   if (!current || current.resetAt <= now) {
     requestWindows.set(key, { count: 1, resetAt: now + WINDOW_MS });
@@ -31,14 +34,14 @@ function isRateLimited(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (isRateLimited(req)) {
-    return NextResponse.json(
-      { error: "You have reached the beta review limit. Please wait ten minutes before trying again." },
-      { status: 429, headers: { "Retry-After": "600" } }
-    );
-  }
   try {
     const request = (await req.json()) as TailoringRequest;
+    if (isRateLimited(req, request)) {
+      return NextResponse.json(
+        { error: "You have reached the beta review limit. Please wait ten minutes before trying again." },
+        { status: 429, headers: { "Retry-After": "600" } }
+      );
+    }
     return NextResponse.json(await tailorCv(request));
   } catch (error) {
     console.error("Premium tailoring error:", error);
