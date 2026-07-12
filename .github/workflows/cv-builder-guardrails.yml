@@ -17,6 +17,8 @@ jobs:
       - run: npm ci
       - run: npm run check:free
       - run: npx playwright install --with-deps chromium
+      - name: Pin Lighthouse to Playwright Chromium
+        run: echo "CHROME_PATH=$(node -e 'process.stdout.write(require(\"playwright\").chromium.executablePath())')" >> "$GITHUB_ENV"
       - run: npm run build
       - run: npm run check:perf
       - run: npm run test:e2e
