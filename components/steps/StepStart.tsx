@@ -655,7 +655,7 @@ export default function StepStart() {
               >
                 {/* Scaled template preview */}
                 <div className="relative w-full overflow-hidden bg-gray-50" style={{ height: 360 }}>
-                  <span className="absolute left-3 top-3 z-10 bg-gray-950 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute start-3 top-3 z-10 bg-gray-950 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                     Fictional sample CV
                   </span>
                   <div
@@ -672,7 +672,7 @@ export default function StepStart() {
 
                 {/* Badge */}
                 {t.badge && (
-                  <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                  <span className="absolute top-3 end-3 bg-green-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
                     {t.badge}
                   </span>
                 )}

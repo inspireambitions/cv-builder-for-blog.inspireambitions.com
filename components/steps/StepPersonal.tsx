@@ -264,7 +264,7 @@ export default function StepPersonal() {
               }`}
             />
             {linkedinStatus.valid && personal.linkedin && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-600 flex items-center gap-1">
+              <span className="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-green-600 flex items-center gap-1">
                 <svg
                   className="w-4 h-4"
                   fill="none"

@@ -25,7 +25,7 @@ export default function StepTemplate() {
             <button
               key={tpl.key}
               onClick={() => updateField({ template: tpl.key as TemplateType })}
-              className={`relative bg-white rounded-xl shadow-sm border overflow-hidden text-left transition-all cursor-pointer ${
+              className={`relative bg-white rounded-xl shadow-sm border overflow-hidden text-start transition-all cursor-pointer ${
                 selected
                   ? "ring-2 ring-gold-500 border-gold-500"
                   : "border-gray-200 hover:shadow-md"
@@ -36,7 +36,7 @@ export default function StepTemplate() {
 
               {/* Checkmark */}
               {selected && (
-                <div className="absolute top-3 right-3 w-7 h-7 bg-gold-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-3 end-3 w-7 h-7 bg-gold-500 rounded-full flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -55,7 +55,7 @@ export default function StepTemplate() {
 
               {/* Gulf region badge */}
               {tpl.key === "gulf" && state.geo === "gulf" && (
-                <span className="absolute top-3 left-3 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                <span className="absolute top-3 start-3 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                   Recommended for your region
                 </span>
               )}

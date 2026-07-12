@@ -15,7 +15,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run check:free
       - run: npx playwright install --with-deps chromium
       - run: npm run build
       - run: npm run check:perf
       - run: npm run test:e2e
+      - run: npm run test:lighthouse

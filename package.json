@@ -9,8 +9,10 @@
     "start:test": "node scripts/start-test-server.mjs",
     "lint": "next lint",
     "check:perf": "node scripts/check-performance-budget.mjs",
+    "check:free": "node scripts/check-free-product.mjs",
     "test:e2e": "playwright test",
-    "ci": "npm run build && npm run check:perf && npm run test:e2e"
+    "test:lighthouse": "lhci autorun",
+    "ci": "npm run check:free && npm run build && npm run check:perf && npm run test:e2e && npm run test:lighthouse"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/file-saver": "^2.0.7",

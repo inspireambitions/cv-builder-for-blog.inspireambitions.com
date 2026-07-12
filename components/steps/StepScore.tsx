@@ -72,7 +72,7 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="text-sm font-medium text-gray-700 w-16 text-right">
+          <span className="text-sm font-medium text-gray-700 w-16 text-end">
             {layer.score}/{layer.max}
           </span>
           <svg
@@ -109,7 +109,7 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
                 </span>
               </div>
               {c.tip && c.level !== "green" && (
-                <p className="text-xs text-gray-500 mt-1 ml-4">{c.tip}</p>
+                <p className="text-xs text-gray-500 mt-1 ms-4">{c.tip}</p>
               )}
             </div>
           ))}

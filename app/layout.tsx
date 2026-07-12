@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-cormorant",
+  weight: "600",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cv.inspireambitions.com"),
@@ -25,8 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning className={cormorant.variable}>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ia-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})();`,
+          }}
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-PY9B70N583"
           strategy="afterInteractive"
@@ -39,10 +52,6 @@ export default function RootLayout({
             gtag('config', 'G-PY9B70N583');
           `}
         </Script>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body className="min-h-screen bg-gray-50">{children}</body>
     </html>

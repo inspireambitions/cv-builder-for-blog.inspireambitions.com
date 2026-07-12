@@ -95,7 +95,7 @@ export default function ApplicationPack({
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <section>
           <h5 className="text-sm font-bold uppercase tracking-wide text-gray-500">Interview questions</h5>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-gray-800">
+          <ol className="mt-3 list-decimal space-y-2 ps-5 text-sm leading-6 text-gray-800">
             {pack.interviewQuestions.map((question) => <li key={question}>{question}</li>)}
           </ol>
         </section>

@@ -53,7 +53,7 @@ export default function StepSummary() {
           <button
             key={prompt.label}
             onClick={() => insertPrompt(prompt.starter)}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-left hover:shadow-md hover:border-gold-300 transition-all cursor-pointer group"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-start hover:shadow-md hover:border-gold-300 transition-all cursor-pointer group"
           >
             <p className="text-sm font-medium text-gray-900 group-hover:text-gold-600 transition-colors">
               {prompt.label}

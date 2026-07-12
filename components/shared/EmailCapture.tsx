@@ -224,14 +224,14 @@ export default function EmailCapture({
   return (
     <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 md:p-8 text-white overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-gold-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gold-500/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 end-0 w-40 h-40 bg-gold-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 start-0 w-24 h-24 bg-gold-500/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
       {/* Dismiss button */}
       <button
         type="button"
         onClick={handleDismiss}
-        className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
+        className="absolute top-3 end-3 text-gray-400 hover:text-white transition-colors"
         aria-label="Dismiss"
       >
         <svg

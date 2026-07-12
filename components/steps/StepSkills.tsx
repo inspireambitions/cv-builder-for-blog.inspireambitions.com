@@ -114,7 +114,7 @@ export default function StepSkills() {
                 <button
                   type="button"
                   onClick={() => removeSkill(skill)}
-                  className="ml-2 text-gold-500 hover:text-gold-700 transition-colors"
+                  className="ms-2 text-gold-500 hover:text-gold-700 transition-colors"
                   aria-label={`Remove ${skill}`}
                 >
                   &times;

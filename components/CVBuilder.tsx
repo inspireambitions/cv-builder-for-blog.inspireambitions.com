@@ -7,6 +7,7 @@ import { useLocale } from "@/lib/locale";
 import { createResumeLink } from "@/lib/resume-link";
 import { trackToolEvent } from "@/lib/analytics";
 import LanguageToggle from "./shared/LanguageToggle";
+import ThemeToggle from "./shared/ThemeToggle";
 
 import StepStart from "./steps/StepStart";
 import StepTemplate from "./steps/StepTemplate";
@@ -76,7 +77,7 @@ export default function CVBuilder() {
   const { t, dir, locale } = useLocale();
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
-  const [showPreview, setShowPreview] = useState(false);
+  const [mobileMode, setMobileMode] = useState<"edit" | "preview" | "score">("edit");
   const [resumeLinkStatus, setResumeLinkStatus] = useState<
     "idle" | "copying" | "copied" | "error"
   >("idle");
@@ -102,6 +103,10 @@ export default function CVBuilder() {
     }
     return () => observer.disconnect();
   }, [calculateScale]);
+
+  useEffect(() => {
+    if (state.step === 8) setMobileMode("score");
+  }, [state.step]);
 
   const CurrentStep = STEP_COMPONENTS[state.step] || StepStart;
   const isLastStep = state.step === 8;
@@ -144,7 +149,7 @@ export default function CVBuilder() {
             >
               <span className="w-5 h-5 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
               <span className="text-[#6f5314] font-bold">Inspire</span>
-              <span className="text-[#1a2744] font-bold -ml-1">Ambitions</span>
+              <span className="text-[#1a2744] font-bold -ms-1">Ambitions</span>
             </a>
             <span className="bg-gold-500/10 text-gold-600 text-xs font-medium px-2 py-0.5 rounded-full hidden sm:inline">
               {t("header.cvBuilder")}
@@ -180,6 +185,7 @@ export default function CVBuilder() {
                 Delete draft
               </button>
             )}
+            <ThemeToggle />
             <LanguageToggle />
           </div>
         </div>
@@ -193,7 +199,7 @@ export default function CVBuilder() {
               We restored your CV from{" "}
               {new Date(restoredAt).toLocaleString()}.
             </p>
-            <p className="text-xs text-emerald-800 sm:ml-auto">
+            <p className="text-xs text-emerald-800 sm:ms-auto">
               Autosave is active. Resume links are encrypted in the private URL fragment and never sent to our server.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -260,11 +266,31 @@ export default function CVBuilder() {
         </div>
       )}
 
+      {state.step > 0 && (
+        <div className="mobile-mode-control sticky top-[69px] z-20 py-2 lg:hidden" aria-label="Builder mode">
+          <div className="mx-auto grid max-w-md grid-cols-3 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+            {(["edit", "preview", "score"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setMobileMode(mode)}
+                className={`min-h-11 rounded-md px-3 text-sm font-semibold capitalize transition-colors ${
+                  mobileMode === mode ? "bg-gold-500 text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+                aria-pressed={mobileMode === mode}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-24 sm:pb-6">
         <div className="flex gap-6">
           {/* Form Panel */}
-          <div className="flex-1 min-w-0">
+          <div className={`flex-1 min-w-0 ${mobileMode === "edit" || (mobileMode === "score" && state.step === 8) ? "block" : "hidden lg:block"}`}>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
               <CurrentStep />
             </div>
@@ -284,6 +310,7 @@ export default function CVBuilder() {
                     type="button"
                     onClick={handleCopyResumeLink}
                     disabled={resumeLinkStatus === "copying"}
+                    aria-label="Copy private resume link"
                     className="min-h-11 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
                   >
                     {resumeLinkStatus === "copying"
@@ -307,7 +334,7 @@ export default function CVBuilder() {
 
             {/* Navigation Buttons */}
             {state.step > 0 && (
-              <div className="flex justify-between items-center">
+              <div className="hidden justify-between items-center sm:flex">
                 <button
                   onClick={prevStep}
                   className="flex items-center gap-2 px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -340,13 +367,13 @@ export default function CVBuilder() {
                 </div>
                 <div
                   ref={previewContainerRef}
-                  className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+                  className="paper-surface bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
                 >
                   <div
                     data-preview-container
                     style={{
                       transform: `scale(${scale})`,
-                      transformOrigin: "top left",
+                      transformOrigin: dir === "rtl" ? "top right" : "top left",
                       width: "794px",
                       height: `${1123 * scale}px`,
                     }}
@@ -358,41 +385,19 @@ export default function CVBuilder() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Mobile preview FAB */}
-      {state.step > 0 && (
-        <button
-          onClick={() => setShowPreview(true)}
-          className="fixed bottom-6 right-6 bg-gold-500 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-40 lg:hidden"
-          aria-label={t("nav.preview")}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-        </button>
-      )}
-
-      {/* Mobile full-screen preview overlay */}
-      {showPreview && state.step > 0 && (
-        <div className="fixed inset-0 z-50 bg-gray-50 overflow-auto lg:hidden">
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-700">{t("nav.preview")}</h3>
-            <button
-              onClick={() => setShowPreview(false)}
-              className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-700"
-            >
-              &#10005; {t("nav.close")}
-            </button>
-          </div>
-          <div className="p-4">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        {state.step > 0 && mobileMode === "preview" && (
+          <section className="lg:hidden" aria-label="CV preview">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-700">{t("nav.preview")}</h2>
+              <span className="text-xs text-gray-500">Pinch to zoom</span>
+            </div>
+            <div className="paper-surface overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg touch-pinch-zoom">
               <div
                 data-preview-container
                 style={{
                   transform: `scale(${Math.min((typeof window !== "undefined" ? window.innerWidth - 32 : 360) / 794, 1)})`,
-                  transformOrigin: "top left",
+                  transformOrigin: dir === "rtl" ? "top right" : "top left",
                   width: "794px",
                   height: `${1123 * Math.min((typeof window !== "undefined" ? window.innerWidth - 32 : 360) / 794, 1)}px`,
                 }}
@@ -400,7 +405,45 @@ export default function CVBuilder() {
                 <TemplateRenderer state={state} />
               </div>
             </div>
-          </div>
+            <button
+              type="button"
+              onClick={() => { goToStep(8); setMobileMode("score"); }}
+              className="fixed end-4 z-30 min-h-12 rounded-full bg-gold-500 px-5 font-semibold text-white shadow-lg"
+              style={{ bottom: "calc(16px + var(--ia-safe-bottom))" }}
+            >
+              Export
+            </button>
+          </section>
+        )}
+
+        {state.step > 0 && state.step !== 8 && mobileMode === "score" && (
+          <section className="lg:hidden" aria-label="CV score and export">
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <StepScore />
+            </div>
+          </section>
+        )}
+      </div>
+
+      {state.step > 0 && mobileMode === "edit" && (
+        <div className="mobile-action-bar fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 px-4 pt-3 sm:hidden">
+          <button
+            type="button"
+            onClick={prevStep}
+            className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700"
+          >
+            {t("nav.back")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (isLastStep) setMobileMode("score");
+              else nextStep();
+            }}
+            className="min-h-11 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
+          >
+            {isLastStep ? "Score and export" : t("nav.next")}
+          </button>
         </div>
       )}
 
@@ -418,7 +461,7 @@ export default function CVBuilder() {
               >
                 <span className="w-4 h-4 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
                 <span className="text-[#d7bd78] font-bold text-lg">Inspire</span>
-                <span className="text-white font-bold text-lg -ml-1">Ambitions</span>
+                <span className="text-white font-bold text-lg -ms-1">Ambitions</span>
               </a>
               <p className="text-sm text-gray-300 leading-relaxed">
                 Free career tools built by an HR Specialist with 20+ years of GCC experience.

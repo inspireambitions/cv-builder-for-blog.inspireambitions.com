@@ -195,7 +195,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
       <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 min-h-10 min-w-10 rounded-full text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="absolute end-4 top-4 min-h-10 min-w-10 rounded-full text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           aria-label="Close download dialog"
         >
           x
@@ -268,7 +268,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           <button
             onClick={() => runDownload("pdf_ats")}
             disabled={downloading !== null}
-            className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+            className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -288,7 +288,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           <button
             onClick={() => runDownload("pdf_recruiter")}
             disabled={downloading !== null}
-            className="w-full rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+            className="w-full rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -309,7 +309,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             <button
               onClick={() => runDownload("word_ats")}
               disabled={downloading !== null}
-              className="rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+              className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
               <div className="font-semibold text-gray-900">ATS Word (.docx)</div>
               <p className="mt-0.5 text-sm text-gray-600">
@@ -323,7 +323,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             <button
               onClick={() => runDownload("word_recruiter")}
               disabled={downloading !== null}
-              className="rounded-xl border-2 border-gray-200 p-4 text-left transition-colors hover:border-emerald-400 disabled:opacity-60"
+              className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
               <div className="font-semibold text-gray-900">Recruiter Word</div>
               <p className="mt-0.5 text-sm text-gray-600">
@@ -347,7 +347,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             <button
               onClick={() => runDownload("jpeg")}
               disabled={downloading !== null}
-              className="w-full rounded-xl border border-gray-200 p-4 text-left transition-colors hover:border-gray-300 disabled:opacity-60"
+              className="w-full rounded-xl border border-gray-200 p-4 text-start transition-colors hover:border-gray-300 disabled:opacity-60"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>

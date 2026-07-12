@@ -217,7 +217,7 @@ export default function TailorWorkspace() {
 
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wide text-gray-500">Tailored summary</h4>
-          <p className="mt-3 border-l-4 border-gold-500 pl-4 text-base leading-7 text-gray-800">{final.summary.text}</p>
+          <p className="mt-3 border-s-4 border-gold-500 ps-4 text-base leading-7 text-gray-800">{final.summary.text}</p>
         </div>
 
         <div>
@@ -235,7 +235,7 @@ export default function TailorWorkspace() {
         {final.gaps.length > 0 && (
           <div className="border border-amber-200 bg-amber-50 p-4">
             <h4 className="text-sm font-bold text-amber-950">Genuine gaps kept visible</h4>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-amber-900">
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm leading-6 text-amber-900">
               {final.gaps.map((gap) => <li key={gap}>{gap}</li>)}
             </ul>
           </div>
@@ -251,7 +251,7 @@ export default function TailorWorkspace() {
         {result.review.warnings.length > 0 && (
           <div className="border-t border-gray-200 pt-5">
             <h4 className="text-sm font-bold text-gray-900">Senior reviewer notes</h4>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-gray-600">
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm leading-6 text-gray-600">
               {result.review.warnings.map((warning) => <li key={warning}>{warning}</li>)}
             </ul>
           </div>

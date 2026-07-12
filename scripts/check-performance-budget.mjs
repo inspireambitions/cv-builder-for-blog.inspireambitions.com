@@ -1,38 +1,54 @@
-import { readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { gzipSync } from "node:zlib";
 
 const root = process.cwd();
-const chunksDir = join(root, ".next", "static", "chunks", "app");
-const MAX_APP_CHUNK_BYTES = 1_500_000;
+const nextDir = join(root, ".next");
+const manifestPath = join(nextDir, "app-build-manifest.json");
+const MAX_INITIAL_JS_GZIP = 250 * 1024;
+const MAX_INITIAL_FONT_BYTES = 120 * 1024;
 
-async function walk(dir) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) return walk(path);
-      return path.endsWith(".js") ? [path] : [];
-    })
-  );
-  return files.flat();
+async function filesIn(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory() ? filesIn(path) : [path];
+  }));
+  return nested.flat();
 }
 
 try {
-  const files = await walk(chunksDir);
-  const sizes = await Promise.all(
-    files.map(async (file) => ({ file, size: (await stat(file)).size }))
-  );
-  const total = sizes.reduce((sum, item) => sum + item.size, 0);
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const routeFiles = new Set([...(manifest.pages["/layout"] || []), ...(manifest.pages["/page"] || [])]
+    .filter((file) => file.endsWith(".js")));
 
-  if (total > MAX_APP_CHUNK_BYTES) {
-    console.error(
-      `App JS budget exceeded: ${total} bytes > ${MAX_APP_CHUNK_BYTES} bytes`
-    );
-    process.exit(1);
+  if (routeFiles.size === 0) throw new Error("No initial JavaScript files were found for the root route.");
+
+  let gzipBytes = 0;
+  for (const file of routeFiles) {
+    const content = await readFile(join(nextDir, file));
+    gzipBytes += gzipSync(content).byteLength;
   }
 
-  console.log(`App JS budget OK: ${total} bytes across ${sizes.length} files`);
+  const mediaDir = join(nextDir, "static", "media");
+  const mediaFiles = await filesIn(mediaDir).catch(() => []);
+  const fontFiles = mediaFiles.filter((file) => /\.(woff2?|ttf|otf)$/i.test(file));
+  const fontBytes = (await Promise.all(fontFiles.map(async (file) => (await stat(file)).size)))
+    .reduce((sum, size) => sum + size, 0);
+
+  const failures = [];
+  if (gzipBytes > MAX_INITIAL_JS_GZIP) failures.push(`Initial JS ${gzipBytes} > ${MAX_INITIAL_JS_GZIP} gzip bytes`);
+  if (fontBytes > MAX_INITIAL_FONT_BYTES) failures.push(`Initial fonts ${fontBytes} > ${MAX_INITIAL_FONT_BYTES} bytes`);
+
+  console.log(`Initial JS: ${gzipBytes} gzip bytes across ${routeFiles.size} files.`);
+  console.log(`Initial fonts: ${fontBytes} bytes across ${fontFiles.length} files.`);
+
+  if (failures.length > 0) {
+    failures.forEach((failure) => console.error(failure));
+    process.exit(1);
+  }
 } catch (error) {
-  console.warn("Performance budget skipped: build chunks were not found.");
-  console.warn(error instanceof Error ? error.message : error);
+  console.error("Performance budget could not be measured.");
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
 }
