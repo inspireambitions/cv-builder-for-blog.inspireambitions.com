@@ -174,13 +174,20 @@ export function trimDraftForRelevance(draft: TailoringDraft, jobDescription: str
 }
 
 async function sonnetDraft(request: TailoringRequest, evidence: EvidenceItem[]) {
-  const message = await createAnthropicMessage({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 4200,
-    system: `${DRAFT_SYSTEM}\nReturn valid JSON matching this JSON Schema:\n${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`,
-    messages: [{ role: "user", content: draftingInput(request, evidence) }],
-  });
-  return JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringDraft;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const message = await createAnthropicMessage({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 4200,
+      system: `${DRAFT_SYSTEM}\nReturn valid JSON matching this JSON Schema:\n${JSON.stringify(TAILORING_DRAFT_SCHEMA)}${attempt ? "\nYour previous response was malformed. Return compact JSON only. Check every comma, quote and closing bracket." : ""}`,
+      messages: [{ role: "user", content: draftingInput(request, evidence) }],
+    });
+    try {
+      return JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringDraft;
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+  }
+  throw new Error("Sonnet could not produce a valid draft");
 }
 
 async function createDraft(request: TailoringRequest, evidence: EvidenceItem[]) {
@@ -206,35 +213,45 @@ async function reviewDraft(
   evidence: EvidenceItem[],
   draft: TailoringDraft
 ): Promise<TailoringReview> {
-  const message = await createAnthropicMessage({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 5200,
-    system: `You are the senior reviewer in a premium UAE CV agency. Review a draft produced by another model.
+  const reviewSystem = `You are the senior reviewer in a premium UAE CV agency. Review a draft produced by another model.
 Correct weak, generic, repetitive or vacancy-misaligned wording, but never add a fact that is absent from the evidence ledger.
 Every final claim must retain exact evidence IDs. Unsupported vacancy requirements remain gaps.
 Return only JSON with: approved boolean, confidence number 0-100, corrections array [{target,replacement,evidenceIds,reason}], warnings string array, and final containing the complete corrected draft in the supplied draft schema.
 Use British English. Preserve employer names, role titles and dates. A confident reviewer still cannot override evidence.
-Draft schema: ${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`,
-    messages: [
-      {
-        role: "user",
-        content: JSON.stringify(
-          {
-            target: {
-              jobTitle: request.jobTitle || "",
-              company: request.company || "",
-              jobDescription: request.jobDescription,
-            },
-            evidence,
-            draft,
-          },
-          null,
-          2
-        ),
+Draft schema: ${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`;
+  const reviewInput = JSON.stringify(
+    {
+      target: {
+        jobTitle: request.jobTitle || "",
+        company: request.company || "",
+        jobDescription: request.jobDescription,
       },
-    ],
-  });
-  const review = JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringReview;
+      evidence,
+      draft,
+    },
+    null,
+    2
+  );
+  let review: TailoringReview | undefined;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const message = await createAnthropicMessage({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 5200,
+      system: `${reviewSystem}${attempt ? "\nYour previous response was malformed. Return compact JSON only. Check every comma, quote and closing bracket." : ""}`,
+      messages: [
+        {
+          role: "user",
+          content: reviewInput,
+        },
+      ],
+    });
+    try {
+      review = JSON.parse(extractJSON(getAnthropicTextContent(message))) as TailoringReview;
+      break;
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+  }
   if (
     !review ||
     typeof review !== "object" ||
