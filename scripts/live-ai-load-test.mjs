@@ -103,7 +103,11 @@ async function run(index) {
 const started = Date.now();
 const results = await Promise.all(Array.from({ length: concurrency }, (_, index) => run(index + 1)));
 const serviceFailures = results.filter(
-  (item) => item.status !== 200 || item.draftProvider !== "grok-4.5" || !item.integrity
+  (item) =>
+    item.status !== 200 ||
+    item.draftProvider !== "grok-4.5" ||
+    !item.approved ||
+    !item.integrity
 );
 const durations = results.map((item) => item.durationMs).sort((a, b) => a - b);
 const percentile = (p) => durations[Math.min(durations.length - 1, Math.ceil(durations.length * p) - 1)];

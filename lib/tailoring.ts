@@ -300,6 +300,9 @@ Draft schema: ${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`;
         throw new Error("Senior review did not match the required structure");
       }
       assertDraftShape(review.final);
+      if (!review.approved) {
+        throw new Error("Senior reviewer did not approve the corrected draft");
+      }
       return review;
     } catch (error) {
       lastError = error;
