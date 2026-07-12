@@ -5,21 +5,21 @@ import { LocaleProvider } from "@/lib/locale";
 import { CVProvider, useCVState } from "@/lib/state";
 import CVBuilder from "@/components/CVBuilder";
 
-function StartedBuilder() {
+function StartedBuilder({ startImmediately }: { startImmediately: boolean }) {
   const { state, goToStep } = useCVState();
 
   useEffect(() => {
-    if (state.step === 0) goToStep(1);
-  }, [goToStep, state.step]);
+    if (startImmediately && state.step === 0) goToStep(1);
+  }, [goToStep, startImmediately, state.step]);
 
   return <CVBuilder />;
 }
 
-export default function BuilderShell() {
+export default function BuilderShell({ startImmediately = true }: { startImmediately?: boolean }) {
   return (
     <LocaleProvider>
       <CVProvider>
-        <StartedBuilder />
+        <StartedBuilder startImmediately={startImmediately} />
       </CVProvider>
     </LocaleProvider>
   );

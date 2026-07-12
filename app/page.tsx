@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 
@@ -8,8 +8,18 @@ const BuilderShell = dynamic(() => import("@/components/BuilderShell"));
 
 export default function Home() {
   const [started, setStarted] = useState(false);
+  const [resumeExisting, setResumeExisting] = useState(false);
 
-  if (started) return <BuilderShell />;
+  useEffect(() => {
+    const hasDraft = Boolean(localStorage.getItem("inspireambitions-cv-state"));
+    const hasResumeLink = window.location.hash.startsWith("#resume=");
+    if (hasDraft || hasResumeLink) {
+      setResumeExisting(true);
+      setStarted(true);
+    }
+  }, []);
+
+  if (started) return <BuilderShell startImmediately={!resumeExisting} />;
 
   return (
     <main className="min-h-screen bg-gray-50">
