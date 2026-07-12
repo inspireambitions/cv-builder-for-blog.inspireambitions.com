@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import dynamic from "next/dynamic";
 import { useCVState } from "@/lib/state";
 import { detectGeo } from "@/lib/geo";
 import { validateFileUpload } from "@/lib/validators";
-import { sampleCVState } from "@/lib/sample-data";
 import type { CVState } from "@/lib/types";
-const Corporate = dynamic(() => import("@/components/templates/Corporate"));
-const Minimal = dynamic(() => import("@/components/templates/Minimal"));
-const Gulf = dynamic(() => import("@/components/templates/Gulf"));
-const Creative = dynamic(() => import("@/components/templates/Creative"));
 import { trackToolEvent } from "@/lib/analytics";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
@@ -66,12 +60,12 @@ const TEMPLATES: {
   name: string;
   bestFor: string;
   badge?: string;
-  Component: React.ComponentType<{ state: CVState }>;
+  accentClass: string;
 }[] = [
-  { key: "corp", name: "Corporate", bestFor: "Finance, consulting & enterprise roles", Component: Corporate },
-  { key: "min", name: "Minimal", bestFor: "Tech, startups & design roles", Component: Minimal },
-  { key: "gulf", name: "Gulf", bestFor: "GCC employers, government & semi-gov", badge: "Popular in GCC", Component: Gulf },
-  { key: "cre", name: "Creative", bestFor: "Marketing, media & creative industries", Component: Creative },
+  { key: "corp", name: "Corporate", bestFor: "Finance, consulting & enterprise roles", accentClass: "bg-navy-700" },
+  { key: "min", name: "Minimal", bestFor: "Tech, startups & design roles", accentClass: "bg-gray-600" },
+  { key: "gulf", name: "Gulf", bestFor: "GCC employers, government & semi-gov", badge: "Popular in GCC", accentClass: "bg-gold-600" },
+  { key: "cre", name: "Creative", bestFor: "Marketing, media & creative industries", accentClass: "bg-emerald-700" },
 ];
 
 const FEATURES = [
@@ -648,26 +642,28 @@ export default function StepStart() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {TEMPLATES.map((t) => {
-            const previewState: CVState = { ...sampleCVState, template: t.key };
             return (
               <div
                 key={t.key}
                 className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
               >
-                {/* Scaled template preview */}
-                <div className="relative w-full overflow-hidden bg-gray-50" style={{ height: 360 }}>
+                {/* Lightweight representative preview. Full templates load in the editor. */}
+                <div className="relative h-[360px] w-full overflow-hidden bg-gray-50 p-6">
                   <span className="absolute start-3 top-3 z-10 bg-gray-950 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                     Fictional sample CV
                   </span>
-                  <div
-                    className="origin-top-left pointer-events-none"
-                    style={{
-                      transform: "scale(0.35)",
-                      width: 794,
-                      minHeight: 1123,
-                    }}
-                  >
-                    <t.Component state={previewState} />
+                  <div className="mt-8 h-full bg-white p-5 shadow-sm" aria-hidden="true">
+                    <div className={`mb-4 h-2 w-20 ${t.accentClass}`} />
+                    <div className="mb-2 h-3 w-3/4 bg-gray-800" />
+                    <div className="mb-6 h-2 w-1/2 bg-gray-300" />
+                    {["w-full", "w-5/6", "w-full", "w-2/3"].map((width, index) => (
+                      <div key={index} className="mb-5">
+                        <div className={`mb-2 h-2 w-24 ${t.accentClass}`} />
+                        <div className={`mb-1 h-1.5 ${width} bg-gray-300`} />
+                        <div className="mb-1 h-1.5 w-full bg-gray-200" />
+                        <div className="h-1.5 w-4/5 bg-gray-200" />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
