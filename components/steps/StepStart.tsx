@@ -99,7 +99,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Gulf/MENA Ready",
-    desc: "The only CV builder with a dedicated GCC template. Photo support, Arabic-friendly layouts.",
+    desc: "Built for GCC applications, with a dedicated Gulf template, photo support and Arabic-friendly layouts.",
   },
   {
     icon: (
@@ -127,7 +127,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Commonly Forgotten Sections",
-    desc: "We prompt you for achievements, volunteering, certifications, and memberships that 68\u201395% of candidates miss.",
+    desc: "We prompt you for achievements, volunteering, certifications and memberships that are easy to overlook.",
   },
 ];
 
@@ -532,7 +532,7 @@ export default function StepStart() {
 
         {/* Subheadline */}
         <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          The world&apos;s most HR-credible CV builder. Free ATS-safe PDF and Word export by email. No watermark. No credit card.
+          Build a clear, evidence-led CV for UAE and international roles. Free ATS-safe PDF and Word export by email. No watermark. No credit card.
         </p>
 
         {/* CTAs */}
@@ -550,9 +550,14 @@ export default function StepStart() {
               disabled={!hydrated}
               className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all disabled:cursor-wait disabled:opacity-60"
             >
-              Upload &amp; AI Improve
+              Upload &amp; Tailor to a Job
             </button>
           </div>
+        )}
+        {mode === "hero" && (
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">
+            Already have a CV? Upload it, improve it, then tailor the reviewed version to a real vacancy.
+          </p>
         )}
 
         {/* Upload zone (inline) */}
@@ -650,6 +655,9 @@ export default function StepStart() {
               >
                 {/* Scaled template preview */}
                 <div className="relative w-full overflow-hidden bg-gray-50" style={{ height: 360 }}>
+                  <span className="absolute left-3 top-3 z-10 bg-gray-950 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                    Fictional sample CV
+                  </span>
                   <div
                     className="origin-top-left pointer-events-none"
                     style={{

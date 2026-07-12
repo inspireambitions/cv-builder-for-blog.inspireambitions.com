@@ -12,7 +12,7 @@ export const sampleCVState: CVState = {
     phone: "+971 50 123 4567",
     location: "Dubai, UAE",
     linkedin: "https://linkedin.com/in/sarah-alrashid",
-    visa_status: "Golden",
+    visa_status: "",
     notice_period: "30 days",
     availability_date: "",
     noc_available: "Not applicable",
@@ -22,16 +22,10 @@ export const sampleCVState: CVState = {
     include_marital_status: false,
     marital_status: "",
     arabic_proficiency: "Native",
-    sector_credentials: [
-      {
-        authority: "MOHRE",
-        license_no: "",
-        expiry_date: "",
-      },
-    ],
+    sector_credentials: [],
   },
   summary:
-    "Results-driven Programme Manager with 10+ years delivering complex transformation initiatives across the GCC. Led portfolios valued at $120M+ across financial services, infrastructure, and government sectors. Proven track record of reducing delivery timelines by 23% through agile adoption and building high-performing cross-functional teams of 50+. CIPD and PMP certified with deep expertise in stakeholder management at C-suite level.",
+    "Programme Manager with 10+ years delivering transformation programmes across the GCC. Led portfolios valued at $120M+ in financial services, infrastructure and government. Cut delivery timelines by 23% through agile working and led cross-functional teams of 50+. PMP and CIPD certified, with regular C-suite reporting experience.",
   experience: [
     {
       id: "exp-1",
@@ -131,14 +125,14 @@ export const sampleCVState: CVState = {
       id: "ach-1",
       title: "GCC Project Leader of the Year",
       body: "Awarded for delivering the Abu Dhabi Smart Infrastructure Programme under budget and ahead of schedule.",
-      awardingBody: "PMI MENA Chapter",
+      awardingBody: "Gulf Project Excellence Forum (sample)",
       year: "2023",
     },
     {
       id: "ach-2",
-      title: "Keynote Speaker \u2014 Future of Work Summit",
+      title: "Keynote Speaker \u2014 Future of Work Forum",
       body: "Presented to 800+ attendees on agile transformation in government organisations.",
-      awardingBody: "GITEX Global",
+      awardingBody: "Future Work Forum (sample)",
       year: "2022",
     },
   ],
@@ -158,7 +152,7 @@ export const sampleCVState: CVState = {
       id: "pub-1",
       title:
         "Agile in the Gulf: Adapting Western Frameworks for MENA Culture",
-      outlet: "Harvard Business Review Arabia",
+      outlet: "Gulf Leadership Review (sample)",
       date: "2023",
       url: "",
     },

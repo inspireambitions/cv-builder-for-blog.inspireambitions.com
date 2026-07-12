@@ -67,6 +67,28 @@ test("relevance trimming keeps no more than five evidence-backed bullets per rol
   expect(trimmed.trimmingNotes.join(" ")).toContain("2 lower-relevance");
 });
 
+test("front door uses honest claims and makes tailoring discoverable", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Upload & Tailor to a Job" })).toBeVisible();
+  await expect(page.getByText("Fictional sample CV").first()).toBeVisible();
+  await expect(page.getByText(/world's most|only CV builder|68.?95/i)).toHaveCount(0);
+});
+
+test("provider load failure preserves trust in plain language", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript((cvState) => {
+    localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 3, savedAt: new Date().toISOString(), state: { ...cvState, step: 8 } }));
+  }, sampleCVState);
+  await page.route("**/api/tailor", async (route) => {
+    await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "The review service is busy. Your CV is safe and unchanged. Please wait one minute, then try again." }) });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Tailor to a Job" }).click();
+  await page.getByPlaceholder(/Paste the vacancy/).fill("We need a senior hotel operations manager to lead guest services, manage budgets, coach teams, improve service standards and coordinate departments across a busy UAE luxury hotel operation.");
+  await page.getByRole("button", { name: "Run Premium Review" }).click();
+  await expect(page.getByText("The review service is busy. Your CV is safe and unchanged. Please wait one minute, then try again.", { exact: true })).toBeVisible();
+});
+
 test("premium tailoring workspace is usable on mobile and applies a verified result", async ({ page }) => {
   const result: TailoringResult = {
     draftProvider: "grok-4.5",

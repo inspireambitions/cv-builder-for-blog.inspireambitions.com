@@ -247,7 +247,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             <p className="text-xs leading-5 text-gray-500">
               Free download, no card, no watermark. We will email your report
               and may send practical career guidance from Inspire Ambitions.
-              Unsubscribe anytime.
+              Unsubscribe anytime. Your email is used for this report and guidance; it is never added to your CV.
             </p>
           </form>
         ) : (

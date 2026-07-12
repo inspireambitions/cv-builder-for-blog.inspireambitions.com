@@ -44,6 +44,10 @@ export async function POST(req: NextRequest) {
     console.error("Premium tailoring error:", error);
     const message = error instanceof Error ? error.message : "Tailoring failed. Please try again.";
     const isInputError = /before tailoring|at least|too long|Add more/i.test(message);
-    return NextResponse.json({ error: message }, { status: isInputError ? 400 : 500 });
+    if (isInputError) return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: "The review service is busy. Your CV is safe and unchanged. Please wait one minute, then try again." },
+      { status: 503, headers: { "Retry-After": "60" } }
+    );
   }
 }

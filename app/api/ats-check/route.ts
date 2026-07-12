@@ -49,10 +49,12 @@ export async function POST(req: NextRequest) {
     const skills = Array.isArray(expected.skills) ? expected.skills.filter(Boolean).slice(0, 20) : [];
     const coveredSkills = skills.filter((skill) => lower.includes(skill.toLowerCase()));
     const brokenGlyphs = (text.match(/\uFFFD|\(cid:\d+\)/g) ?? []).length;
+    const decorativeContactGlyphs = (text.match(/[\u2709\u260E\u{1F4CD}\u{1F517}]/gu) ?? []).length;
     const checks = [
       { label: "Readable text layer", passed: text.length >= 120, detail: `${text.length.toLocaleString()} characters extracted` },
       { label: "Contact details", passed: missingContact.length === 0, detail: missingContact.length ? `Missing: ${missingContact.join(", ")}` : "Name, email and phone remain readable" },
       { label: "Character integrity", passed: brokenGlyphs === 0, detail: brokenGlyphs ? `${brokenGlyphs} broken glyph markers found` : "No broken glyph markers found" },
+      { label: "ATS-safe contact text", passed: decorativeContactGlyphs === 0, detail: decorativeContactGlyphs ? `${decorativeContactGlyphs} decorative contact icons entered the text layer` : "No decorative contact icons in the text layer" },
       { label: "Skill coverage", passed: skills.length === 0 || coveredSkills.length / skills.length >= 0.7, detail: skills.length ? `${coveredSkills.length}/${skills.length} selected skills found` : "No selected skills to check" },
     ];
     return NextResponse.json({

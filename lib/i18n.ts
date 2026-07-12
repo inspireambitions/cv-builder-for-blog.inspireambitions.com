@@ -10,9 +10,9 @@ export const translations: Record<Locale, Record<string, string>> = {
     "hero.badge": "Built by an HR Specialist",
     "hero.headline": "Build a CV That Gets You Hired",
     "hero.subheadline":
-      "The world's most HR-credible CV builder. Free ATS-safe PDF and Word export by email. No watermark. No credit card.",
+      "Build a clear, evidence-led CV for UAE and international roles. Free ATS-safe PDF and Word export by email. No watermark. No credit card.",
     "hero.buildCta": "Build My CV — Free",
-    "hero.uploadCta": "Upload & AI Improve",
+    "hero.uploadCta": "Upload & Tailor to a Job",
     "hero.trust1": "Free forever",
     "hero.trust2": "No credit card",
     "hero.trust3": "HR Specialist approved",
@@ -29,7 +29,7 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
     "feature.gulfReady": "Gulf/MENA Ready",
     "feature.gulfReadyDesc":
-      "The only CV builder with a dedicated GCC template. Photo support, Arabic-friendly layouts.",
+      "Built for GCC applications, with a dedicated Gulf template, photo support and Arabic-friendly layouts.",
     "feature.aiPowered": "AI-Powered",
     "feature.aiPoweredDesc":
       "Upload your existing CV and our AI rewrites it with achievement-focused language.",
@@ -38,7 +38,7 @@ export const translations: Record<Locale, Record<string, string>> = {
       "See your CV update in real-time as you type. What you see is what you get.",
     "feature.forgottenSections": "Commonly Forgotten Sections",
     "feature.forgottenSectionsDesc":
-      "We prompt you for achievements, volunteering, certifications, and memberships that 68-95% of candidates miss.",
+      "We prompt you for achievements, volunteering, certifications and memberships that are easy to overlook.",
 
     // Template names
     "template.corp": "Corporate / Traditional",
@@ -215,7 +215,7 @@ export const translations: Record<Locale, Record<string, string>> = {
       "\u0634\u0627\u0647\u062f \u0633\u064a\u0631\u062a\u0643 \u0627\u0644\u0630\u0627\u062a\u064a\u0629 \u062a\u062a\u062d\u062f\u062b \u0641\u064a \u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0641\u0639\u0644\u064a \u0623\u062b\u0646\u0627\u0621 \u0627\u0644\u0643\u062a\u0627\u0628\u0629.",
     "feature.forgottenSections": "\u0627\u0644\u0623\u0642\u0633\u0627\u0645 \u0627\u0644\u0645\u0646\u0633\u064a\u0629 \u0639\u0627\u062f\u0629\u064b",
     "feature.forgottenSectionsDesc":
-      "\u0646\u0637\u0644\u0628 \u0645\u0646\u0643 \u0627\u0644\u0625\u0646\u062c\u0627\u0632\u0627\u062a \u0648\u0627\u0644\u062a\u0637\u0648\u0639 \u0648\u0627\u0644\u0634\u0647\u0627\u062f\u0627\u062a \u0648\u0627\u0644\u0639\u0636\u0648\u064a\u0627\u062a \u0627\u0644\u062a\u064a \u064a\u0641\u0648\u0651\u062a\u0647\u0627 68-95% \u0645\u0646 \u0627\u0644\u0645\u0631\u0634\u062d\u064a\u0646.",
+      "\u0646\u0630\u0643\u0651\u0631\u0643 \u0628\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0625\u0646\u062c\u0627\u0632\u0627\u062a \u0648\u0627\u0644\u062a\u0637\u0648\u0639 \u0648\u0627\u0644\u0634\u0647\u0627\u062f\u0627\u062a \u0648\u0627\u0644\u0639\u0636\u0648\u064a\u0627\u062a \u0627\u0644\u062a\u064a \u064a\u0633\u0647\u0644 \u0646\u0633\u064a\u0627\u0646\u0647\u0627.",
 
     // Template names
     "template.corp": "\u0627\u0644\u0645\u0624\u0633\u0633\u064a / \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a",

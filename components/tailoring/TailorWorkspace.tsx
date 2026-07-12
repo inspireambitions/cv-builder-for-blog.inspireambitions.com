@@ -40,7 +40,12 @@ export default function TailorWorkspace() {
         body: JSON.stringify({ cvData: state, jobTitle, company, jobDescription }),
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Tailoring failed. Please try again.");
+      if (!response.ok) {
+        const fallback = response.status === 429 || response.status === 503
+          ? "The review service is busy. Your CV is safe and unchanged. Please wait, then try again."
+          : "The review could not finish. Your CV is safe and unchanged. Please try again.";
+        throw new Error(payload.error || fallback);
+      }
       setResult(payload as TailoringResult);
       setView("result");
       trackToolEvent("cv_tailoring_completed", {
@@ -101,6 +106,7 @@ export default function TailorWorkspace() {
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-gold-500" />
         <h3 className="mt-5 text-xl font-bold text-gray-950">Your agency review is running</h3>
         <p className="mt-2 text-sm text-gray-600">Drafting, reviewing and checking every claim against your CV evidence.</p>
+        <p className="mt-2 text-xs text-gray-500">This usually takes 30 to 90 seconds. During high demand, we may ask you to retry without changing your CV.</p>
       </section>
     );
   }
