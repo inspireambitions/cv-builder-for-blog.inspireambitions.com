@@ -3,7 +3,9 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "InspireAmbitions CV Builder — Free CV Builder by an HR Specialist",
+  metadataBase: new URL("https://cv.inspireambitions.com"),
+  alternates: { canonical: "/" },
+  title: "InspireAmbitions CV Builder - Free CV Builder by an HR Specialist",
   description:
     "Build a professional, HR-approved CV in minutes. Free ATS-safe PDF and Word export, no watermark. Built by a practising HR Specialist with GCC/MENA expertise.",
   keywords: [
