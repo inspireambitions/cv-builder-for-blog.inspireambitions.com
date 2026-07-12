@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Cormorant_Garamond } from "next/font/google";
+import DeferredAnalytics from "@/components/shared/DeferredAnalytics";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -40,20 +40,8 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('ia-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})();`,
           }}
         />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-PY9B70N583"
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-PY9B70N583');
-          `}
-        </Script>
       </head>
-      <body className="min-h-screen bg-gray-50">{children}</body>
+      <body className="min-h-screen bg-gray-50"><DeferredAnalytics />{children}</body>
     </html>
   );
 }
