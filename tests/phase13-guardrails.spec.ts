@@ -71,7 +71,10 @@ test("download gate exposes email-only dual exports without account, card, paywa
   await page.getByRole("button", { name: /Build My CV/ }).click();
   for (let index = 0; index < 8; index += 1) {
     const next = page.getByRole("button", { name: /Next Step/ });
-    if (await next.isVisible().catch(() => false)) await next.click();
+    if (await next.isVisible().catch(() => false)) {
+      await next.click();
+      await page.waitForTimeout(150);
+    }
   }
   await page.getByRole("button", { name: "Email & Download CV" }).click();
 
