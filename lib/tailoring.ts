@@ -212,20 +212,42 @@ async function sonnetDraft(request: TailoringRequest, evidence: EvidenceItem[]) 
   return getAnthropicToolInput<TailoringDraft>(message, toolName);
 }
 
+async function createValidDraft(
+  provider: "grok-4.5" | "sonnet-fallback",
+  generate: () => Promise<TailoringDraft>
+) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const draft = await generate();
+      assertDraftShape(draft);
+      return draft;
+    } catch (error) {
+      lastError = error;
+      console.error(`${provider} returned an invalid draft (attempt ${attempt}/2):`, error);
+    }
+  }
+
+  throw lastError;
+}
+
 async function createDraft(request: TailoringRequest, evidence: EvidenceItem[]) {
   try {
-    const draft = await createXaiStructuredCompletion<TailoringDraft>({
-      system: DRAFT_SYSTEM,
-      user: draftingInput(request, evidence),
-      schemaName: "uae_cv_tailoring_draft",
-      schema: TAILORING_DRAFT_SCHEMA,
-    });
-    assertDraftShape(draft);
+    const draft = await createValidDraft("grok-4.5", () =>
+      createXaiStructuredCompletion<TailoringDraft>({
+        system: DRAFT_SYSTEM,
+        user: draftingInput(request, evidence),
+        schemaName: "uae_cv_tailoring_draft",
+        schema: TAILORING_DRAFT_SCHEMA,
+      })
+    );
     return { draft, provider: "grok-4.5" as const };
   } catch (error) {
     console.error("Grok drafting unavailable; using Sonnet fallback:", error);
-    const draft = await sonnetDraft(request, evidence);
-    assertDraftShape(draft);
+    const draft = await createValidDraft("sonnet-fallback", () =>
+      sonnetDraft(request, evidence)
+    );
     return { draft, provider: "sonnet-fallback" as const };
   }
 }
