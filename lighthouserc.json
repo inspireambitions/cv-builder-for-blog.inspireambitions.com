@@ -6,7 +6,7 @@
       "url": ["http://127.0.0.1:3000/"],
       "numberOfRuns": 1,
       "settings": {
-        "preset": "perf",
+        "onlyCategories": ["performance", "accessibility"],
         "formFactor": "mobile",
         "screenEmulation": { "mobile": true, "width": 360, "height": 800, "deviceScaleFactor": 2 },
         "throttlingMethod": "simulate"
