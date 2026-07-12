@@ -24,7 +24,7 @@ jobs:
           body="$(mktemp)"
           status="$(curl --silent --show-error --location --retry 2 --retry-all-errors --max-time 25 --output "$body" --write-out '%{http_code}' https://cv.inspireambitions.com/)"
           test "$status" = "200"
-          grep -q "Build a CV" "$body"
+          grep -q "InspireAmbitions CV Builder" "$body"
 
       - name: Check legacy CV redirects
         shell: bash
