@@ -8,6 +8,7 @@ import { validateEmail } from "@/lib/validators";
 import { calculateScore } from "@/lib/score";
 import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
 import { reportClientError } from "@/lib/error-reporting";
+import { saveAs } from "file-saver";
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -15,6 +16,11 @@ interface DownloadModalProps {
 }
 
 type DownloadFormat = "pdf_ats" | "pdf_recruiter" | "word_ats" | "word_recruiter" | "jpeg";
+type AtsReport = {
+  passed: boolean;
+  score: number;
+  checks: Array<{ label: string; passed: boolean; detail: string }>;
+};
 
 const DOWNLOAD_GATE_KEY = "ia-cv-download-email-unlocked";
 const MAX_EXPORT_ATTEMPTS = 3;
@@ -30,6 +36,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const [showMoreFormats, setShowMoreFormats] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [email, setEmail] = useState("");
+  const [atsReport, setAtsReport] = useState<AtsReport | null>(null);
   const [emailStatus, setEmailStatus] = useState<
     "idle" | "loading" | "unlocked" | "error"
   >("idle");
@@ -115,8 +122,26 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         setAttempt(tryNumber);
         try {
           if (format === "pdf_ats") {
-            const { exportPDF } = await import("@/lib/export-pdf");
-            await exportPDF(state, { mode: "ats" });
+            const { buildPDF } = await import("@/lib/export-pdf");
+            const output = await buildPDF(state, { mode: "ats" });
+            const formData = new FormData();
+            formData.append("file", new File([output.blob], output.filename, { type: "application/pdf" }));
+            formData.append(
+              "expected",
+              JSON.stringify({
+                name: state.personal.name,
+                email: state.personal.email,
+                phone: state.personal.phone,
+                skills: state.skills,
+              })
+            );
+            try {
+              const check = await fetch("/api/ats-check", { method: "POST", body: formData });
+              if (check.ok) setAtsReport((await check.json()) as AtsReport);
+            } catch {
+              // Download remains available when the optional verification service is unavailable.
+            }
+            saveAs(output.blob, output.filename);
           }
           if (format === "pdf_recruiter") {
             const { exportPDF } = await import("@/lib/export-pdf");
@@ -227,6 +252,19 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           </form>
         ) : (
         <div className="mt-6 space-y-3">
+          {atsReport && (
+            <div className={`border p-4 ${atsReport.passed ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`} aria-live="polite">
+              <div className="flex items-center justify-between gap-4">
+                <div className={`font-semibold ${atsReport.passed ? "text-emerald-950" : "text-amber-950"}`}>Finished-PDF ATS check</div>
+                <div className={`text-sm font-bold ${atsReport.passed ? "text-emerald-800" : "text-amber-800"}`}>{atsReport.score}/100</div>
+              </div>
+              <ul className="mt-2 space-y-1 text-xs text-gray-700">
+                {atsReport.checks.map((check) => (
+                  <li key={check.label}>{check.passed ? "Pass" : "Review"}: {check.label} - {check.detail}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <button
             onClick={() => runDownload("pdf_ats")}
             disabled={downloading !== null}

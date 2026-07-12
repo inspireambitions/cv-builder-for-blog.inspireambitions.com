@@ -28,7 +28,7 @@ function imageTypeFromDataUrl(value: string): "JPEG" | "PNG" | "WEBP" {
   return "JPEG";
 }
 
-export async function exportPDF(state: CVState, options: ExportOptions = {}) {
+export async function buildPDF(state: CVState, options: ExportOptions = {}) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
@@ -270,6 +270,15 @@ export async function exportPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const blob = pdf.output("blob");
-  saveAs(blob, filenameFor(state, "pdf", recruiterReady ? "Recruiter" : "ATS"));
+  return {
+    blob: pdf.output("blob"),
+    filename: filenameFor(state, "pdf", recruiterReady ? "Recruiter" : "ATS"),
+    pageCount: pdf.getNumberOfPages(),
+  };
+}
+
+export async function exportPDF(state: CVState, options: ExportOptions = {}) {
+  const output = await buildPDF(state, options);
+  saveAs(output.blob, output.filename);
+  return output;
 }

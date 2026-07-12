@@ -109,6 +109,8 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   await mkdir("test-results/cv-builder-p0", { recursive: true });
   const pdfPath = "test-results/cv-builder-p0/mariam-hassan.pdf";
   await pdfDownload.saveAs(pdfPath);
+  await expect(page.getByText("Finished-PDF ATS check")).toBeVisible();
+  await expect(page.getByText(/Readable text layer/)).toBeVisible();
   const parser = new PDFParse({ data: await readFile(pdfPath) });
   const parsedPdf = await parser.getText();
   await parser.destroy();

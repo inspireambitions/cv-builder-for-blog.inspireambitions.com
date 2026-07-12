@@ -5,6 +5,7 @@ import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
 import type { ScoreResult, ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
+import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
 
 // SVG ring constants
 const SIZE = 160;
@@ -273,6 +274,8 @@ export default function StepScore() {
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
       />
+
+      <TailorWorkspace />
     </div>
   );
 }
