@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useCVState } from "@/lib/state";
 import { STEPS } from "@/lib/constants";
 import { useLocale } from "@/lib/locale";
@@ -9,20 +10,20 @@ import { trackToolEvent } from "@/lib/analytics";
 import LanguageToggle from "./shared/LanguageToggle";
 import ThemeToggle from "./shared/ThemeToggle";
 
-import StepStart from "./steps/StepStart";
-import StepTemplate from "./steps/StepTemplate";
-import StepPersonal from "./steps/StepPersonal";
-import StepSummary from "./steps/StepSummary";
-import StepExperience from "./steps/StepExperience";
-import StepEducation from "./steps/StepEducation";
-import StepSkills from "./steps/StepSkills";
-import StepExtras from "./steps/StepExtras";
-import StepScore from "./steps/StepScore";
+const StepStart = dynamic(() => import("./steps/StepStart"));
+const StepTemplate = dynamic(() => import("./steps/StepTemplate"));
+const StepPersonal = dynamic(() => import("./steps/StepPersonal"));
+const StepSummary = dynamic(() => import("./steps/StepSummary"));
+const StepExperience = dynamic(() => import("./steps/StepExperience"));
+const StepEducation = dynamic(() => import("./steps/StepEducation"));
+const StepSkills = dynamic(() => import("./steps/StepSkills"));
+const StepExtras = dynamic(() => import("./steps/StepExtras"));
+const StepScore = dynamic(() => import("./steps/StepScore"));
 
-import CorporateTemplate from "./templates/Corporate";
-import MinimalTemplate from "./templates/Minimal";
-import GulfTemplate from "./templates/Gulf";
-import CreativeTemplate from "./templates/Creative";
+const CorporateTemplate = dynamic(() => import("./templates/Corporate"));
+const MinimalTemplate = dynamic(() => import("./templates/Minimal"));
+const GulfTemplate = dynamic(() => import("./templates/Gulf"));
+const CreativeTemplate = dynamic(() => import("./templates/Creative"));
 import SaveToast from "./shared/SaveToast";
 
 /** Maps step keys from STEPS to i18n translation keys */

@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useCVState } from "@/lib/state";
 import { detectGeo } from "@/lib/geo";
 import { validateFileUpload } from "@/lib/validators";
 import { sampleCVState } from "@/lib/sample-data";
 import type { CVState } from "@/lib/types";
-import Corporate from "@/components/templates/Corporate";
-import Minimal from "@/components/templates/Minimal";
-import Gulf from "@/components/templates/Gulf";
-import Creative from "@/components/templates/Creative";
+const Corporate = dynamic(() => import("@/components/templates/Corporate"));
+const Minimal = dynamic(() => import("@/components/templates/Minimal"));
+const Gulf = dynamic(() => import("@/components/templates/Gulf"));
+const Creative = dynamic(() => import("@/components/templates/Creative"));
 import { trackToolEvent } from "@/lib/analytics";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
