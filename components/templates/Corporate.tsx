@@ -28,29 +28,27 @@ export default function Corporate({ state }: { state: CVState }) {
 
   const hasSidebar = filledSkills.length > 0 || filledLanguages.length > 0 || filledAchievements.length > 0 || filledVolunteer.length > 0 || filledProjects.length > 0 || filledPublications.length > 0 || filledMemberships.length > 0;
 
-  const skillBarWidths = [92, 88, 95, 85, 90, 87, 93, 86, 91, 89];
-
   return (
     <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14 }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #1a2744 0%, #2d3d66 100%)", padding: "32px 40px 28px" }}>
+      <div style={{ backgroundColor: "#ffffff", borderBottom: "2px solid #1a2744", padding: "34px 40px 22px" }}>
         {personal.name.trim() && (
-          <div style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+          <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 31, fontWeight: 700, color: "#17191d", lineHeight: 1.15 }}>
             {personal.name}
           </div>
         )}
         {personal.title.trim() && (
-          <div style={{ fontSize: 16, color: "rgba(255,255,255,0.78)", marginTop: 4 }}>
+          <div style={{ fontSize: 15, color: "#1a2744", marginTop: 5, textTransform: "uppercase", letterSpacing: "0.04em" }}>
             {personal.title}
           </div>
         )}
         {hasContact && (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>
+          <div style={{ fontSize: 12, color: "#565b64", marginTop: 12 }}>
             {contactParts.join("  |  ")}
           </div>
         )}
         {uaeHeaderParts.length > 0 && (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", marginTop: 6 }}>
+          <div style={{ borderTop: "1px solid #d7dbe2", fontSize: 11, color: "#1a2744", fontWeight: 600, marginTop: 8, paddingTop: 7 }}>
             {uaeHeaderParts.join("  |  ")}
           </div>
         )}
@@ -144,12 +142,7 @@ export default function Corporate({ state }: { state: CVState }) {
               <section style={{ marginBottom: 22 }}>
                 <SidebarHeading>Skills</SidebarHeading>
                 {filledSkills.map((skill, i) => (
-                  <div key={i} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 12, color: "#333", marginBottom: 3 }}>{skill}</div>
-                    <div style={{ height: 6, backgroundColor: "#dde1e6", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${skillBarWidths[i % skillBarWidths.length]}%`, background: "linear-gradient(90deg, #1a2744 0%, #2d3d66 100%)", borderRadius: 3 }} />
-                    </div>
-                  </div>
+                  <div key={i} style={{ borderBottom: "1px solid #e1e4e8", fontSize: 12, color: "#333", padding: "5px 0" }}>{skill}</div>
                 ))}
               </section>
             )}

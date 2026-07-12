@@ -6,6 +6,7 @@ import { detectGeo } from "@/lib/geo";
 import { validateFileUpload } from "@/lib/validators";
 import type { CVState } from "@/lib/types";
 import { trackToolEvent } from "@/lib/analytics";
+import TemplatePreview from "@/components/templates/TemplatePreview";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
@@ -60,12 +61,12 @@ const TEMPLATES: {
   name: string;
   bestFor: string;
   badge?: string;
-  accentClass: string;
+  photo: string;
 }[] = [
-  { key: "corp", name: "Corporate", bestFor: "Finance, consulting & enterprise roles", accentClass: "bg-navy-700" },
-  { key: "min", name: "Minimal", bestFor: "Tech, startups & design roles", accentClass: "bg-gray-600" },
-  { key: "gulf", name: "Gulf", bestFor: "GCC employers, government & semi-gov", badge: "Popular in GCC", accentClass: "bg-gold-600" },
-  { key: "cre", name: "Creative", bestFor: "Marketing, media & creative industries", accentClass: "bg-emerald-700" },
+  { key: "corp", name: "Executive", bestFor: "Banking, consulting, government & leadership", photo: "Optional" },
+  { key: "gulf", name: "Gulf Professional", bestFor: "Hospitality, aviation, healthcare & regional roles", badge: "GCC-first", photo: "Expected" },
+  { key: "min", name: "Technical", bestFor: "Engineering, construction, logistics & technology", photo: "None" },
+  { key: "cre", name: "Creative", bestFor: "Marketing, media & communications", photo: "Optional" },
 ];
 
 const FEATURES = [
@@ -637,33 +638,25 @@ export default function StepStart() {
       {/* ===== TEMPLATE PREVIEW GALLERY ===== */}
       <section className="max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-          4 Professional Templates &mdash; Choose Your Style
+          Four professional directions. Choose how recruiters should read you.
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {TEMPLATES.map((t) => {
             return (
-              <div
+              <button
+                type="button"
                 key={t.key}
-                className="group relative bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                onClick={() => {
+                  updateField({ template: t.key });
+                  nextStep();
+                }}
+                className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white text-start shadow-rest transition hover:-translate-y-0.5 hover:border-gold-600 hover:shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2"
+                aria-label={`Choose ${t.name} template`}
               >
-                {/* Lightweight representative preview. Full templates load in the editor. */}
-                <div className="relative h-[360px] w-full overflow-hidden bg-gray-50 p-6">
-                  <span className="absolute start-3 top-3 z-10 bg-gray-950 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                    Fictional sample CV
-                  </span>
-                  <div className="mt-8 h-full bg-white p-5 shadow-sm" aria-hidden="true">
-                    <div className={`mb-4 h-2 w-20 ${t.accentClass}`} />
-                    <div className="mb-2 h-3 w-3/4 bg-gray-800" />
-                    <div className="mb-6 h-2 w-1/2 bg-gray-300" />
-                    {["w-full", "w-5/6", "w-full", "w-2/3"].map((width, index) => (
-                      <div key={index} className="mb-5">
-                        <div className={`mb-2 h-2 w-24 ${t.accentClass}`} />
-                        <div className={`mb-1 h-1.5 ${width} bg-gray-300`} />
-                        <div className="mb-1 h-1.5 w-full bg-gray-200" />
-                        <div className="h-1.5 w-4/5 bg-gray-200" />
-                      </div>
-                    ))}
+                <div className="relative h-[360px] w-full overflow-hidden bg-gray-100 p-4">
+                  <div className="h-[430px] overflow-hidden border border-gray-200 shadow-rest">
+                    <TemplatePreview template={t.key} />
                   </div>
                 </div>
 
@@ -675,14 +668,22 @@ export default function StepStart() {
                 )}
 
                 {/* Info */}
-                <div className="p-4 border-t border-gray-100">
-                  <h3 className="font-semibold text-gray-900">{t.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Best for: {t.bestFor}</p>
+                <div className="border-t border-gray-100 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-gray-900">{t.name}</h3>
+                    <span className="text-xs font-semibold text-gold-700">Choose</span>
+                  </div>
+                  <p className="mt-1 min-h-10 text-xs leading-5 text-gray-500">Best for: {t.bestFor}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase text-gray-600">
+                    <span className="rounded-full bg-gray-100 px-2 py-1">Photo: {t.photo}</span>
+                    <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">ATS-safe</span>
+                  </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
+        <p className="mt-5 text-center text-xs text-gray-500">Sample data is used in all previews so you can compare the design fairly.</p>
       </section>
 
       {/* ===== FEATURES SECTION ===== */}

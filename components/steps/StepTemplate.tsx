@@ -3,6 +3,14 @@
 import { useCVState } from "@/lib/state";
 import { TEMPLATE_INFO } from "@/lib/constants";
 import type { TemplateType } from "@/lib/types";
+import TemplatePreview from "@/components/templates/TemplatePreview";
+
+const photoRules: Record<TemplateType, string> = {
+  corp: "Photo optional",
+  gulf: "Photo expected",
+  min: "No photo",
+  cre: "Photo optional",
+};
 
 export default function StepTemplate() {
   const { state, updateField } = useCVState();
@@ -11,32 +19,36 @@ export default function StepTemplate() {
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">
-          Choose Your Template
+          Choose how recruiters should read you
         </h2>
         <p className="mt-2 text-gray-600">
-          Select a layout that fits your industry and target market
+          Each direction changes hierarchy, density and regional emphasis, not just colour.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {TEMPLATE_INFO.map((tpl) => {
           const selected = state.template === tpl.key;
           return (
             <button
               key={tpl.key}
               onClick={() => updateField({ template: tpl.key as TemplateType })}
-              className={`relative bg-white rounded-xl shadow-sm border overflow-hidden text-start transition-all cursor-pointer ${
+              className={`relative overflow-hidden rounded-lg border bg-white text-start shadow-rest transition-all ${
                 selected
-                  ? "ring-2 ring-gold-500 border-gold-500"
-                  : "border-gray-200 hover:shadow-md"
+                  ? "border-gold-600 ring-2 ring-gold-600 ring-offset-2"
+                  : "border-gray-200 hover:-translate-y-0.5 hover:border-gold-600 hover:shadow-raised"
               }`}
+              aria-pressed={selected}
             >
-              {/* Color strip */}
-              <div className={`h-[100px] w-full ${tpl.color}`} />
+              <div className="h-[280px] overflow-hidden bg-gray-100 p-3">
+                <div className="h-[390px] overflow-hidden border border-gray-200 shadow-rest">
+                  <TemplatePreview template={tpl.key} />
+                </div>
+              </div>
 
               {/* Checkmark */}
               {selected && (
-                <div className="absolute top-3 end-3 w-7 h-7 bg-gold-500 rounded-full flex items-center justify-center">
+                <div className="absolute end-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-gold-600 shadow-raised">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -61,17 +73,22 @@ export default function StepTemplate() {
               )}
 
               <div className="p-4">
-                <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                   {tpl.name}
                 </h3>
                 <p className="mt-1 text-xs text-gray-600 leading-relaxed">
                   {tpl.desc}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase">
+                  <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">{photoRules[tpl.key]}</span>
+                  <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">ATS-safe</span>
+                </div>
               </div>
             </button>
           );
         })}
       </div>
+      <p className="text-center text-xs text-gray-500">The same sample data is used in every preview for a fair comparison.</p>
 
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">

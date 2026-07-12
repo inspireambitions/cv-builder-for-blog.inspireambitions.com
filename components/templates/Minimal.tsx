@@ -26,11 +26,11 @@ export default function Minimal({ state }: { state: CVState }) {
   const filledMemberships = memberships.filter(m => m.org.trim());
 
   return (
-    <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontSize: 14, color: "#2d2d2d", padding: "48px 56px" }}>
+    <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "Arial, sans-serif", fontSize: 14, color: "#202226", padding: "44px 52px" }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         {personal.name.trim() && (
-          <div style={{ fontSize: 32, fontWeight: 300, color: "#111", lineHeight: 1.15, letterSpacing: "-0.01em" }}>
+          <div style={{ borderLeft: "5px solid #202226", fontSize: 28, fontWeight: 800, color: "#111", lineHeight: 1.15, paddingLeft: 14, textTransform: "uppercase" }}>
             {personal.name}
           </div>
         )}
@@ -40,20 +40,20 @@ export default function Minimal({ state }: { state: CVState }) {
           </div>
         )}
         {contactParts.length > 0 && (
-          <div style={{ fontSize: 12, color: "#666", marginTop: 8 }}>
+          <div style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: "#666", marginTop: 10 }}>
             {contactParts.join("  \u00b7  ")}
           </div>
         )}
         {uaeHeaderParts.length > 0 && (
-          <div style={{ fontSize: 12, color: "#4b7d55", marginTop: 6 }}>
+          <div style={{ backgroundColor: "#f1f3f5", fontFamily: "'Courier New', monospace", fontSize: 11, color: "#30343a", marginTop: 7, padding: "7px 9px" }}>
             {uaeHeaderParts.join("  \u00b7  ")}
           </div>
         )}
         <div style={{ height: 1, backgroundColor: "#e5e7eb", marginTop: 20 }} />
       </div>
 
-      {/* Body: 2-column grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+      {/* ATS-literal single-column body */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 0 }}>
         {/* Left Column */}
         <div>
           {/* Summary */}
@@ -116,11 +116,9 @@ export default function Minimal({ state }: { state: CVState }) {
           {filledSkills.length > 0 && (
             <section style={{ marginBottom: 24 }}>
               <MinimalHeading>Skills</MinimalHeading>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div style={{ fontSize: 13, lineHeight: 1.6 }}>
                 {filledSkills.map((skill, i) => (
-                  <span key={i} style={{ backgroundColor: "#f2f2f6", borderRadius: 4, padding: "4px 12px", fontSize: 13, color: "#333" }}>
-                    {skill}
-                  </span>
+                  <span key={i}>{i > 0 ? " · " : ""}{skill}</span>
                 ))}
               </div>
             </section>

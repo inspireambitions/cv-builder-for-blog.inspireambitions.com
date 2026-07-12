@@ -23,8 +23,6 @@ export default function Creative({ state }: { state: CVState }) {
   const filledPublications = publications.filter(p => p.title.trim());
   const filledMemberships = memberships.filter(m => m.org.trim());
 
-  const skillBarWidths = [90, 95, 85, 92, 88, 93, 87, 91, 86, 94];
-
   return (
     <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14, display: "flex" }}>
       {/* Left Sidebar */}
@@ -56,22 +54,22 @@ export default function Creative({ state }: { state: CVState }) {
         <div style={{ marginTop: 20, marginBottom: 20 }}>
           {personal.email.trim() && (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6, wordBreak: "break-all" }}>
-              <span style={{ marginRight: 6 }}>{"\u2709"}</span>{personal.email}
+              <span style={{ marginRight: 6, fontWeight: 700 }}>Email</span>{personal.email}
             </div>
           )}
           {personal.phone.trim() && (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
-              <span style={{ marginRight: 6 }}>{"\u260E"}</span>{personal.phone}
+              <span style={{ marginRight: 6, fontWeight: 700 }}>Phone</span>{personal.phone}
             </div>
           )}
           {personal.location.trim() && (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
-              <span style={{ marginRight: 6 }}>{"\uD83D\uDCCD"}</span>{personal.location}
+              <span style={{ marginRight: 6, fontWeight: 700 }}>Based</span>{personal.location}
             </div>
           )}
           {personal.linkedin.trim() && (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6, wordBreak: "break-all" }}>
-              <span style={{ marginRight: 6 }}>{"\uD83D\uDD17"}</span>{personal.linkedin}
+              <span style={{ marginRight: 6, fontWeight: 700 }}>LinkedIn</span>{personal.linkedin}
             </div>
           )}
           {uaeHeaderParts.length > 0 && (
@@ -86,12 +84,7 @@ export default function Creative({ state }: { state: CVState }) {
           <section style={{ marginBottom: 20 }}>
             <SidebarSectionHeading>Skills</SidebarSectionHeading>
             {filledSkills.map((skill, i) => (
-              <div key={i} style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", marginBottom: 3 }}>{skill}</div>
-                <div style={{ height: 5, backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${skillBarWidths[i % skillBarWidths.length]}%`, background: "linear-gradient(90deg, #9b741e 0%, #684d12 100%)", borderRadius: 3 }} />
-                </div>
-              </div>
+              <div key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.18)", fontSize: 11, color: "rgba(255,255,255,0.9)", padding: "5px 0" }}>{skill}</div>
             ))}
           </section>
         )}

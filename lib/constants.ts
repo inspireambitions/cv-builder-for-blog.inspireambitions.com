@@ -32,26 +32,26 @@ export const LANGUAGE_LEVELS = [
 export const TEMPLATE_INFO = [
   {
     key: "corp" as const,
-    name: "Corporate / Traditional",
-    desc: "Navy header, 2-column layout. Best for: Finance, Law, Consulting, Government.",
+    name: "Executive",
+    desc: "Quiet authority for banking, consulting, government and leadership roles.",
     color: "bg-navy-800",
   },
   {
     key: "min" as const,
-    name: "Modern Minimal",
-    desc: "Clean white design, generous spacing. Best for: Tech, Startups, Product, Design.",
+    name: "Technical",
+    desc: "Dense, literal structure for engineering, construction, logistics and technology.",
     color: "bg-gray-700",
   },
   {
     key: "gulf" as const,
-    name: "Gulf / UAE Style",
-    desc: "Green header with photo. Best for: GCC/MENA roles where photo is expected.",
+    name: "Gulf Professional",
+    desc: "Region-first hierarchy for hospitality, aviation, healthcare and GCC hiring.",
     color: "bg-green-800",
   },
   {
     key: "cre" as const,
-    name: "Creative / Bold",
-    desc: "Purple sidebar with photo. Best for: Marketing, Media, Creative Industries.",
+    name: "Creative",
+    desc: "Strong typographic hierarchy for marketing, media and communications.",
     color: "bg-purple-800",
   },
 ] as const;

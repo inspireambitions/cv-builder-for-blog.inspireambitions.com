@@ -30,7 +30,7 @@ export default function Gulf({ state }: { state: CVState }) {
   return (
     <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14 }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #1a3320 0%, #234428 100%)", padding: "28px 40px 24px", display: "flex", alignItems: "center", gap: 20 }}>
+      <div style={{ backgroundColor: "#292b2d", padding: "28px 40px 24px", display: "flex", alignItems: "center", gap: 20 }}>
         {photo && (
           <div style={{ flexShrink: 0 }}>
             <img
@@ -144,14 +144,14 @@ export default function Gulf({ state }: { state: CVState }) {
 
         {/* Sidebar */}
         {hasSidebar && (
-          <div style={{ backgroundColor: "#f0f7f1", padding: "28px 20px 32px 20px", borderLeft: "1px solid #d4e6d7" }}>
+          <div style={{ backgroundColor: "#eeeae2", padding: "28px 20px 32px 20px", borderLeft: "1px solid #d5cec2" }}>
             {/* Skills */}
             {filledSkills.length > 0 && (
               <section style={{ marginBottom: 22 }}>
                 <GulfSidebarHeading>Skills</GulfSidebarHeading>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {filledSkills.map((skill, i) => (
-                    <span key={i} style={{ backgroundColor: "#dcfce7", color: "#166534", borderRadius: 9999, padding: "4px 12px", fontSize: 12, fontWeight: 500 }}>
+                    <span key={i} style={{ borderBottom: "1px solid #d0c7b9", color: "#403c36", padding: "4px 0", fontSize: 12, fontWeight: 500, width: "100%" }}>
                       {skill}
                     </span>
                   ))}
