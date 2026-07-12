@@ -68,39 +68,36 @@ function payload(index) {
 
 async function run(index) {
   const started = Date.now();
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-vercel-forwarded-for": `198.51.100.${index + 10}`,
-      },
-      body: JSON.stringify(payload(index)),
-      signal: AbortSignal.timeout(210_000),
-    });
-    const body = await response.json().catch(() => ({}));
-    return {
-      index,
-      status: response.status,
-      durationMs: Date.now() - started,
-      draftProvider: body.draftProvider || "",
-      reviewProvider: body.reviewProvider || "",
-      approved: body.review?.approved === true,
-      integrity: body.integrity?.passed === true,
-      error: body.error || "",
-    };
-  } catch (error) {
-    return {
-      index,
-      status: 0,
-      durationMs: Date.now() - started,
-      draftProvider: "",
-      reviewProvider: "",
-      approved: false,
-      integrity: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
+  let last = { status: 0, body: {}, error: "" };
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-vercel-forwarded-for": `198.51.100.${index + 10}`,
+        },
+        body: JSON.stringify(payload(index)),
+        signal: AbortSignal.timeout(360_000),
+      });
+      const body = await response.json().catch(() => ({}));
+      last = { status: response.status, body, error: body.error || "" };
+      if (response.ok || response.status !== 503) break;
+    } catch (error) {
+      last = { status: 0, body: {}, error: error instanceof Error ? error.message : String(error) };
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1_500 * (attempt + 1)));
   }
+  return {
+    index,
+    status: last.status,
+    durationMs: Date.now() - started,
+    draftProvider: last.body.draftProvider || "",
+    reviewProvider: last.body.reviewProvider || "",
+    approved: last.body.review?.approved === true,
+    integrity: last.body.integrity?.passed === true,
+    error: last.error,
+  };
 }
 
 const started = Date.now();
@@ -141,4 +138,4 @@ console.log(
   )
 );
 
-process.exit(serviceFailures.length / results.length > 0.05 ? 1 : 0);
+process.exit(serviceFailures.length > 0 ? 1 : 0);

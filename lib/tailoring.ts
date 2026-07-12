@@ -218,14 +218,14 @@ async function createValidDraft(
 ) {
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       const draft = await generate();
       assertDraftShape(draft);
       return draft;
     } catch (error) {
       lastError = error;
-      console.error(`${provider} returned an invalid draft (attempt ${attempt}/2):`, error);
+      console.error(`${provider} returned an invalid draft (attempt ${attempt}/3):`, error);
     }
   }
 
@@ -240,6 +240,7 @@ async function createDraft(request: TailoringRequest, evidence: EvidenceItem[]) 
         user: draftingInput(request, evidence),
         schemaName: "uae_cv_tailoring_draft",
         schema: TAILORING_DRAFT_SCHEMA,
+        timeoutMs: 40_000,
       })
     );
     return { draft, provider: "grok-4.5" as const };
@@ -277,26 +278,35 @@ Draft schema: ${JSON.stringify(TAILORING_DRAFT_SCHEMA)}`;
     2
   );
   const toolName = "submit_senior_cv_review";
-  const message = await createAnthropicMessage({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 5200,
-    system: reviewSystem,
-    messages: [{ role: "user", content: reviewInput }],
-    tools: [{ name: toolName, description: "Submit the complete senior review and final evidence-backed draft.", input_schema: TAILORING_REVIEW_SCHEMA as Tool.InputSchema }],
-    tool_choice: { type: "tool", name: toolName },
-  });
-  const review = getAnthropicToolInput<TailoringReview>(message, toolName);
-  if (
-    !review ||
-    typeof review !== "object" ||
-    typeof review.approved !== "boolean" ||
-    !Array.isArray(review.corrections) ||
-    !Array.isArray(review.warnings)
-  ) {
-    throw new Error("Senior review did not match the required structure");
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const message = await createAnthropicMessage({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 5200,
+        system: reviewSystem,
+        messages: [{ role: "user", content: reviewInput }],
+        tools: [{ name: toolName, description: "Submit the complete senior review and final evidence-backed draft.", input_schema: TAILORING_REVIEW_SCHEMA as Tool.InputSchema }],
+        tool_choice: { type: "tool", name: toolName },
+      });
+      const review = getAnthropicToolInput<TailoringReview>(message, toolName);
+      if (
+        !review ||
+        typeof review !== "object" ||
+        typeof review.approved !== "boolean" ||
+        !Array.isArray(review.corrections) ||
+        !Array.isArray(review.warnings)
+      ) {
+        throw new Error("Senior review did not match the required structure");
+      }
+      assertDraftShape(review.final);
+      return review;
+    } catch (error) {
+      lastError = error;
+      console.error(`Senior review failed (attempt ${attempt}/3):`, error);
+    }
   }
-  assertDraftShape(review.final);
-  return review;
+  throw lastError;
 }
 
 function assertRequest(request: TailoringRequest) {

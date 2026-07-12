@@ -106,5 +106,13 @@ export function getAnthropicToolInput<T>(message: Message, toolName: string): T 
     throw new Error("Unexpected structured response from AI");
   }
 
-  return toolBlock.input as T;
+  let input: unknown = toolBlock.input;
+  if (typeof input === "string") {
+    input = JSON.parse(input);
+  }
+  if (Array.isArray(input) && input.length === 1) {
+    input = input[0];
+  }
+
+  return input as T;
 }

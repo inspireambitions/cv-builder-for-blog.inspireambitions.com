@@ -9,6 +9,37 @@ import OutcomeFeedback from "@/components/tailoring/OutcomeFeedback";
 
 type View = "closed" | "input" | "running" | "result";
 
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function requestTailoring(body: string) {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    let response: Response;
+    try {
+      response = await fetch("/api/tailor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+    } catch (caught) {
+      lastError = caught instanceof Error ? caught : new Error("Tailoring failed. Please try again.");
+      if (attempt === 2) throw lastError;
+      await wait(1_500 * (attempt + 1));
+      continue;
+    }
+    const payload = await response.json();
+    if (response.ok) return payload as TailoringResult;
+    const fallback = response.status === 429 || response.status === 503
+      ? "The review service is busy. Your CV is safe and unchanged. Please wait, then try again."
+      : "The review could not finish. Your CV is safe and unchanged. Please try again.";
+    lastError = new Error(payload.error || fallback);
+    if (response.status !== 503 || attempt === 2) throw lastError;
+    await wait(1_500 * (attempt + 1));
+  }
+  throw lastError ?? new Error("Tailoring failed. Please try again.");
+}
+
 function statusStyle(status: "supported" | "partial" | "gap") {
   if (status === "supported") return "bg-emerald-50 text-emerald-800 border-emerald-200";
   if (status === "partial") return "bg-amber-50 text-amber-800 border-amber-200";
@@ -34,19 +65,10 @@ export default function TailorWorkspace() {
     setView("running");
     trackToolEvent("cv_tailoring_started", { surface: "score_workspace" });
     try {
-      const response = await fetch("/api/tailor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cvData: state, jobTitle, company, jobDescription }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        const fallback = response.status === 429 || response.status === 503
-          ? "The review service is busy. Your CV is safe and unchanged. Please wait, then try again."
-          : "The review could not finish. Your CV is safe and unchanged. Please try again.";
-        throw new Error(payload.error || fallback);
-      }
-      setResult(payload as TailoringResult);
+      const payload = await requestTailoring(
+        JSON.stringify({ cvData: state, jobTitle, company, jobDescription })
+      );
+      setResult(payload);
       setView("result");
       trackToolEvent("cv_tailoring_completed", {
         surface: "score_workspace",
