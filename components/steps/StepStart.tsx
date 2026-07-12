@@ -669,7 +669,7 @@ export default function StepStart() {
 
                 {/* Badge */}
                 {t.badge && (
-                  <span className="absolute top-3 end-3 bg-green-600 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                  <span className="absolute top-3 end-3 bg-green-800 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
                     {t.badge}
                   </span>
                 )}
