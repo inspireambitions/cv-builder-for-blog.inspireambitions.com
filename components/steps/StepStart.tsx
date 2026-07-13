@@ -63,10 +63,15 @@ const TEMPLATES: {
   badge?: string;
   photo: string;
 }[] = [
-  { key: "corp", name: "Executive", bestFor: "Banking, consulting, government & leadership", photo: "Optional" },
-  { key: "gulf", name: "Gulf Professional", bestFor: "Hospitality, aviation, healthcare & regional roles", badge: "GCC-first", photo: "Expected" },
-  { key: "min", name: "Technical", bestFor: "Engineering, construction, logistics & technology", photo: "None" },
-  { key: "cre", name: "Creative", bestFor: "Marketing, media & communications", photo: "Optional" },
+  { key: "classic", name: "Classic GCC", bestFor: "Most UAE and Gulf applications", badge: "GCC-first", photo: "Optional" },
+  { key: "site", name: "Site", bestFor: "Construction and engineering", photo: "Optional" },
+  { key: "service", name: "Service", bestFor: "Hospitality and F&B", photo: "Prominent" },
+  { key: "care", name: "Care", bestFor: "Healthcare and clinical roles", photo: "Optional" },
+  { key: "ledger", name: "Ledger", bestFor: "Banking, finance and compliance", photo: "Optional" },
+  { key: "crew", name: "Crew", bestFor: "Aviation and cabin service", photo: "Prominent" },
+  { key: "stack", name: "Stack", bestFor: "Technology and product roles", photo: "Hidden" },
+  { key: "move", name: "Move", bestFor: "Logistics and retail", photo: "Optional" },
+  { key: "corner", name: "Corner", bestFor: "Executive and management roles", photo: "Optional" },
 ];
 
 const FEATURES = [
@@ -308,7 +313,7 @@ export default function StepStart() {
     detectGeo().then((geo) => {
       updateField({ geo });
       if (geo === "gulf") {
-        updateField({ template: "gulf" });
+        updateField({ template: "classic" });
       }
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { trackToolEvent } from "@/lib/analytics";
 import type { TailoringResult } from "@/lib/tailoring-types";
 import ApplicationPack from "@/components/tailoring/ApplicationPack";
 import OutcomeFeedback from "@/components/tailoring/OutcomeFeedback";
+import { computeGulfMatchScore } from "@/lib/gulf-match";
 
 type View = "closed" | "input" | "running" | "result";
 
@@ -47,7 +48,7 @@ function statusStyle(status: "supported" | "partial" | "gap") {
 }
 
 export default function TailorWorkspace() {
-  const { state, setState } = useCVState();
+  const { state, setState, goToStep } = useCVState();
   const [view, setView] = useState<View>("closed");
   const [jobTitle, setJobTitle] = useState("");
   const [company, setCompany] = useState("");
@@ -55,6 +56,7 @@ export default function TailorWorkspace() {
   const [result, setResult] = useState<TailoringResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
+  const deterministicMatch = useMemo(() => computeGulfMatchScore(state, jobDescription, jobTitle), [state, jobDescription, jobTitle]);
 
   async function runTailoring() {
     setError(null);
@@ -198,10 +200,34 @@ export default function TailorWorkspace() {
             <p className="mt-2 text-sm text-gray-600">Drafted by {result.draftProvider}; reviewed by {result.reviewProvider}.</p>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-950">{Math.round(final.matchScore)}</span>
-            <span className="text-sm text-gray-500">/100 match</span>
+            <span className="text-4xl font-bold text-gray-950">{deterministicMatch.score}</span>
+            <span className="text-sm text-gray-500">/100 Gulf Match</span>
           </div>
         </div>
+
+        <div className="border border-gray-200 bg-gray-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><h4 className="font-bold text-gray-950">{deterministicMatch.verdict}</h4><p className="mt-1 text-sm text-gray-600">The score is calculated in code. The same CV and vacancy always return the same result.</p></div>
+            <div className="text-xs text-gray-600">Skills {deterministicMatch.components.skills}/40 · Role {deterministicMatch.components.title}/15 · GCC {deterministicMatch.components.gcc}/15 · ATS {deterministicMatch.components.ats}/10</div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2" aria-label="GCC compliance">
+            {deterministicMatch.compliance.map((item) => <span key={item.label} className={`border px-2 py-1 text-xs font-semibold ${item.met ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-900"}`}>{item.met ? "Ready" : "Missing"}: {item.label}</span>)}
+          </div>
+        </div>
+
+        {deterministicMatch.gaps.length > 0 && (
+          <div>
+            <h4 className="text-sm font-bold uppercase tracking-wide text-gray-500">Prioritised match gaps</h4>
+            <div className="mt-3 divide-y divide-gray-200 border-y border-gray-200">
+              {deterministicMatch.gaps.slice(0, 8).map((gap) => (
+                <div key={gap.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><p className="text-sm font-semibold text-gray-900">{gap.label}</p><p className="mt-1 text-sm text-gray-600">{gap.reason}</p></div>
+                  <button type="button" onClick={() => { const steps = { personal: 2, summary: 3, experience: 4, education: 5, skills: 6 }; goToStep(steps[gap.target]); }} className="min-h-10 shrink-0 border border-gray-300 px-3 text-sm font-semibold text-gray-800 hover:bg-gray-50">Fix</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={`border px-4 py-3 text-sm font-semibold ${result.integrity.passed ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-red-200 bg-red-50 text-red-900"}`}>
           {result.integrity.passed

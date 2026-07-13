@@ -87,6 +87,7 @@ export interface PersonalDetails {
   linkedin: string;
   visa_status: VisaStatus;
   notice_period: string;
+  driving_license: string;
   availability_date: string;
   noc_available: NocAvailable;
   nationality: string;
@@ -137,7 +138,17 @@ export interface MembershipEntry {
   year: string;
 }
 
-export type TemplateType = "corp" | "min" | "gulf" | "cre";
+export type TemplateType =
+  | "classic"
+  | "site"
+  | "service"
+  | "care"
+  | "ledger"
+  | "crew"
+  | "stack"
+  | "move"
+  | "corner";
+export type CVLanguage = "en" | "ar";
 export type GeoType = "gulf" | "global";
 export type PlanType = "free" | "payg" | "annual";
 
@@ -179,6 +190,7 @@ export interface ScoreResult {
 export interface CVState {
   step: number;
   template: TemplateType;
+  cvLanguage: CVLanguage;
   geo: GeoType;
   photo: string | null;
   personal: PersonalDetails;
@@ -199,7 +211,8 @@ export interface CVState {
 
 export const defaultCVState: CVState = {
   step: 0,
-  template: "corp",
+  template: "classic",
+  cvLanguage: "en",
   geo: "global",
   photo: null,
   personal: {
@@ -211,6 +224,7 @@ export const defaultCVState: CVState = {
     linkedin: "",
     visa_status: "",
     notice_period: "",
+    driving_license: "",
     availability_date: "",
     noc_available: "",
     nationality: "",

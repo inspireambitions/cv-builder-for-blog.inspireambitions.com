@@ -5,8 +5,6 @@ import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
 import { trackToolEvent } from "@/lib/analytics";
 import { validateEmail } from "@/lib/validators";
-import { calculateScore } from "@/lib/score";
-import { buildCVEmailHTML } from "@/components/shared/EmailCapture";
 import { reportClientError } from "@/lib/error-reporting";
 import { saveAs } from "file-saver";
 
@@ -23,6 +21,7 @@ type AtsReport = {
 };
 
 const DOWNLOAD_GATE_KEY = "ia-cv-download-email-unlocked";
+const REVIEW_PROMPT_KEY = "ia-cv-review-prompt-seen";
 const MAX_EXPORT_ATTEMPTS = 3;
 
 async function wait(ms: number) {
@@ -37,6 +36,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const [attempt, setAttempt] = useState(0);
   const [email, setEmail] = useState("");
   const [atsReport, setAtsReport] = useState<AtsReport | null>(null);
+  const [showReview, setShowReview] = useState(false);
   const [emailStatus, setEmailStatus] = useState<
     "idle" | "loading" | "unlocked" | "error"
   >("idle");
@@ -62,49 +62,21 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
       setError(validation.warning ?? "Please enter a valid email address.");
       return;
     }
-
     setEmailStatus("loading");
     setError(null);
-    trackToolEvent("email_submitted", { surface: "cv_download_gate" });
-
+    trackToolEvent("email_gate_shown", { surface: "cv_download_gate", format: "pdf_ats" });
     try {
-      const score = calculateScore(state);
-      const emailContent = buildCVEmailHTML(state, score);
-      const userName = state.personal.name || "CV Report";
-      const firstName = userName.split(" ")[0] || "";
-
-      const wpRes = await fetch("/api/email-results", {
+      const firstName = (state.personal.name || "").split(" ")[0] || "";
+      const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          tool: "CV Builder",
-          subject: `Your CV Score: ${score.total}/100 — ${userName}`,
-          content: emailContent,
-          source: "cv-builder-download-gate",
-        }),
+        body: JSON.stringify({ email, firstName, source: "cv-builder-download-gate", template: state.template, cvLang: state.cvLanguage, uiLang: document.documentElement.lang || "en", format: "pdf_ats" }),
       });
-
-      const subscribeRes = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          firstName,
-          source: "cv-builder-download-gate",
-        }),
-      }).catch(() => null);
-
-      if (!wpRes.ok && !subscribeRes?.ok) {
-        throw new Error("Email capture failed.");
-      }
-
+      if (!response.ok) throw new Error("Email capture failed.");
       localStorage.setItem(DOWNLOAD_GATE_KEY, email.toLowerCase().trim());
       setEmailStatus("unlocked");
-      trackToolEvent("email_report_sent", { surface: "cv_download_gate" });
-      if (subscribeRes?.ok) {
-        trackToolEvent("sendy_subscribed", { surface: "cv_download_gate" });
-      }
+      trackToolEvent("email_captured", { surface: "cv_download_gate", format: "pdf_ats" });
+      await runDownload("pdf_ats");
     } catch {
       setEmailStatus("error");
       setError("We could not unlock downloads. Please check your email and try again.");
@@ -166,6 +138,11 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         }
       }
       trackToolEvent("cv_download_completed", { format });
+      if (!localStorage.getItem(REVIEW_PROMPT_KEY)) {
+        localStorage.setItem(REVIEW_PROMPT_KEY, "shown");
+        setShowReview(true);
+        trackToolEvent("review_prompt_shown", { format });
+      }
     } catch (e) {
       setError("Export failed after retries. Your CV is still saved; please try again.");
       console.error(e);
@@ -202,15 +179,14 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         </button>
 
         <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
-          Free. Email gated. No card.
+          Free. No card. No watermark.
         </span>
 
         <h2 className="mt-4 text-2xl font-bold text-gray-900">
           Download Your CV
         </h2>
         <p className="mt-2 text-sm leading-6 text-gray-500">
-          Enter your email once to receive your CV score report and unlock PDF,
-          Word, and preview image downloads.
+          JPEG is instant with no email. PDF and Word ask for your email once on this device.
         </p>
 
         {error && (
@@ -218,6 +194,16 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             {error}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={() => runDownload("jpeg")}
+          disabled={downloading !== null}
+          className="mt-5 w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
+        >
+          <div className="font-semibold text-gray-900">Download JPEG, no email</div>
+          <p className="mt-1 text-sm text-gray-600">Instant, anonymous and watermark-free. PDF is better for ATS applications.</p>
+        </button>
 
         {emailStatus !== "unlocked" ? (
           <form onSubmit={unlockDownloads} className="mt-6 space-y-4">
@@ -242,12 +228,10 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             >
               {emailStatus === "loading"
                 ? "Unlocking downloads..."
-                : "Email My Report & Unlock Downloads"}
+                : "Unlock and Download PDF"}
             </button>
             <p className="text-xs leading-5 text-gray-500">
-              Free download, no card, no watermark. We will email your report
-              and may send practical career guidance from Inspire Ambitions.
-              Unsubscribe anytime. Your email is used for this report and guidance; it is never added to your CV.
+              PDF and Word are free. We ask for your email and may send practical Gulf job-search guidance. Unsubscribe anytime. Prefer not to share it? Use the JPEG button above.
             </p>
           </form>
         ) : (
@@ -365,6 +349,17 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             </button>
           )}
         </div>
+        )}
+
+        {showReview && (
+          <div className="mt-5 border border-gold-200 bg-gold-50 p-4">
+            <p className="font-semibold text-gray-950">Did this help?</p>
+            <p className="mt-1 text-sm text-gray-700">A short, honest review helps other Gulf job seekers find this free tool.</p>
+            <div className="mt-3 flex gap-3">
+              <a href="https://www.trustpilot.com/evaluate/inspireambitions.com" target="_blank" rel="noreferrer" onClick={() => trackToolEvent("review_prompt_clicked", { surface: "download" })} className="bg-gray-950 px-4 py-2 text-sm font-semibold text-white">Review on Trustpilot</a>
+              <button type="button" onClick={() => setShowReview(false)} className="px-3 py-2 text-sm font-semibold text-gray-700">Not now</button>
+            </div>
+          </div>
         )}
 
         <p className="mt-6 text-center text-xs text-gray-400">

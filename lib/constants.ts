@@ -30,30 +30,15 @@ export const LANGUAGE_LEVELS = [
 ] as const;
 
 export const TEMPLATE_INFO = [
-  {
-    key: "corp" as const,
-    name: "Executive",
-    desc: "Quiet authority for banking, consulting, government and leadership roles.",
-    color: "bg-navy-800",
-  },
-  {
-    key: "min" as const,
-    name: "Technical",
-    desc: "Dense, literal structure for engineering, construction, logistics and technology.",
-    color: "bg-gray-700",
-  },
-  {
-    key: "gulf" as const,
-    name: "Gulf Professional",
-    desc: "Region-first hierarchy for hospitality, aviation, healthcare and GCC hiring.",
-    color: "bg-green-800",
-  },
-  {
-    key: "cre" as const,
-    name: "Creative",
-    desc: "Strong typographic hierarchy for marketing, media and communications.",
-    color: "bg-purple-800",
-  },
+  { key: "classic" as const, name: "Classic GCC", desc: "Balanced Gulf format for broad professional use.", color: "bg-navy-800" },
+  { key: "site" as const, name: "Site", desc: "Construction and engineering, with licences and projects first.", color: "bg-slate-800" },
+  { key: "service" as const, name: "Service", desc: "Hospitality and F&B, with languages and employers prominent.", color: "bg-emerald-800" },
+  { key: "care" as const, name: "Care", desc: "Healthcare, with DHA, DOH, MOH and clinical skills prioritised.", color: "bg-teal-800" },
+  { key: "ledger" as const, name: "Ledger", desc: "Banking and finance, conservative and compliance-led.", color: "bg-blue-950" },
+  { key: "crew" as const, name: "Crew", desc: "Aviation and service roles, with photo and languages supported.", color: "bg-sky-900" },
+  { key: "stack" as const, name: "Stack", desc: "Technology roles, with skills and projects surfaced early.", color: "bg-zinc-900" },
+  { key: "move" as const, name: "Move", desc: "Logistics and retail, with licences, systems and availability.", color: "bg-orange-900" },
+  { key: "corner" as const, name: "Corner", desc: "Executive and management CV with board-level authority.", color: "bg-stone-900" },
 ] as const;
 
 export const PRICES = {

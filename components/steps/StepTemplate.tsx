@@ -6,10 +6,15 @@ import type { TemplateType } from "@/lib/types";
 import TemplatePreview from "@/components/templates/TemplatePreview";
 
 const photoRules: Record<TemplateType, string> = {
-  corp: "Photo optional",
-  gulf: "Photo expected",
-  min: "No photo",
-  cre: "Photo optional",
+  classic: "Photo optional",
+  site: "Photo optional",
+  service: "Photo prominent",
+  care: "Photo optional",
+  ledger: "Photo optional",
+  crew: "Photo prominent",
+  stack: "Photo hidden",
+  move: "Photo optional",
+  corner: "Photo optional",
 };
 
 export default function StepTemplate() {
@@ -66,7 +71,7 @@ export default function StepTemplate() {
               )}
 
               {/* Gulf region badge */}
-              {tpl.key === "gulf" && state.geo === "gulf" && (
+              {tpl.key === "classic" && state.geo === "gulf" && (
                 <span className="absolute top-3 start-3 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                   Recommended for your region
                 </span>
@@ -87,6 +92,19 @@ export default function StepTemplate() {
             </button>
           );
         })}
+      </div>
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <label className="text-sm font-semibold text-gray-900" htmlFor="cv-language">CV document language</label>
+        <p className="mt-1 text-xs text-gray-600">This changes headings and layout direction. Your own content stays unchanged.</p>
+        <select
+          id="cv-language"
+          value={state.cvLanguage}
+          onChange={(event) => updateField({ cvLanguage: event.target.value as "en" | "ar" })}
+          className="mt-3 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-base md:w-72"
+        >
+          <option value="en">English, left to right</option>
+          <option value="ar">العربية، من اليمين إلى اليسار</option>
+        </select>
       </div>
       <p className="text-center text-xs text-gray-500">The same sample data is used in every preview for a fair comparison.</p>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 
 const BuilderShell = dynamic(() => import("@/components/BuilderShell"));
@@ -13,7 +14,8 @@ export default function Home() {
   useEffect(() => {
     const hasDraft = Boolean(localStorage.getItem("inspireambitions-cv-state"));
     const hasResumeLink = window.location.hash.startsWith("#resume=");
-    if (hasDraft || hasResumeLink) {
+    const hasHandoff = new URLSearchParams(window.location.search).has("handoff");
+    if (hasDraft || hasResumeLink || hasHandoff) {
       setResumeExisting(true);
       setStarted(true);
     }
@@ -85,6 +87,7 @@ export default function Home() {
       </section>
       <footer className="border-t border-gray-200 bg-white py-8 text-center text-sm text-gray-600">
         <p>Built by a practising Gulf HR Career Specialist. Your CV draft stays in your browser unless you choose a server-assisted feature.</p>
+        <p className="mt-3"><Link href="/why-free" className="font-semibold underline">Why it is free</Link> · <Link href="/vs/zety" className="font-semibold underline">Compare CV builders</Link></p>
       </footer>
     </main>
   );

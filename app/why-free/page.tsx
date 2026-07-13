@@ -1,0 +1,7 @@
+import Link from "next/link";
+
+export const metadata = { title: "Why Our Gulf CV Builder Is Free", description: "Why Inspire Ambitions offers a free Gulf CV builder with no payment tier, no card and an ungated JPEG download." };
+
+export default function WhyFreePage() {
+  return <main className="min-h-screen bg-[#faf9f6] px-5 py-14 text-[#1c1d1f]"><article className="mx-auto max-w-3xl"><p className="text-sm font-bold uppercase text-[#8a611f]">Our promise</p><h1 className="mt-3 text-4xl font-bold">Why this CV builder is free</h1><p className="mt-6 text-lg leading-8">I built Inspire Ambitions to give Gulf job seekers practical guidance from a real HR Career Specialist. The builder has no paid tier. It asks for no card. JPEG downloads need no email. PDF and editable Word downloads ask for one email so we can grow a useful career community without hiding your CV behind a payment screen.</p><p className="mt-5 text-lg leading-8">Your CV stays in your browser unless you choose an AI review. We do not sell CV content. We do not promise interviews. We help you present evidence clearly, then leave the final hiring decision where it belongs.</p><h2 className="mt-10 text-2xl font-bold">What will stay free</h2><ul className="mt-4 space-y-3 text-base leading-7"><li>All templates and editing tools</li><li>The Gulf Match Score</li><li>JPEG export with no email</li><li>PDF and Word export after one email unlock</li></ul><Link href="/" className="mt-10 inline-block bg-[#1c1d1f] px-5 py-3 font-semibold text-white">Build your CV</Link></article></main>;
+}

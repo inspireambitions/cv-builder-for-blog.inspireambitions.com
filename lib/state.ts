@@ -33,7 +33,7 @@ const CVContext = createContext<CVContextValue | null>(null);
 const STORAGE_KEY = "inspireambitions-cv-state";
 const DRAFTS_KEY = "inspireambitions-cv-drafts";
 const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface StoredDraft {
@@ -49,10 +49,23 @@ function normalizeState(value: unknown): CVState | null {
   if (!value || typeof value !== "object") return null;
   const incoming = value as Partial<CVState>;
   const personal = incoming.personal ?? {};
+  const legacyTemplateMap: Record<string, CVState["template"]> = {
+    corp: "ledger",
+    min: "stack",
+    gulf: "classic",
+    cre: "service",
+  };
+  const incomingTemplate = typeof incoming.template === "string" ? incoming.template : "";
+  const validTemplates: CVState["template"][] = ["classic", "site", "service", "care", "ledger", "crew", "stack", "move", "corner"];
+  const template = validTemplates.includes(incomingTemplate as CVState["template"])
+    ? incomingTemplate as CVState["template"]
+    : legacyTemplateMap[incomingTemplate] ?? defaultCVState.template;
 
   return {
     ...defaultCVState,
     ...incoming,
+    template,
+    cvLanguage: incoming.cvLanguage === "ar" ? "ar" : "en",
     personal: {
       ...defaultCVState.personal,
       ...personal,

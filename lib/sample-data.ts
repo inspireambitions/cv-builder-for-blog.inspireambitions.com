@@ -2,7 +2,8 @@ import type { CVState } from "./types";
 
 export const sampleCVState: CVState = {
   step: 8,
-  template: "corp",
+  template: "classic",
+  cvLanguage: "en",
   geo: "global",
   photo: null,
   personal: {
@@ -14,6 +15,7 @@ export const sampleCVState: CVState = {
     linkedin: "https://linkedin.com/in/sarah-alrashid",
     visa_status: "",
     notice_period: "30 days",
+    driving_license: "UAE light vehicle",
     availability_date: "",
     noc_available: "Not applicable",
     nationality: "United Arab Emirates",

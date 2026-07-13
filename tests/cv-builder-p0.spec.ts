@@ -46,11 +46,11 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   await page
     .getByPlaceholder("firstname.lastname@gmail.com")
     .fill("mariam.hassan@example.com");
-  await page.locator("select").nth(0).selectOption("Employment");
+  await page.getByLabel("Visa Status").selectOption("Employment");
   await page.getByPlaceholder("e.g. Immediate, 30 days").fill("Immediate");
-  await page.locator("select").nth(1).selectOption("Yes");
+  await page.getByLabel("NOC Available").selectOption("Yes");
   await page.getByPlaceholder("Start typing or skip").fill("Philippines");
-  await page.locator("select").nth(2).selectOption("Conversational");
+  await page.getByLabel("Arabic Proficiency").selectOption("Conversational");
   await page.getByRole("button", { name: "RERA" }).click();
 
   await expect(page.getByPlaceholder("Licence / registration number")).toBeVisible();
@@ -95,9 +95,12 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
     page.getByText("after email unlock. No card, no watermark")
   ).toBeVisible();
   await page.getByRole("button", { name: "Email & Download CV" }).click();
-  await expect(page.getByRole("button", { name: "Email My Report & Unlock Downloads" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Unlock and Download PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
   await page.getByLabel("Email address").fill("mariam.hassan@example.com");
-  await page.getByRole("button", { name: "Email My Report & Unlock Downloads" }).click();
+  const initialPdf = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Unlock and Download PDF" }).click();
+  await initialPdf;
   await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: "ATS Word (.docx)" })).toBeVisible();

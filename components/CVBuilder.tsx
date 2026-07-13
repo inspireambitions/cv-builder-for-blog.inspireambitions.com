@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCVState } from "@/lib/state";
 import { STEPS } from "@/lib/constants";
 import { useLocale } from "@/lib/locale";
@@ -20,10 +21,7 @@ const StepSkills = dynamic(() => import("./steps/StepSkills"));
 const StepExtras = dynamic(() => import("./steps/StepExtras"));
 const StepScore = dynamic(() => import("./steps/StepScore"));
 
-const CorporateTemplate = dynamic(() => import("./templates/Corporate"));
-const MinimalTemplate = dynamic(() => import("./templates/Minimal"));
-const GulfTemplate = dynamic(() => import("./templates/Gulf"));
-const CreativeTemplate = dynamic(() => import("./templates/Creative"));
+const SectorTemplate = dynamic(() => import("./templates/SectorTemplate"));
 import SaveToast from "./shared/SaveToast";
 
 /** Maps step keys from STEPS to i18n translation keys */
@@ -51,18 +49,7 @@ const STEP_COMPONENTS = [
 ];
 
 function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["state"] }) {
-  switch (state.template) {
-    case "corp":
-      return <CorporateTemplate state={state} />;
-    case "min":
-      return <MinimalTemplate state={state} />;
-    case "gulf":
-      return <GulfTemplate state={state} />;
-    case "cre":
-      return <CreativeTemplate state={state} />;
-    default:
-      return <CorporateTemplate state={state} />;
-  }
+  return <SectorTemplate state={state} />;
 }
 
 export default function CVBuilder() {
@@ -473,6 +460,8 @@ export default function CVBuilder() {
             <div className="space-y-3">
               <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Career Tools</h4>
               <ul className="space-y-2">
+                <li><Link href="/why-free" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">Why it is free</Link></li>
+                <li><Link href="/vs/zety" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">Compare CV builders</Link></li>
                 <li>
                   <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
                     More free career tools

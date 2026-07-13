@@ -18,6 +18,7 @@ import {
   validatePhone,
   validateImageUpload,
 } from "@/lib/validators";
+import { TEMPLATE_CONFIG } from "@/lib/template-config";
 
 interface FieldStatus {
   valid?: boolean;
@@ -36,7 +37,7 @@ export default function StepPersonal() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoProcessing, setPhotoProcessing] = useState(false);
 
-  const showPhoto = template === "gulf" || template === "cre";
+  const showPhoto = TEMPLATE_CONFIG[template].photo !== "hidden";
   const selectedCredentialAuthorities = new Set(
     personal.sector_credentials.map((credential) => credential.authority)
   );
@@ -312,6 +313,7 @@ export default function StepPersonal() {
               Visa Status
             </label>
             <select
+              aria-label="Visa Status"
               value={personal.visa_status}
               onChange={(e) =>
                 updatePersonal({
@@ -359,9 +361,23 @@ export default function StepPersonal() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Driving Licence
+            </label>
+            <input
+              type="text"
+              value={personal.driving_license}
+              onChange={(e) => updatePersonal({ driving_license: e.target.value })}
+              placeholder="e.g. UAE light vehicle, valid"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               NOC Available
             </label>
             <select
+              aria-label="NOC Available"
               value={personal.noc_available}
               onChange={(e) =>
                 updatePersonal({
@@ -402,6 +418,7 @@ export default function StepPersonal() {
               Arabic Proficiency
             </label>
             <select
+              aria-label="Arabic Proficiency"
               value={personal.arabic_proficiency}
               onChange={(e) =>
                 updatePersonal({

@@ -76,12 +76,14 @@ test("download gate exposes email-only dual exports without account, card, paywa
   }
   await page.getByRole("button", { name: "Email & Download CV" }).click();
 
-  await expect(page.getByText("Free. Email gated. No card.")).toBeVisible();
-  await expect(page.getByText(/Free download, no card, no watermark/i)).toBeVisible();
+  await expect(page.getByText("Free. No card. No watermark.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
   await expect(page.getByText(/paywall/i)).toHaveCount(0);
 
   await page.getByLabel("Email address").fill("phase13@example.com");
-  await page.getByRole("button", { name: "Email My Report & Unlock Downloads" }).click();
+  const initialPdf = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Unlock and Download PDF" }).click();
+  await initialPdf;
 
   await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();

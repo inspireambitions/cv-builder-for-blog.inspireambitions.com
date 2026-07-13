@@ -278,6 +278,40 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
 }
 
 export async function exportPDF(state: CVState, options: ExportOptions = {}) {
+  if (isRecruiterReady(options)) {
+    const element = document.getElementById("cv-render");
+    if (element) {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+      const preview = element.closest("[data-preview-container]") as HTMLElement | null;
+      const previousTransform = preview?.style.transform;
+      const previousHeight = preview?.style.height;
+      if (preview) { preview.style.transform = "none"; preview.style.height = "auto"; }
+      try {
+        const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 794 });
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imageHeight = pageWidth * canvas.height / canvas.width;
+        let remaining = imageHeight;
+        let offset = 0;
+        const image = canvas.toDataURL("image/jpeg", 0.96);
+        pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
+        remaining -= pageHeight;
+        while (remaining > 0) {
+          offset -= pageHeight;
+          pdf.addPage();
+          pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
+          remaining -= pageHeight;
+        }
+        const output = { blob: pdf.output("blob"), filename: filenameFor(state, "pdf", "Recruiter"), pageCount: pdf.getNumberOfPages() };
+        saveAs(output.blob, output.filename);
+        return output;
+      } finally {
+        if (preview) { preview.style.transform = previousTransform ?? ""; preview.style.height = previousHeight ?? ""; }
+      }
+    }
+  }
   const output = await buildPDF(state, options);
   saveAs(output.blob, output.filename);
   return output;

@@ -17,7 +17,8 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("cv-locale") as Locale) || "en";
+      const saved = localStorage.getItem("cv-locale");
+      return saved && ["en", "ar", "hi", "ur", "tl"].includes(saved) ? saved as Locale : "en";
     }
     return "en";
   });
@@ -25,7 +26,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("cv-locale", newLocale);
-    document.documentElement.dir = newLocale === "ar" ? "rtl" : "ltr";
+    document.documentElement.dir = newLocale === "ar" || newLocale === "ur" ? "rtl" : "ltr";
     document.documentElement.lang = newLocale;
   }, []);
 
@@ -36,7 +37,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     [locale]
   );
 
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir = locale === "ar" || locale === "ur" ? "rtl" : "ltr";
 
   return React.createElement(
     LocaleContext.Provider,
