@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { mkdir, stat } from "node:fs/promises";
+import { mkdir, readFile, stat } from "node:fs/promises";
+import { PDFParse } from "pdf-parse";
 import { defaultCVState, type CVState } from "../lib/types";
 
 function completeState(template: CVState["template"] = "service"): CVState {
@@ -140,4 +141,61 @@ test("anonymous JPEG export supports Tailwind OKLCH colours", async ({ page }) =
   await download.saveAs(output);
   expect((await stat(output)).size).toBeGreaterThan(10_000);
   await expect(page.getByText(/Export failed/)).toHaveCount(0);
+});
+
+test("dense kitchen steward PDF stays on one page and omits blank language separators", async ({ page }) => {
+  const state = completeState("service");
+  state.summary = "Reliable kitchen steward with more than three years of experience in busy hotel and restaurant settings. Skilled in kitchen sanitation, food-area hygiene, industrial dishwashing, waste removal, stock organisation and safe chemical handling.";
+  state.experience[0].description = [
+    "Keep kitchen, food preparation and storage areas clean and ready for service.",
+    "Complete end-of-shift cleaning and restock work areas for the next team.",
+    "Wash cutlery, crockery, glassware, utensils and cookware using industrial dishwashers and manual methods.",
+    "Remove waste, sweep and mop work areas while following hygiene procedures.",
+    "Use kitchen equipment and cleaning chemicals in line with safety instructions.",
+    "Work with kitchen colleagues to maintain an orderly service flow.",
+  ].join("\n");
+  state.experience.push({
+    id: "exp-2",
+    role: "Restaurant Steward",
+    company: "Sheraton Hotel Kampala",
+    companyDesc: "",
+    location: "Kampala, Uganda",
+    dates: "2020 to 2022",
+    description: [
+      "Cleaned kitchen, preparation and storage areas to the required schedule.",
+      "Checked storage temperatures and reported defective kitchen equipment.",
+      "Organised equipment and supplies so they could be used safely and quickly.",
+      "Supported food preparation, dishwashing, plating and table resets during service.",
+    ].join("\n"),
+    gap: "",
+  });
+  state.skills = ["Kitchen sanitation", "Industrial dishwashing", "Food hygiene", "Chemical handling", "Waste management", "Stock organisation", "Equipment care and reporting", "Teamwork"];
+  state.languages = [
+    { id: "lang-1", language: "English", level: "" },
+    { id: "lang-2", language: "Arabic", level: "Basic" },
+  ];
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/subscribe", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, contactSaved: true, emailSent: true }) })
+  );
+  await seedDraft(page, state);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Download my CV" }).click();
+  await page.getByLabel("Email address").fill("candidate@example.com");
+  const pending = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Unlock and Download PDF" }).click();
+  const download = await pending;
+  await mkdir("test-results/production-defects", { recursive: true });
+  const output = "test-results/production-defects/dense-kitchen-steward.pdf";
+  await download.saveAs(output);
+
+  const parser = new PDFParse({ data: await readFile(output) });
+  const info = await parser.getInfo();
+  const text = (await parser.getText()).text;
+  await parser.destroy();
+  expect(info.total).toBe(1);
+  expect(text).toContain("English, Arabic - Basic");
+  expect(text).not.toContain("English -");
 });

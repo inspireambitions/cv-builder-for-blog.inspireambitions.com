@@ -91,18 +91,18 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
   }
 
   function sectionHeading(text: string) {
-    ensureSpace(14);
-    y += 3;
+    ensureSpace(18);
+    y += 2;
     pdf.setDrawColor(26, 39, 68);
     pdf.setLineWidth(0.4);
     writeLines(text.toUpperCase(), {
       size: 11,
       style: "bold",
       color: [26, 39, 68],
-      after: 1.5,
+      after: 1,
     });
     pdf.line(marginX, y, pageWidth - marginX, y);
-    y += 4;
+    y += 2.5;
   }
 
   if (recruiterReady && state.photo) {
@@ -144,12 +144,12 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     size: 9.5,
     color: [72, 110, 74],
     align: "center",
-    after: 7,
+    after: 5,
   });
 
   if (state.summary.trim()) {
     sectionHeading("Professional Summary");
-    writeLines(state.summary, { after: 5 });
+    writeLines(state.summary, { after: 4 });
   }
 
   const filledExperience = state.experience.filter(
@@ -177,7 +177,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
         writeLines(`- ${stripBulletPrefix(bullet)}`, {
           size: 10.2,
           indent: 4,
-          after: 1.5,
+          after: 0.8,
         });
       }
       writeLines(exp.gap ? `Career note: ${exp.gap}` : "", {
@@ -249,7 +249,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     sectionHeading("Languages");
     writeLines(
       filledLanguages
-        .map((lang) => `${lang.language} - ${lang.level}`)
+        .map((lang) => [lang.language, lang.level].filter(Boolean).join(" - "))
         .join(", "),
       { after: 5 }
     );
