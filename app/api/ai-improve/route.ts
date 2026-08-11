@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyseCvText } from "@/lib/ai-improve";
+import { getPublicAnthropicErrorMessage } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
 
@@ -19,15 +20,8 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("AI Improve error:", error);
 
-    if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { error: "Failed to parse AI response as JSON" },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      { error: "Failed to analyse CV. Please try again." },
+      { error: getPublicAnthropicErrorMessage(error) },
       { status: 500 }
     );
   }

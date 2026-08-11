@@ -83,6 +83,7 @@ test("provider load failure preserves trust in plain language", async ({ page })
     await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "The review service is busy. Your CV is safe and unchanged. Please wait one minute, then try again." }) });
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Tailor to a Job" }).click();
   await page.getByPlaceholder(/Paste the vacancy/).fill("We need a senior hotel operations manager to lead guest services, manage budgets, coach teams, improve service standards and coordinate departments across a busy UAE luxury hotel operation.");
   await page.getByRole("button", { name: "Run Premium Review" }).click();
@@ -105,6 +106,7 @@ test("reviewer rejection cannot be applied or turned into an application pack", 
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rejectedResult) });
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Tailor to a Job" }).click();
   await page.getByPlaceholder(/Paste the vacancy/).fill("We need a senior hotel operations manager to lead guest services, manage budgets, coach teams, improve service standards and coordinate departments across a busy UAE luxury hotel operation.");
   await page.getByRole("button", { name: "Run Premium Review" }).click();
@@ -151,6 +153,7 @@ test("premium tailoring workspace is usable on mobile and applies a verified res
   });
 
   await page.goto("/");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Tailor to a Job" }).click();
   await page.getByPlaceholder("e.g. Front Office Manager").fill("Hotel Operations Manager");
   await page.getByPlaceholder("e.g. Jumeirah Group").fill("Gulf Hotel Group");

@@ -39,3 +39,12 @@ jobs:
             target="$(curl --silent --show-error --head --max-time 20 --output /dev/null --write-out '%{redirect_url}' "https://inspireambitions.com${path}")"
             test "$target" = "https://cv.inspireambitions.com/"
           done
+
+      - name: Check download gate integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+          status="$(curl --silent --show-error --location --retry 2 --retry-all-errors --max-time 25 --output "$body" --write-out '%{http_code}' https://cv.inspireambitions.com/api/subscribe)"
+          test "$status" = "200"
+          grep -q '"ok":true' "$body"

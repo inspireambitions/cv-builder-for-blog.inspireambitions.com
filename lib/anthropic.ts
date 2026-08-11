@@ -58,7 +58,12 @@ export function getAnthropicClient() {
     throw new Error("ANTHROPIC_API_KEY is not configured");
   }
 
-  return new Anthropic({ apiKey });
+  return new Anthropic({
+    apiKey,
+    ...(process.env.ANTHROPIC_API_BASE
+      ? { baseURL: process.env.ANTHROPIC_API_BASE }
+      : {}),
+  });
 }
 
 export async function createAnthropicMessage(

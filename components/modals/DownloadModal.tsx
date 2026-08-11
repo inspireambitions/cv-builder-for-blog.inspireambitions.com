@@ -35,6 +35,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const [showMoreFormats, setShowMoreFormats] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [email, setEmail] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<AtsReport | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [emailStatus, setEmailStatus] = useState<
@@ -64,6 +65,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
     }
     setEmailStatus("loading");
     setError(null);
+    setNotice(null);
     trackToolEvent("email_gate_shown", { surface: "cv_download_gate", format: "pdf_ats" });
     try {
       const firstName = (state.personal.name || "").split(" ")[0] || "";
@@ -72,14 +74,27 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, firstName, source: "cv-builder-download-gate", template: state.template, cvLang: state.cvLanguage, uiLang: document.documentElement.lang || "en", format: "pdf_ats" }),
       });
-      if (!response.ok) throw new Error("Email capture failed.");
+      const result = (await response.json().catch(() => null)) as {
+        error?: string;
+        warning?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(
+          result?.error || "We could not verify your email right now. Please try again."
+        );
+      }
       localStorage.setItem(DOWNLOAD_GATE_KEY, email.toLowerCase().trim());
       setEmailStatus("unlocked");
+      setNotice(result?.warning || null);
       trackToolEvent("email_captured", { surface: "cv_download_gate", format: "pdf_ats" });
       await runDownload("pdf_ats");
-    } catch {
+    } catch (unlockError) {
       setEmailStatus("error");
-      setError("We could not unlock downloads. Please check your email and try again.");
+      setError(
+        unlockError instanceof Error
+          ? unlockError.message
+          : "We could not verify your email right now. Please try again."
+      );
     }
   }
 
@@ -190,8 +205,14 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         </p>
 
         {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
             {error}
+          </div>
+        )}
+
+        {notice && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+            {notice}
           </div>
         )}
 

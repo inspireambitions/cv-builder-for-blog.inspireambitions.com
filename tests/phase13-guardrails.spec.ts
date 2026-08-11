@@ -63,7 +63,11 @@ test("download gate exposes email-only dual exports without account, card, paywa
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true }),
+      body: JSON.stringify({
+        success: true,
+        warning:
+          "Your download is ready. We could not send the confirmation email, but every download format remains available.",
+      }),
     });
   });
 
@@ -84,6 +88,10 @@ test("download gate exposes email-only dual exports without account, card, paywa
   const initialPdf = page.waitForEvent("download");
   await page.getByRole("button", { name: "Unlock and Download PDF" }).click();
   await initialPdf;
+
+  await expect(
+    page.getByText(/download is ready.*confirmation email/i)
+  ).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();

@@ -1,64 +1,163 @@
 import { NextResponse } from "next/server";
-import { resolveMx } from "node:dns/promises";
 
 export const runtime = "nodejs";
+
+type ResendDomain = {
+  name?: string;
+  status?: string;
+  capabilities?: { sending?: string };
+};
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(value);
 }
 
-async function hasMx(email: string) {
-  try {
-    return (await resolveMx(email.split("@")[1])).length > 0;
-  } catch {
-    return false;
-  }
+function senderAddress() {
+  return (
+    process.env.RESEND_FROM_EMAIL ||
+    process.env.EMAIL_FROM ||
+    "Inspire Ambitions <info@inspireambitions.com>"
+  );
 }
 
-async function resend(path: string, body: unknown, idempotencyKey?: string) {
+function senderDomain() {
+  return senderAddress().match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? "";
+}
+
+function tagValue(value: unknown) {
+  return (
+    String(value || "unknown")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 256) || "unknown"
+  );
+}
+
+async function resend(path: string, body?: unknown, idempotencyKey?: string) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
-  return fetch(`https://api.resend.com${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}) },
-    body: JSON.stringify(body),
+
+  const apiBase = process.env.RESEND_API_BASE || "https://api.resend.com";
+  return fetch(`${apiBase}${path}`, {
+    method: body === undefined ? "GET" : "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     cache: "no-store",
   });
 }
 
-export async function POST(req: Request) {
+export async function GET() {
   try {
-    const payload = await req.json();
-    const email = String(payload.email || "").toLowerCase().trim();
-    const firstName = String(payload.firstName || "").trim().slice(0, 80);
-    if (!isEmail(email) || !(await hasMx(email))) return NextResponse.json({ error: "Enter a working email address." }, { status: 400 });
+    const response = await resend("/domains");
+    if (!response.ok) throw new Error(`Resend health check returned ${response.status}`);
 
+    const payload = (await response.json()) as { data?: ResendDomain[] };
+    const domain = payload.data?.find(
+      (item) => item.name?.toLowerCase() === senderDomain()
+    );
+    const ready =
+      Boolean(domain) &&
+      domain?.capabilities?.sending === "enabled" &&
+      ["verified", "partially_verified", "partially_failed"].includes(
+        domain?.status || ""
+      );
+
+    if (!ready) throw new Error("The configured Resend sender domain is not ready");
+
+    return NextResponse.json(
+      { ok: true },
+      { headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (error) {
+    console.error(
+      "Resend health check failed",
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      { ok: false },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  let payload: Record<string, unknown>;
+  try {
+    payload = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: "We could not read the email request. Please try again." },
+      { status: 400 }
+    );
+  }
+
+  const email = String(payload.email || "").toLowerCase().trim();
+  const firstName = String(payload.firstName || "").trim().slice(0, 80);
+  if (!isEmail(email)) {
+    return NextResponse.json(
+      { error: "Enter a valid email address." },
+      { status: 400 }
+    );
+  }
+
+  let contactSaved = false;
+  let emailSent = false;
+
+  try {
     const segmentId = process.env.RESEND_CV_SEGMENT_ID;
     const contact = await resend("/contacts", {
       email,
       firstName,
       unsubscribed: false,
-      properties: {
-        source: String(payload.source || "cv-builder-download-gate"),
-        template: String(payload.template || "classic"),
-        ui_language: String(payload.uiLang || "en"),
-        cv_language: String(payload.cvLang || "en"),
-        requested_format: String(payload.format || "pdf"),
-      },
       ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
     });
-    if (!contact.ok && contact.status !== 409) throw new Error(await contact.text());
-
-    const welcome = await resend("/emails", {
-      from: process.env.RESEND_FROM_EMAIL || "Inspire Ambitions <hello@inspireambitions.com>",
-      to: [email],
-      subject: "Your free CV downloads are unlocked",
-      html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#1c1d1f"><h1>Your CV downloads are unlocked</h1><p>Greetings from Inspire Ambitions${firstName ? `, ${firstName}` : ""}.</p><p>You can return to the CV builder on this device and download PDF or Word without entering your email again.</p><h2>Three quick Gulf CV checks</h2><ol><li>State your current location and notice period.</li><li>Use numbers to prove results.</li><li>Match only skills you can support with evidence.</li></ol><p><a href="https://cv.inspireambitions.com">Return to the free CV builder</a></p><p>If the tool helped, leave an honest review on <a href="https://www.trustpilot.com/evaluate/inspireambitions.com">Trustpilot</a>. We ask every user the same way.</p><p style="font-size:12px;color:#666">You can unsubscribe from any guidance email with one tap.</p></div>`,
-    }, `cv-welcome-${Buffer.from(email).toString("base64url").slice(0, 80)}`);
-    if (!welcome.ok) throw new Error(await welcome.text());
-    return NextResponse.json({ success: true });
+    if (!contact.ok && contact.status !== 409) {
+      throw new Error(await contact.text());
+    }
+    contactSaved = true;
   } catch (error) {
-    console.error("Resend capture failed", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: "We could not unlock downloads. Please try again." }, { status: 500 });
+    console.error(
+      "Resend contact capture failed",
+      error instanceof Error ? error.message : error
+    );
   }
+
+  try {
+    const welcome = await resend(
+      "/emails",
+      {
+        from: senderAddress(),
+        to: [email],
+        subject: "Your free CV downloads are unlocked",
+        html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#1c1d1f"><h1>Your CV downloads are unlocked</h1><p>Greetings from Inspire Ambitions${firstName ? `, ${firstName}` : ""}.</p><p>You can return to the CV builder on this device and download PDF or Word without entering your email again.</p><h2>Three quick Gulf CV checks</h2><ol><li>State your current location and notice period.</li><li>Use numbers to prove results.</li><li>Match only skills you can support with evidence.</li></ol><p><a href="https://cv.inspireambitions.com">Return to the free CV builder</a></p><p>If the tool helped, leave an honest review on <a href="https://www.trustpilot.com/evaluate/inspireambitions.com">Trustpilot</a>. We ask every user the same way.</p><p style="font-size:12px;color:#666">You can unsubscribe from any guidance email with one tap.</p></div>`,
+        tags: [
+          { name: "source", value: "cv_builder" },
+          { name: "requested_format", value: tagValue(payload.format || "pdf") },
+        ],
+      },
+      `cv-welcome-${Buffer.from(email).toString("base64url").slice(0, 80)}`
+    );
+    if (!welcome.ok) throw new Error(await welcome.text());
+    emailSent = true;
+  } catch (error) {
+    console.error(
+      "Resend welcome email failed",
+      error instanceof Error ? error.message : error
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    contactSaved,
+    emailSent,
+    ...(!emailSent
+      ? {
+          warning:
+            "Your download is ready. We could not send the confirmation email, but every download format remains available.",
+        }
+      : {}),
+  });
 }

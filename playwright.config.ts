@@ -13,12 +13,28 @@ export default defineConfig({
   },
   webServer: useExternalServer
     ? undefined
-    : {
-        command: "npm run start:test",
-        url: baseURL,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-      },
+    : [
+        {
+          command: "node scripts/mock-external-services.mjs",
+          url: "http://127.0.0.1:3216/health",
+          reuseExistingServer: !process.env.CI,
+          timeout: 30_000,
+        },
+        {
+          command: "npm run start:test",
+          url: baseURL,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+          env: {
+            ...process.env,
+            RESEND_API_KEY: "test-resend-key",
+            RESEND_API_BASE: "http://127.0.0.1:3216",
+            RESEND_FROM_EMAIL: "Inspire Ambitions <info@inspireambitions.com>",
+            ANTHROPIC_API_KEY: "test-anthropic-key",
+            ANTHROPIC_API_BASE: "http://127.0.0.1:3216",
+          },
+        },
+      ],
   projects: [
     {
       name: "mobile-360",
