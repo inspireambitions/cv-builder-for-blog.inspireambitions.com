@@ -43,3 +43,18 @@ test("guided mobile details use three short pages and save progress", async ({ p
   await expect(page.getByText("Are you applying in the Gulf?")).toBeVisible();
   await expect(page.getByText("Saved on this device")).toBeVisible();
 });
+
+test("start fresh from a restored finished CV returns to the first mobile page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: /Build My CV/ }).click();
+  for (let index = 0; index < 9; index += 1) {
+    await page.getByRole("button", { name: "Save and continue" }).click();
+  }
+  await page.waitForTimeout(500);
+  await page.reload();
+  await page.getByRole("button", { name: "Start fresh", exact: true }).click();
+
+  await expect(page.getByText("Personal details • 1 of 3")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How can employers contact you?" })).toBeVisible();
+});

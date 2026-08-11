@@ -145,8 +145,16 @@ export default function CVBuilder() {
     );
     if (!confirmed) return;
     resetState();
+    setMobileMode("edit");
+    goToStep(1);
     trackToolEvent("cv_draft_deleted", { surface: "cv_builder_header" });
-  }, [resetState]);
+  }, [goToStep, resetState]);
+
+  const handleStartFresh = useCallback(() => {
+    resetState();
+    setMobileMode("edit");
+    goToStep(1);
+  }, [goToStep, resetState]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -225,7 +233,7 @@ export default function CVBuilder() {
               </button>
               <button
                 type="button"
-                onClick={resetState}
+                onClick={handleStartFresh}
                 className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100"
               >
                 Start fresh
