@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -126,19 +127,23 @@ export async function POST(req: Request) {
   }
 
   try {
+    const emailRequest = {
+      from: senderAddress(),
+      to: [email],
+      subject: "Your free CV downloads are unlocked",
+      html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#1c1d1f"><h1>Your CV downloads are unlocked</h1><p>Greetings from Inspire Ambitions${firstName ? `, ${firstName}` : ""}.</p><p>You can return to the CV builder on this device and download PDF or Word without entering your email again.</p><h2>Three quick Gulf CV checks</h2><ol><li>State your current location and notice period.</li><li>Use numbers to prove results.</li><li>Match only skills you can support with evidence.</li></ol><p><a href="https://cv.inspireambitions.com">Return to the free CV builder</a></p><p>If the tool helped, leave an honest review on <a href="https://www.trustpilot.com/evaluate/inspireambitions.com">Trustpilot</a>. We ask every user the same way.</p><p style="font-size:12px;color:#666">You can unsubscribe from any guidance email with one tap.</p></div>`,
+      tags: [
+        { name: "source", value: "cv_builder" },
+        { name: "requested_format", value: tagValue(payload.format || "pdf") },
+      ],
+    };
+    const idempotencyKey = `cv-welcome-${createHash("sha256")
+      .update(JSON.stringify(emailRequest))
+      .digest("base64url")}`;
     const welcome = await resend(
       "/emails",
-      {
-        from: senderAddress(),
-        to: [email],
-        subject: "Your free CV downloads are unlocked",
-        html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#1c1d1f"><h1>Your CV downloads are unlocked</h1><p>Greetings from Inspire Ambitions${firstName ? `, ${firstName}` : ""}.</p><p>You can return to the CV builder on this device and download PDF or Word without entering your email again.</p><h2>Three quick Gulf CV checks</h2><ol><li>State your current location and notice period.</li><li>Use numbers to prove results.</li><li>Match only skills you can support with evidence.</li></ol><p><a href="https://cv.inspireambitions.com">Return to the free CV builder</a></p><p>If the tool helped, leave an honest review on <a href="https://www.trustpilot.com/evaluate/inspireambitions.com">Trustpilot</a>. We ask every user the same way.</p><p style="font-size:12px;color:#666">You can unsubscribe from any guidance email with one tap.</p></div>`,
-        tags: [
-          { name: "source", value: "cv_builder" },
-          { name: "requested_format", value: tagValue(payload.format || "pdf") },
-        ],
-      },
-      `cv-welcome-${Buffer.from(email).toString("base64url").slice(0, 80)}`
+      emailRequest,
+      idempotencyKey
     );
     if (!welcome.ok) throw new Error(await welcome.text());
     emailSent = true;

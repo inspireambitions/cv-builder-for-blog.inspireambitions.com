@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 
 const port = Number(process.env.MOCK_SERVICES_PORT || 3216);
 const analysisAttempts = new Map();
+const emailRequests = new Map();
 
 function send(response, status, body) {
   response.writeHead(status, { "Content-Type": "application/json" });
@@ -44,6 +45,20 @@ const server = createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && url.pathname === "/emails") {
+    const body = await readJson(request);
+    const recipient = String(body.to?.[0] || "");
+    if (recipient.startsWith("idempotency-")) {
+      const key = String(request.headers["idempotency-key"] || "");
+      const serialised = JSON.stringify(body);
+      if (emailRequests.has(key) && emailRequests.get(key) !== serialised) {
+        return send(response, 409, {
+          name: "invalid_idempotent_request",
+          message: "This idempotency key was reused with a different request body.",
+        });
+      }
+      emailRequests.set(key, serialised);
+      return send(response, 200, { id: `email_${emailRequests.size}` });
+    }
     return send(response, 503, { message: "Simulated email outage" });
   }
 

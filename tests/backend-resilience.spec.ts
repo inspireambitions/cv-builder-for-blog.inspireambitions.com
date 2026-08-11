@@ -25,6 +25,28 @@ test("download gate health check verifies the Resend sender", async ({ request }
   await expect(response.json()).resolves.toEqual({ ok: true });
 });
 
+test("email idempotency follows the complete request body", async ({ request }, testInfo) => {
+  const email = `idempotency-${testInfo.project.name}@example.com`;
+  const first = await request.post("/api/subscribe", {
+    data: { email, firstName: "Mariam", format: "pdf_ats" },
+  });
+  const repeated = await request.post("/api/subscribe", {
+    data: { email, firstName: "Mariam", format: "pdf_ats" },
+  });
+  const changed = await request.post("/api/subscribe", {
+    data: { email, firstName: "Mary", format: "word" },
+  });
+
+  for (const response of [first, repeated, changed]) {
+    expect(response.status()).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      contactSaved: true,
+      emailSent: true,
+    });
+  }
+});
+
 test("AI CV analysis retries an invalid response with structured output", async ({
   request,
 }) => {
