@@ -1,6 +1,7 @@
 "use client";
 
 import type { CVState } from "./types";
+import { getCleanBuilderUrl } from "./clean-url";
 
 const RESUME_HASH_KEY = "resume";
 const RESUME_LINK_VERSION = 1;
@@ -54,7 +55,7 @@ export async function createResumeLink(state: CVState) {
   const plaintext = new TextEncoder().encode(JSON.stringify(payload));
   const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
 
-  const url = new URL(window.location.href);
+  const url = getCleanBuilderUrl();
   url.hash = `${RESUME_HASH_KEY}=${[
     toBase64Url(new Uint8Array(encrypted)),
     toBase64Url(iv),

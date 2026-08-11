@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import ThemeToggle from "@/components/shared/ThemeToggle";
+import { removeShareTrackingParams } from "@/lib/clean-url";
 
 const BuilderShell = dynamic(() => import("@/components/BuilderShell"));
 
@@ -15,6 +16,7 @@ export default function Home() {
     const hasDraft = Boolean(localStorage.getItem("inspireambitions-cv-state"));
     const hasResumeLink = window.location.hash.startsWith("#resume=");
     const hasHandoff = new URLSearchParams(window.location.search).has("handoff");
+    removeShareTrackingParams();
     if (hasDraft || hasResumeLink || hasHandoff) {
       setResumeExisting(true);
       setStarted(true);

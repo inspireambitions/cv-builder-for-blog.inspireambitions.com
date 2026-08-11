@@ -2,6 +2,32 @@ import { expect, test } from "@playwright/test";
 import { mkdir, readFile, stat } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 
+test("removes Google linker tracking from shared URLs", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        async writeText(text: string) {
+          (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink = text;
+        },
+      },
+      configurable: true,
+    });
+  });
+
+  await page.goto("/?_gl=1*tracking-value");
+  await expect.poll(() => new URL(page.url()).search).toBe("");
+
+  await page.getByRole("button", { name: /Build My CV/ }).click();
+  await page.getByRole("button", { name: "Copy private resume link" }).click();
+
+  const resumeLink = await page.evaluate(
+    () => (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink
+  );
+  const sharedUrl = new URL(resumeLink ?? "");
+  expect(sharedUrl.search).toBe("");
+  expect(sharedUrl.hash).toMatch(/^#resume=/);
+});
+
 test("P0 CV builder path restores drafts, gates downloads by email, and exports PDF/DOCX", async ({
   context,
   page,
