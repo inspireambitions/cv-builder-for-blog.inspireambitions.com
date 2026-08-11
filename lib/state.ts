@@ -33,7 +33,8 @@ const CVContext = createContext<CVContextValue | null>(null);
 const STORAGE_KEY = "inspireambitions-cv-state";
 const DRAFTS_KEY = "inspireambitions-cv-drafts";
 const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
-const STORAGE_VERSION = 5;
+const STORAGE_VERSION = 6;
+const STEP_LAYOUT_VERSION = 5;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface StoredDraft {
@@ -77,7 +78,7 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
   return {
     ...defaultCVState,
     ...incoming,
-    step: sourceVersion < STORAGE_VERSION
+    step: sourceVersion < STEP_LAYOUT_VERSION
       ? legacyStepMap[incomingStep] ?? 0
       : Math.max(0, Math.min(8, incomingStep)),
     mobilePersonalPage: Math.max(
@@ -85,6 +86,9 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
       Math.min(2, typeof incoming.mobilePersonalPage === "number" ? incoming.mobilePersonalPage : 0)
     ),
     template,
+    templateConfirmed:
+      incoming.templateConfirmed === true ||
+      (sourceVersion < STORAGE_VERSION && template !== defaultCVState.template),
     cvLanguage: incoming.cvLanguage === "ar" ? "ar" : "en",
     personal: {
       ...defaultCVState.personal,

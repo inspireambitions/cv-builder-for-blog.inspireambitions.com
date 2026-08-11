@@ -11,6 +11,7 @@
 # testing
 /coverage
 /test-results
+/\.lighthouseci/
 /outputs/
 /.qa-server*.log
 

@@ -150,7 +150,7 @@ export default function StepExperience() {
                   onChange={(e) =>
                     updateEntry(entry.id, "dates", e.target.value)
                   }
-                  placeholder="e.g. Jan 2020 – Present"
+                  placeholder="e.g. Jan 2020 to Present"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
               </div>
@@ -219,7 +219,7 @@ export default function StepExperience() {
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Specialist Tip
+          HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
           Use the Action + Number + Outcome formula. Weak: &ldquo;Managed a

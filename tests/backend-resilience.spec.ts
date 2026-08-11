@@ -43,5 +43,13 @@ test("AI CV analysis retries an invalid response with structured output", async 
   expect(response.status()).toBe(200);
   const body = await response.json();
   expect(body.extracted.name).toBe("Mariam Hassan");
+  expect(body.extracted.certifications).toEqual([
+    {
+      name: "Chemical Handling Certificate",
+      issuer: "Diversey",
+      date: "",
+      expiry: "",
+    },
+  ]);
   expect(body.feedback).toHaveLength(3);
 });

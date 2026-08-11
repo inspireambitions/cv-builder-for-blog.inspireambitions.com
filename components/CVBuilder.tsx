@@ -94,14 +94,6 @@ export default function CVBuilder() {
     return () => observer.disconnect();
   }, [calculateScale]);
 
-  useEffect(() => {
-    if (state.step === 8) {
-      setMobileMode("score");
-      return;
-    }
-    setMobileMode((current) => current === "score" ? "edit" : current);
-  }, [state.step]);
-
   const CurrentStep = STEP_COMPONENTS[state.step] || StepStart;
   const isLastStep = state.step === 8;
   const currentStep = STEPS[state.step];
@@ -114,6 +106,7 @@ export default function CVBuilder() {
       updateField({ mobilePersonalPage: state.mobilePersonalPage - 1 });
       return;
     }
+    setMobileMode("edit");
     prevStep();
   };
 
@@ -361,7 +354,7 @@ export default function CVBuilder() {
             {state.step > 0 && (
               <div className="hidden justify-between items-center sm:flex">
                 <button
-                  onClick={prevStep}
+                  onClick={() => { setMobileMode("edit"); prevStep(); }}
                   className="flex items-center gap-2 px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <span>{dir === "rtl" ? "\u2192" : "\u2190"}</span> {t("nav.back")}

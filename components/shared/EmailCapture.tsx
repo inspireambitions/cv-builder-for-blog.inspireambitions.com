@@ -15,7 +15,7 @@ export function buildCVEmailHTML(state: CVState, score: ScoreResult): string {
       ? "Strong CV"
       : score.total >= 50
       ? "Needs Improvement"
-      : "Weak — Action Needed";
+      : "Weak: Action Needed";
 
   const isGulf = state.geo === "gulf";
 
@@ -42,7 +42,7 @@ export function buildCVEmailHTML(state: CVState, score: ScoreResult): string {
   }
 
   let html = `<h2 style="margin:0 0 8px;color:#1a1a2e;font-size:20px;">${isGulf ? "Gulf CV Score Report" : "CV Score Report"}</h2>
-<p style="margin:0 0 20px;color:#666;font-size:14px;">Results for <strong>${state.personal.name || "your CV"}</strong>${state.personal.title ? ` — ${state.personal.title}` : ""}</p>
+<p style="margin:0 0 20px;color:#666;font-size:14px;">Results for <strong>${state.personal.name || "your CV"}</strong>${state.personal.title ? ` | ${state.personal.title}` : ""}</p>
 
 <div style="text-align:center;padding:24px;background:#f8f9fa;border-radius:12px;margin-bottom:20px;">
 <div style="font-size:48px;font-weight:800;color:${color};">${score.total}<span style="font-size:20px;color:#999;">/100</span></div>
@@ -121,7 +121,7 @@ export default function EmailCapture({
     const wasDismissed = localStorage.getItem(DISMISSED_KEY);
     const wasSubscribed = localStorage.getItem(SUBSCRIBED_KEY);
     if (!wasDismissed && !wasSubscribed) {
-      setDismissed(false);
+      queueMicrotask(() => setDismissed(false));
       trackToolEvent("email_prompt_seen", { surface: "cv_score_email_card" });
     }
   }, []);
@@ -180,7 +180,7 @@ export default function EmailCapture({
         body: JSON.stringify({
           email,
           tool: "CV Builder",
-          subject: `Your CV Score: ${cvScore}/100 — ${userName || "CV Report"}`,
+          subject: `Your CV Score: ${cvScore}/100 | ${userName || "CV Report"}`,
           content: emailContent,
           source: "cv-builder-score-card",
         }),
@@ -260,7 +260,7 @@ export default function EmailCapture({
           </h3>
           <p className="text-gray-300 text-sm mt-2 leading-relaxed">
             Receive your detailed score breakdown, improvement tips, and CV
-            summary — plus weekly career insights from an HR Career Specialist.
+            summary, plus weekly career insights from an HR Career Specialist.
             Unsubscribe anytime.
           </p>
         </div>

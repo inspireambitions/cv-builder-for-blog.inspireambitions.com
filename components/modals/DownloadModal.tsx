@@ -45,12 +45,14 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     const unlockedEmail = localStorage.getItem(DOWNLOAD_GATE_KEY);
-    if (unlockedEmail) {
-      setEmail(unlockedEmail);
-      setEmailStatus("unlocked");
-    } else {
-      setEmailStatus("idle");
-    }
+    queueMicrotask(() => {
+      if (unlockedEmail) {
+        setEmail(unlockedEmail);
+        setEmailStatus("unlocked");
+      } else {
+        setEmailStatus("idle");
+      }
+    });
     trackToolEvent("email_prompt_seen", { surface: "cv_download_gate" });
   }, [isOpen]);
 

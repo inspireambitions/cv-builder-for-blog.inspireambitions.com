@@ -28,7 +28,7 @@ export interface CertEntry {
 export interface LangEntry {
   id: string;
   language: string;
-  level: "Native" | "Fluent" | "Professional" | "Conversational" | "Basic";
+  level: "" | "Native" | "Fluent" | "Professional" | "Conversational" | "Basic";
 }
 
 export type VisaStatus =
@@ -191,6 +191,7 @@ export interface CVState {
   step: number;
   mobilePersonalPage: number;
   template: TemplateType;
+  templateConfirmed: boolean;
   cvLanguage: CVLanguage;
   geo: GeoType;
   photo: string | null;
@@ -214,6 +215,7 @@ export const defaultCVState: CVState = {
   step: 0,
   mobilePersonalPage: 0,
   template: "classic",
+  templateConfirmed: false,
   cvLanguage: "en",
   geo: "global",
   photo: null,
@@ -255,7 +257,7 @@ export const defaultCVState: CVState = {
   ],
   certifications: [],
   skills: [],
-  languages: [{ id: "lang-1", language: "", level: "Professional" }],
+  languages: [{ id: "lang-1", language: "", level: "" }],
   achievements: [],
   volunteer: [],
   projects: [],

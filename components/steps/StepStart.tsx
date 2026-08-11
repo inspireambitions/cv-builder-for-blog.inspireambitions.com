@@ -25,11 +25,13 @@ type AiExtractedCv = {
   summary?: unknown;
   experience?: unknown;
   education?: unknown;
+  certifications?: unknown;
   skills?: unknown;
   languages?: unknown;
 };
 
 const LANGUAGE_LEVELS: CVState["languages"][number]["level"][] = [
+  "",
   "Native",
   "Fluent",
   "Professional",
@@ -81,8 +83,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
-    title: "HR Specialist Approved",
-    desc: "Every tip, prompt, and scoring criterion written by a practising HR Specialist who screens CVs daily.",
+    title: "Practical Hiring Guidance",
+    desc: "Clear prompts shaped by more than 20 years of HR experience across the Gulf and Africa.",
   },
   {
     icon: (
@@ -227,7 +229,7 @@ function asLanguageLevel(value: unknown): CVState["languages"][number]["level"] 
   const level = asString(value);
   return LANGUAGE_LEVELS.includes(level as CVState["languages"][number]["level"])
     ? (level as CVState["languages"][number]["level"])
-    : "Professional";
+    : "";
 }
 
 function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): CVState {
@@ -266,6 +268,21 @@ function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): C
         .filter((entry) => entry.degree || entry.institution)
     : [];
 
+  const certifications = Array.isArray(extracted.certifications)
+    ? extracted.certifications
+        .map((item, index) => {
+          const entry = asRecord(item);
+          return {
+            id: `ai-cert-${index + 1}`,
+            name: asString(entry.name),
+            issuer: asString(entry.issuer),
+            date: asString(entry.date),
+            expiry: asString(entry.expiry),
+          };
+        })
+        .filter((entry) => entry.name || entry.issuer)
+    : [];
+
   const languages = Array.isArray(extracted.languages)
     ? extracted.languages
         .map((item, index) => {
@@ -293,6 +310,7 @@ function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): C
     summary: asString(extracted.summary) || prev.summary,
     experience: experience.length ? experience : prev.experience,
     education: education.length ? education : prev.education,
+    certifications: certifications.length ? certifications : prev.certifications,
     skills: skills.length ? skills : prev.skills,
     languages: languages.length ? languages : prev.languages,
     score: null,
@@ -523,7 +541,7 @@ export default function StepStart() {
       <section className="text-center max-w-3xl mx-auto pt-8">
         {/* Badge */}
         <span className="inline-block bg-gold-50 text-gold-700 text-xs font-semibold tracking-wide uppercase px-4 py-1.5 rounded-full border border-gold-200 mb-6">
-          Built by an HR Specialist
+          Built by an HR Career Specialist
         </span>
 
         {/* Headline */}
@@ -544,7 +562,7 @@ export default function StepStart() {
               disabled={!hydrated}
               className="bg-gold-500 hover:bg-gold-600 text-white font-semibold text-lg px-8 py-3.5 rounded-xl shadow-lg shadow-gold-500/20 transition-all hover:shadow-xl hover:shadow-gold-500/30 disabled:cursor-wait disabled:opacity-60"
             >
-              Build My CV &mdash; Free
+              Build My CV for Free
             </button>
             <button
               onClick={handleUploadMode}
@@ -595,7 +613,7 @@ export default function StepStart() {
                 Drag &amp; drop your file here, or click to browse
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                PDF, DOCX, TXT, RTF, JPG, PNG, WEBP or iPhone HEIC &mdash; Max 5 MB
+                PDF, DOCX, TXT, RTF, JPG, PNG, WEBP or iPhone HEIC. Max 5 MB.
               </p>
               <input
                 ref={fileInputRef}
@@ -631,7 +649,7 @@ export default function StepStart() {
           </span>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-            HR Specialist approved
+            Built from real hiring experience
           </span>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -653,7 +671,7 @@ export default function StepStart() {
                 type="button"
                 key={t.key}
                 onClick={() => {
-                  updateField({ template: t.key });
+                  updateField({ template: t.key, templateConfirmed: true });
                   nextStep();
                 }}
                 className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white text-start shadow-rest transition hover:-translate-y-0.5 hover:border-gold-600 hover:shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2"

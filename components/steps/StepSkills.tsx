@@ -61,7 +61,7 @@ export default function StepSkills() {
     updateField({
       languages: [
         ...languages,
-        { id: generateLangId(), language: "", level: "Professional" },
+        { id: generateLangId(), language: "", level: "" },
       ],
     });
   }
@@ -79,7 +79,7 @@ export default function StepSkills() {
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Skills</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Add your key skills — type a skill and press Enter or click Add
+            Add your key skills. Type a skill and press Enter or click Add.
           </p>
         </div>
 
@@ -177,6 +177,7 @@ export default function StepSkills() {
                   }
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow bg-white"
                 >
+                  <option value="">Choose your level</option>
                   {LANGUAGE_LEVELS.map((level) => (
                     <option key={level} value={level}>
                       {level}
@@ -229,12 +230,12 @@ export default function StepSkills() {
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Specialist Tip
+          HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
           Mirror the exact keywords from the job description. If the posting
-          says &ldquo;stakeholder management&rdquo;, use that exact phrase —
-          not &ldquo;managing stakeholders&rdquo;. ATS systems match keywords
+          says &ldquo;stakeholder management&rdquo;, use that exact phrase instead of
+          &ldquo;managing stakeholders&rdquo;. ATS systems match keywords
           literally.
         </p>
       </div>

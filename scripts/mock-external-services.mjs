@@ -75,6 +75,9 @@ const server = createServer(async (request, response) => {
                   summary: "",
                   experience: [],
                   education: [],
+                  certifications: [
+                    { name: "Chemical Handling Certificate", issuer: "Diversey", date: "", expiry: "" },
+                  ],
                   skills: ["Room preparation", "Guest service"],
                   languages: [],
                 },

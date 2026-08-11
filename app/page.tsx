@@ -18,8 +18,10 @@ export default function Home() {
     const hasHandoff = new URLSearchParams(window.location.search).has("handoff");
     removeShareTrackingParams();
     if (hasDraft || hasResumeLink || hasHandoff) {
-      setResumeExisting(true);
-      setStarted(true);
+      queueMicrotask(() => {
+        setResumeExisting(true);
+        setStarted(true);
+      });
     }
   }, []);
 

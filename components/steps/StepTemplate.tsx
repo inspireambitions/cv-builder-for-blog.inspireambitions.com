@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { TEMPLATE_INFO } from "@/lib/constants";
 import type { TemplateType } from "@/lib/types";
 import TemplatePreview from "@/components/templates/TemplatePreview";
+import { recommendTemplateForTitle } from "@/lib/template-recommendation";
 
 const photoRules: Record<TemplateType, string> = {
   classic: "Photo optional",
@@ -21,16 +22,13 @@ const photoRules: Record<TemplateType, string> = {
 export default function StepTemplate() {
   const { state, updateField } = useCVState();
   const [showAll, setShowAll] = useState(false);
-  const title = state.personal.title.toLowerCase();
-  const recommendedKey: TemplateType =
-    /hotel|hospitality|housekeep|restaurant|food|guest/.test(title) ? "service" :
-    /nurse|doctor|health|clinic|medical|pharma/.test(title) ? "care" :
-    /engineer|construction|architect|site/.test(title) ? "site" :
-    /developer|software|data|technology|cyber|product/.test(title) ? "stack" :
-    /finance|account|bank|audit/.test(title) ? "ledger" :
-    /aviation|cabin|airport|flight/.test(title) ? "crew" :
-    /logistic|retail|driver|warehouse|supply/.test(title) ? "move" :
-    /director|chief|head|executive|manager/.test(title) ? "corner" : "classic";
+  const recommendedKey = recommendTemplateForTitle(state.personal.title);
+
+  useEffect(() => {
+    if (!state.templateConfirmed && state.template !== recommendedKey) {
+      updateField({ template: recommendedKey });
+    }
+  }, [recommendedKey, state.template, state.templateConfirmed, updateField]);
   const templates = [...TEMPLATE_INFO].sort((a, b) =>
     a.key === recommendedKey ? -1 : b.key === recommendedKey ? 1 : 0
   );
@@ -52,7 +50,7 @@ export default function StepTemplate() {
           return (
             <button
               key={tpl.key}
-              onClick={() => updateField({ template: tpl.key as TemplateType })}
+              onClick={() => updateField({ template: tpl.key as TemplateType, templateConfirmed: true })}
               className={`${index > 0 && !showAll ? "hidden md:block" : "block"} relative overflow-hidden rounded-lg border bg-white text-start shadow-rest transition-all ${
                 selected
                   ? "border-gold-600 ring-2 ring-gold-600 ring-offset-2"

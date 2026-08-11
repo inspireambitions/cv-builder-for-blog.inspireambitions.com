@@ -4,6 +4,7 @@ export const sampleCVState: CVState = {
   step: 8,
   mobilePersonalPage: 0,
   template: "classic",
+  templateConfirmed: true,
   cvLanguage: "en",
   geo: "global",
   photo: null,

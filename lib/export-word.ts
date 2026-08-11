@@ -150,7 +150,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: exp.role, bold: true, size: 24 }),
-            new TextRun({ text: exp.company ? `  —  ${exp.company}` : "", size: 22 }),
+            new TextRun({ text: exp.company ? `  |  ${exp.company}` : "", size: 22 }),
           ],
           spacing: { before: 150, after: 40 },
         })
@@ -207,7 +207,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: edu.degree, bold: true, size: 22 }),
-            new TextRun({ text: edu.institution ? `  —  ${edu.institution}` : "", size: 22 }),
+            new TextRun({ text: edu.institution ? `  |  ${edu.institution}` : "", size: 22 }),
             new TextRun({ text: edu.year ? `  (${edu.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 80, after: 40 },
@@ -247,7 +247,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: cert.name, bold: true, size: 22 }),
-            new TextRun({ text: cert.issuer ? `  —  ${cert.issuer}` : "", size: 22 }),
+            new TextRun({ text: cert.issuer ? `  |  ${cert.issuer}` : "", size: 22 }),
             new TextRun({ text: cert.date ? `  (${cert.date})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 40 },
@@ -275,7 +275,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: `${lang.language} — ${lang.level}`, size: 22 }),
+            new TextRun({ text: [lang.language, lang.level].filter(Boolean).join(" | "), size: 22 }),
           ],
           spacing: { after: 40 },
         })
@@ -291,7 +291,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: a.title, bold: true, size: 22 }),
-            new TextRun({ text: a.awardingBody ? `  —  ${a.awardingBody}` : "", size: 22 }),
+            new TextRun({ text: a.awardingBody ? `  |  ${a.awardingBody}` : "", size: 22 }),
             new TextRun({ text: a.year ? `  (${a.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 30 },
@@ -311,7 +311,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: v.role, bold: true, size: 22 }),
-            new TextRun({ text: v.org ? `  —  ${v.org}` : "", size: 22 }),
+            new TextRun({ text: v.org ? `  |  ${v.org}` : "", size: 22 }),
           ],
           spacing: { before: 60, after: 30 },
         })
@@ -349,7 +349,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: pub.title, bold: true, size: 22 }),
-            new TextRun({ text: pub.outlet ? `  —  ${pub.outlet}` : "", size: 22 }),
+            new TextRun({ text: pub.outlet ? `  |  ${pub.outlet}` : "", size: 22 }),
             new TextRun({ text: pub.date ? `  (${pub.date})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 60 },
@@ -366,7 +366,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
         new Paragraph({
           children: [
             new TextRun({ text: m.org, bold: true, size: 22 }),
-            new TextRun({ text: m.level ? `  —  ${m.level}` : "", size: 22 }),
+            new TextRun({ text: m.level ? `  |  ${m.level}` : "", size: 22 }),
             new TextRun({ text: m.year ? `  (${m.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 40 },

@@ -28,6 +28,7 @@ const CV_ANALYSIS_SCHEMA = {
         "summary",
         "experience",
         "education",
+        "certifications",
         "skills",
         "languages",
       ],
@@ -73,6 +74,20 @@ const CV_ANALYSIS_SCHEMA = {
               institution: STRING_FIELD,
               year: STRING_FIELD,
               grade: STRING_FIELD,
+            },
+          },
+        },
+        certifications: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["name", "issuer", "date", "expiry"],
+            properties: {
+              name: STRING_FIELD,
+              issuer: STRING_FIELD,
+              date: STRING_FIELD,
+              expiry: STRING_FIELD,
             },
           },
         },

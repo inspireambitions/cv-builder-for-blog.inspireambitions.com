@@ -13,9 +13,9 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://cv.inspireambitions.com"),
   alternates: { canonical: "/" },
-  title: "InspireAmbitions CV Builder - Free CV Builder by an HR Specialist",
+  title: "InspireAmbitions CV Builder - Free CV Builder by an HR Career Specialist",
   description:
-    "Build a professional, HR-approved CV in minutes. Free ATS-safe PDF and Word export, no watermark. Built by a practising HR Specialist with GCC/MENA expertise.",
+    "Build a clear CV in minutes. Get free ATS-safe PDF and Word files with no watermark. Built by an HR Career Specialist with GCC and Africa experience.",
   keywords: [
     "CV builder",
     "resume builder",

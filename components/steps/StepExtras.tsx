@@ -386,7 +386,7 @@ export default function StepExtras() {
           open={openSections.volunteer}
           onToggle={() => toggle("volunteer")}
         >
-          <HRTipInline text="82% of employers say volunteering positively influences hiring decisions (Deloitte)." />
+          <HRTipInline text="Add volunteer work when it shows useful skills, responsibility or service. Only include details you can explain in an interview." />
 
           {volunteer.map((entry) => (
             <div
@@ -435,7 +435,7 @@ export default function StepExtras() {
                     onChange={(e) =>
                       updateVolunteer(entry.id, "dates", e.target.value)
                     }
-                    placeholder="e.g. Jan 2021 – Present"
+                    placeholder="e.g. Jan 2021 to Present"
                     className={INPUT_CLASS}
                   />
                 </div>

@@ -4,7 +4,9 @@ import { gzipSync } from "node:zlib";
 
 const root = process.cwd();
 const nextDir = join(root, ".next");
-const manifestPath = join(nextDir, "app-build-manifest.json");
+const legacyManifestPath = join(nextDir, "app-build-manifest.json");
+const buildManifestPath = join(nextDir, "build-manifest.json");
+const appClientManifestPath = join(nextDir, "server", "app", "page_client-reference-manifest.js");
 const MAX_INITIAL_JS_GZIP = 250 * 1024;
 const MAX_INITIAL_FONT_BYTES = 120 * 1024;
 
@@ -18,9 +20,25 @@ async function filesIn(directory) {
 }
 
 try {
-  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  const routeFiles = new Set([...(manifest.pages["/layout"] || []), ...(manifest.pages["/page"] || [])]
-    .filter((file) => file.endsWith(".js")));
+  const routeFiles = new Set();
+  try {
+    const manifest = JSON.parse(await readFile(legacyManifestPath, "utf8"));
+    [...(manifest.pages["/layout"] || []), ...(manifest.pages["/page"] || [])]
+      .filter((file) => file.endsWith(".js"))
+      .forEach((file) => routeFiles.add(file));
+  } catch {
+    const buildManifest = JSON.parse(await readFile(buildManifestPath, "utf8"));
+    (buildManifest.rootMainFiles || []).forEach((file) => routeFiles.add(file));
+
+    const source = await readFile(appClientManifestPath, "utf8");
+    const marker = 'globalThis.__RSC_MANIFEST["/page"] = ';
+    const start = source.indexOf(marker);
+    if (start < 0) throw new Error("Root route client manifest was not found.");
+    const routeManifest = JSON.parse(source.slice(start + marker.length).trim().replace(/;$/, ""));
+    Object.values(routeManifest.entryJSFiles || {}).flat()
+      .filter((file) => typeof file === "string" && file.endsWith(".js"))
+      .forEach((file) => routeFiles.add(file.replace(/^\/_next\//, "")));
+  }
 
   if (routeFiles.size === 0) throw new Error("No initial JavaScript files were found for the root route.");
 

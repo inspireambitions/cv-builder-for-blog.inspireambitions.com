@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
-import type { ScoreResult, ScoreLayer } from "@/lib/types";
+import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
 import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
 
@@ -121,15 +121,8 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
 
 export default function StepScore() {
   const { state } = useCVState();
-  const [score, setScore] = useState<ScoreResult | null>(null);
+  const score = useMemo(() => calculateScore(state), [state]);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-
-  useEffect(() => {
-    const result = calculateScore(state);
-    setScore(result);
-  }, [state]);
-
-  if (!score) return null;
 
   const dashOffset =
     CIRCUMFERENCE - (score.total / score.max) * CIRCUMFERENCE;

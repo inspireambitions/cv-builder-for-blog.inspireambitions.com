@@ -17,8 +17,8 @@ export default function ThemeToggle() {
     const initial = saved === "light" || saved === "dark"
       ? saved
       : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    setTheme(initial);
     applyTheme(initial);
+    queueMicrotask(() => setTheme(initial));
   }, []);
 
   const toggle = () => {

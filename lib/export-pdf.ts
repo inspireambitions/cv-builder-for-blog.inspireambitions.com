@@ -281,7 +281,7 @@ export async function exportPDF(state: CVState, options: ExportOptions = {}) {
   if (isRecruiterReady(options)) {
     const element = document.getElementById("cv-render");
     if (element) {
-      const html2canvas = (await import("html2canvas")).default;
+      const html2canvas = (await import("html2canvas-pro")).default;
       const { jsPDF } = await import("jspdf");
       const preview = element.closest("[data-preview-container]") as HTMLElement | null;
       const previousTransform = preview?.style.transform;

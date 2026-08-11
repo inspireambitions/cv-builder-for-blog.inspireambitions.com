@@ -3,27 +3,27 @@ export type Locale = "en" | "ar" | "hi" | "ur" | "tl";
 const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
   en: {
     // Header
-    "header.tagline": "Built by an HR Specialist",
+    "header.tagline": "Built by an HR Career Specialist",
     "header.cvBuilder": "CV Builder",
 
     // Start / Hero
-    "hero.badge": "Built by an HR Specialist",
+    "hero.badge": "Built by an HR Career Specialist",
     "hero.headline": "Build a CV That Gets You Hired",
     "hero.subheadline":
       "Build a clear, evidence-led CV for UAE and international roles. Free ATS-safe PDF and Word export by email. No watermark. No credit card.",
-    "hero.buildCta": "Build My CV — Free",
+    "hero.buildCta": "Build My CV for Free",
     "hero.uploadCta": "Upload & Tailor to a Job",
     "hero.trust1": "Free forever",
     "hero.trust2": "No credit card",
-    "hero.trust3": "HR Specialist approved",
+    "hero.trust3": "Built from real hiring experience",
     "hero.trust4": "GCC/MENA optimised",
-    "hero.templatesTitle": "4 Professional Templates — Choose Your Style",
+    "hero.templatesTitle": "Choose from 4 Professional Templates",
     "hero.whyTitle": "Why InspireAmbitions?",
 
     // Features
-    "feature.hrApproved": "HR Specialist Approved",
+    "feature.hrApproved": "Practical Hiring Guidance",
     "feature.hrApprovedDesc":
-      "Every tip, prompt, and scoring criterion written by a practising HR Specialist who screens CVs daily.",
+      "Clear prompts shaped by more than 20 years of HR experience across the Gulf and Africa.",
     "feature.freeExport": "Free PDF & Word Export",
     "feature.freeExportDesc":
       "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
@@ -164,7 +164,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "toast.saved": "Progress saved",
 
     // HR Tips
-    "tip.label": "HR Specialist Tip",
+    "tip.label": "HR Career Specialist Tip",
     "tip.email":
       "Recruiters see your email before your CV. firstname.lastname@gmail.com is the gold standard. Avoid nicknames, birth years, or numbers.",
     "tip.summary":

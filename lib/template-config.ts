@@ -23,6 +23,32 @@ export const TEMPLATE_CONFIG: Record<TemplateType, TemplateConfig> = {
 };
 
 export const SECTION_LABELS = {
-  en: { summary: "Professional Profile", experience: "Professional Experience", education: "Education", credentials: "Licences & Credentials", skills: "Core Expertise", languages: "Languages", projects: "Selected Projects" },
-  ar: { summary: "الملف المهني", experience: "الخبرة المهنية", education: "التعليم", credentials: "التراخيص والشهادات", skills: "الخبرات الأساسية", languages: "اللغات", projects: "مشاريع مختارة" },
+  en: {
+    summary: "Professional Profile",
+    experience: "Professional Experience",
+    education: "Education",
+    credentials: "Certifications & Credentials",
+    skills: "Core Expertise",
+    languages: "Languages",
+    projects: "Selected Projects",
+    achievements: "Achievements & Awards",
+    volunteer: "Volunteer Work",
+    publications: "Publications, Media & Speaking",
+    memberships: "Professional Memberships",
+    careerNote: "Career note",
+  },
+  ar: {
+    summary: "الملف المهني",
+    experience: "الخبرة المهنية",
+    education: "التعليم",
+    credentials: "الشهادات والتراخيص",
+    skills: "الخبرات الأساسية",
+    languages: "اللغات",
+    projects: "مشاريع مختارة",
+    achievements: "الإنجازات والجوائز",
+    volunteer: "العمل التطوعي",
+    publications: "المنشورات والإعلام والتحدث",
+    memberships: "العضويات المهنية",
+    careerNote: "ملاحظة مهنية",
+  },
 } as const;

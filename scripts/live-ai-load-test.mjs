@@ -14,7 +14,10 @@ function payload(index) {
       "We seek a Hotel Operations Manager to lead front office and guest services, manage budgets, coach a multicultural team, improve guest satisfaction, coordinate with housekeeping and food and beverage teams, and deliver measurable service improvements in a UAE luxury hotel.",
     cvData: {
       step: 8,
-      template: "corp",
+      mobilePersonalPage: 0,
+      template: "service",
+      templateConfirmed: true,
+      cvLanguage: "en",
       geo: "gulf",
       photo: null,
       personal: {
