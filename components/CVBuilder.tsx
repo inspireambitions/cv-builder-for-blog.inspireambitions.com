@@ -95,7 +95,11 @@ export default function CVBuilder() {
   }, [calculateScale]);
 
   useEffect(() => {
-    if (state.step === 8) setMobileMode("score");
+    if (state.step === 8) {
+      setMobileMode("score");
+      return;
+    }
+    setMobileMode((current) => current === "score" ? "edit" : current);
   }, [state.step]);
 
   const CurrentStep = STEP_COMPONENTS[state.step] || StepStart;
