@@ -68,6 +68,19 @@ test("cruise steward receives and keeps the Service template on immediate contin
   await expect(page.getByLabel("CV preview")).toContainText("HOSPITALITY & SERVICE");
 });
 
+test("Gulf location detection does not replace a confirmed Service template", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/detect-geo", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ geo: "gulf" }) })
+  );
+  await seedDraft(page, completeState("service"));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.waitForTimeout(400);
+  await page.getByRole("button", { name: "Preview CV" }).click();
+  await expect(page.getByLabel("CV preview")).toContainText("HOSPITALITY & SERVICE");
+});
+
 test("sector templates preserve every entered evidence section", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedDraft(page, completeState("corner"));

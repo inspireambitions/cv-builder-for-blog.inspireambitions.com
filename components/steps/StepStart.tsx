@@ -329,12 +329,16 @@ export default function StepStart() {
   // Detect geo on mount
   useEffect(() => {
     detectGeo().then((geo) => {
-      updateField({ geo });
-      if (geo === "gulf") {
-        updateField({ template: "classic" });
-      }
+      setState((previous) => ({
+        ...previous,
+        geo,
+        template:
+          geo === "gulf" && !previous.templateConfirmed
+            ? "classic"
+            : previous.template,
+      }));
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setState]);
 
   async function handleFile(file: File) {
     setError(null);
