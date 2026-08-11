@@ -189,6 +189,7 @@ export interface ScoreResult {
 
 export interface CVState {
   step: number;
+  mobilePersonalPage: number;
   template: TemplateType;
   cvLanguage: CVLanguage;
   geo: GeoType;
@@ -211,6 +212,7 @@ export interface CVState {
 
 export const defaultCVState: CVState = {
   step: 0,
+  mobilePersonalPage: 0,
   template: "classic",
   cvLanguage: "en",
   geo: "global",

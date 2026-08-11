@@ -138,137 +138,65 @@ export default function StepScore() {
   const isGulf = state.geo === "gulf";
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">
-          {isGulf ? "Gulf CV Score & Analysis" : "CV Score & Download"}
-        </h2>
-        <p className="mt-1 text-sm text-gray-600">
-          {isGulf
-            ? "See how your CV performs against Gulf ATS systems and recruiter expectations"
-            : "See how your CV stacks up before exporting your free PDF or Word file after email unlock"}
+    <div className="space-y-8">
+      <section className="rounded-2xl border border-[#d8c895] bg-[#faf7ee] p-6 text-center sm:p-8">
+        <p className="text-sm font-bold text-[#2f6b5e]">Your work is saved</p>
+        <h1 className="mt-2 text-3xl font-bold text-[#1a2744]">Your CV is ready to review</h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#586174]">
+          Preview it, then download a clean PDF, an editable Word file or a quick JPEG. There is no card and no watermark.
         </p>
-      </div>
+        <button
+          type="button"
+          onClick={() => setShowDownloadModal(true)}
+          className="mt-6 min-h-12 w-full rounded-xl bg-[#806017] px-6 text-base font-bold text-white transition-colors hover:bg-[#6f5314] sm:w-auto"
+        >
+          Download my CV
+        </button>
+      </section>
 
-      {/* Score Ring */}
-      <div className="flex flex-col items-center">
-        <div className="relative" style={{ width: SIZE, height: SIZE }}>
-          <svg width={SIZE} height={SIZE} className="-rotate-90">
-            <circle
-              cx={SIZE / 2}
-              cy={SIZE / 2}
-              r={RADIUS}
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth={STROKE}
-            />
-            <circle
-              cx={SIZE / 2}
-              cy={SIZE / 2}
-              r={RADIUS}
-              fill="none"
-              stroke={color}
-              strokeWidth={STROKE}
-              strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={dashOffset}
-              className="transition-all duration-700 ease-out"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-gray-900">
-              {score.total}
-            </span>
-            <span className="text-sm text-gray-500">/100</span>
+      <details className="rounded-2xl border border-gray-200 bg-white p-5">
+        <summary className="cursor-pointer text-base font-bold text-[#1a2744]">
+          Check and improve my CV
+        </summary>
+        <div className="mt-6 space-y-8">
+          <div className="flex flex-col items-center">
+            <div className="relative" style={{ width: SIZE, height: SIZE }}>
+              <svg width={SIZE} height={SIZE} className="-rotate-90" aria-hidden="true">
+                <circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} fill="none" stroke="#e5e7eb" strokeWidth={STROKE} />
+                <circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} fill="none" stroke={color} strokeWidth={STROKE} strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={dashOffset} className="transition-all duration-700 ease-out" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-4xl font-bold text-gray-900">{score.total}</span>
+                <span className="text-sm text-gray-500">out of 100</span>
+              </div>
+            </div>
+            <p className="mt-3 max-w-sm text-center text-xs leading-5 text-gray-500">
+              This is a writing checklist, not a promise that an employer or recruitment system will accept your CV.
+            </p>
+          </div>
+
+          {score.topTips.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <h2 className="text-sm font-bold text-amber-950">Good next fixes</h2>
+              <ol className="space-y-2">
+                {score.topTips.map((tip, index) => (
+                  <li key={tip} className="flex gap-2 text-sm leading-5 text-amber-900">
+                    <span className="font-bold">{index + 1}.</span><span>{tip}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-gray-900">Detailed checks</h2>
+            <LayerCard layer={score.layers.completeness} />
+            <LayerCard layer={score.layers.contentQuality} />
+            {isGulf && <LayerCard layer={score.layers.gulfSpecific} />}
+            <LayerCard layer={score.layers.atsFormatting} />
           </div>
         </div>
-        {isGulf && (
-          <p className="text-xs text-gray-500 mt-2 text-center max-w-xs">
-            Scored against Gulf ATS patterns, regional recruiter expectations,
-            and GCC hiring standards
-          </p>
-        )}
-      </div>
-
-      {/* Top Tips */}
-      {score.topTips.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Quick wins to boost your score
-          </h3>
-          <ul className="space-y-2">
-            {score.topTips.map((tip, i) => (
-              <li
-                key={i}
-                className="text-sm text-amber-800 flex items-start gap-2"
-              >
-                <span className="text-amber-500 font-bold mt-0.5 shrink-0">
-                  {i + 1}.
-                </span>
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Layered Breakdown */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900">
-          Detailed Breakdown
-        </h3>
-        <LayerCard layer={score.layers.completeness} />
-        <LayerCard layer={score.layers.contentQuality} />
-        {isGulf && <LayerCard layer={score.layers.gulfSpecific} />}
-        <LayerCard layer={score.layers.atsFormatting} />
-      </div>
-
-      {/* CTA Cards */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Download CV */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col items-center text-center space-y-4">
-          <svg
-            className="w-10 h-10 text-gold-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Download Your CV
-          </h3>
-          <p className="text-sm text-gray-600">
-            Export your polished CV as a selectable-text PDF or editable Word
-            document after email unlock. No card, no watermark.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowDownloadModal(true)}
-            className="bg-gold-500 hover:bg-gold-600 text-white font-medium px-8 py-3 rounded-lg transition-colors text-base"
-          >
-            Email &amp; Download CV
-          </button>
-        </div>
-      </div>
+      </details>
 
       <DownloadModal
         isOpen={showDownloadModal}

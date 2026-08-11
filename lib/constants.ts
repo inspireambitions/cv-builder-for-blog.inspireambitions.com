@@ -6,14 +6,14 @@ export const GCC_MENA_CODES = [
 
 export const STEPS = [
   { index: 0, label: "Start", key: "start" },
-  { index: 1, label: "Template", key: "template" },
-  { index: 2, label: "Personal Details", key: "personal" },
-  { index: 3, label: "Professional Summary", key: "summary" },
-  { index: 4, label: "Work Experience", key: "experience" },
-  { index: 5, label: "Education & Certs", key: "education" },
-  { index: 6, label: "Skills & Languages", key: "skills" },
+  { index: 1, label: "Your details", key: "personal" },
+  { index: 2, label: "Your profile", key: "summary" },
+  { index: 3, label: "Work history", key: "experience" },
+  { index: 4, label: "Education", key: "education" },
+  { index: 5, label: "Skills", key: "skills" },
+  { index: 6, label: "CV design", key: "template" },
   { index: 7, label: "Extras", key: "extras" },
-  { index: 8, label: "CV Score & Download", key: "score" },
+  { index: 8, label: "Review & download", key: "score" },
 ] as const;
 
 export const PHONE_PLACEHOLDERS: Record<string, string> = {

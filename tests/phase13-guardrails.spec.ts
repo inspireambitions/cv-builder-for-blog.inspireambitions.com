@@ -37,8 +37,7 @@ for (const view of webviews) {
     await page.goto("/");
     await expect(page.getByRole("button", { name: /Build My CV/ })).toBeVisible();
     await page.getByRole("button", { name: /Build My CV/ }).click();
-    await page.getByRole("button", { name: /Next Step/ }).click();
-    await expect(page.getByPlaceholder("e.g. Sarah Al-Mansoori")).toBeVisible();
+    await expect(page.getByPlaceholder("For example, Amina Yusuf")).toBeVisible();
     await expect
       .poll(async () =>
         page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
@@ -73,12 +72,14 @@ test("download gate exposes email-only dual exports without account, card, paywa
 
   await page.goto("/");
   await page.getByRole("button", { name: /Build My CV/ }).click();
-  for (let index = 0; index < 7; index += 1) {
-    const next = page.getByRole("button", { name: /Next Step/ });
+  const isMobile = (page.viewportSize()?.width ?? 1440) < 640;
+  const clickCount = isMobile ? 9 : 7;
+  for (let index = 0; index < clickCount; index += 1) {
+    const next = page.getByRole("button", { name: isMobile ? "Save and continue" : /Next Step/ });
     await expect(next).toBeVisible();
     await next.click();
   }
-  await page.getByRole("button", { name: "Email & Download CV" }).click();
+  await page.getByRole("button", { name: "Download my CV" }).click();
 
   await expect(page.getByText("Free. No card. No watermark.")).toBeVisible();
   await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
@@ -110,8 +111,9 @@ test("embedded iframe parity works for the WordPress wrapper surface", async ({ 
   const frame = page.frameLocator("iframe[title='Dubai CV Builder']");
   await expect(frame.getByRole("button", { name: /Build My CV/ })).toBeVisible();
   await frame.getByRole("button", { name: /Build My CV/ }).click();
-  await frame.getByRole("button", { name: /Next Step/ }).click();
-  await expect(frame.getByPlaceholder("e.g. Sarah Al-Mansoori")).toBeVisible();
+  await expect(
+    frame.locator('input[placeholder="For example, Amina Yusuf"]:visible, input[placeholder="e.g. Sarah Al-Mansoori"]:visible').first()
+  ).toBeVisible();
 });
 
 test("WCAG 2.2 AA guardrail has no serious or critical axe violations on the start page", async ({

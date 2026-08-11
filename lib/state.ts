@@ -33,7 +33,7 @@ const CVContext = createContext<CVContextValue | null>(null);
 const STORAGE_KEY = "inspireambitions-cv-state";
 const DRAFTS_KEY = "inspireambitions-cv-drafts";
 const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
-const STORAGE_VERSION = 4;
+const STORAGE_VERSION = 5;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface StoredDraft {
@@ -45,7 +45,7 @@ interface StoredDraft {
 
 type DraftStore = Record<string, StoredDraft>;
 
-function normalizeState(value: unknown): CVState | null {
+function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVState | null {
   if (!value || typeof value !== "object") return null;
   const incoming = value as Partial<CVState>;
   const personal = incoming.personal ?? {};
@@ -61,9 +61,29 @@ function normalizeState(value: unknown): CVState | null {
     ? incomingTemplate as CVState["template"]
     : legacyTemplateMap[incomingTemplate] ?? defaultCVState.template;
 
+  const legacyStepMap: Record<number, number> = {
+    0: 0,
+    1: 6,
+    2: 1,
+    3: 2,
+    4: 3,
+    5: 4,
+    6: 5,
+    7: 7,
+    8: 8,
+  };
+  const incomingStep = typeof incoming.step === "number" ? incoming.step : 0;
+
   return {
     ...defaultCVState,
     ...incoming,
+    step: sourceVersion < STORAGE_VERSION
+      ? legacyStepMap[incomingStep] ?? 0
+      : Math.max(0, Math.min(8, incomingStep)),
+    mobilePersonalPage: Math.max(
+      0,
+      Math.min(2, typeof incoming.mobilePersonalPage === "number" ? incoming.mobilePersonalPage : 0)
+    ),
     template,
     cvLanguage: incoming.cvLanguage === "ar" ? "ar" : "en",
     personal: {
@@ -130,7 +150,7 @@ function validateStoredDraft(parsed: unknown): { state: CVState; savedAt: string
   }
 
   const draftState = draft.state ? draft.state : parsed;
-  const state = normalizeState(draftState);
+  const state = normalizeState(draftState, typeof draft.version === "number" ? draft.version : 1);
   return state ? { state, savedAt } : null;
 }
 

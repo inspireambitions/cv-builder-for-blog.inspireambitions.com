@@ -222,7 +222,7 @@ export default function TailorWorkspace() {
               {deterministicMatch.gaps.slice(0, 8).map((gap) => (
                 <div key={gap.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div><p className="text-sm font-semibold text-gray-900">{gap.label}</p><p className="mt-1 text-sm text-gray-600">{gap.reason}</p></div>
-                  <button type="button" onClick={() => { const steps = { personal: 2, summary: 3, experience: 4, education: 5, skills: 6 }; goToStep(steps[gap.target]); }} className="min-h-10 shrink-0 border border-gray-300 px-3 text-sm font-semibold text-gray-800 hover:bg-gray-50">Fix</button>
+                  <button type="button" onClick={() => { const steps = { personal: 1, summary: 2, experience: 3, education: 4, skills: 5 }; goToStep(steps[gap.target]); }} className="min-h-10 shrink-0 border border-gray-300 px-3 text-sm font-semibold text-gray-800 hover:bg-gray-50">Fix</button>
                 </div>
               ))}
             </div>

@@ -19,6 +19,7 @@ import {
   validateImageUpload,
 } from "@/lib/validators";
 import { TEMPLATE_CONFIG } from "@/lib/template-config";
+import GuidedPersonal from "./GuidedPersonal";
 
 interface FieldStatus {
   valid?: boolean;
@@ -133,7 +134,11 @@ export default function StepPersonal() {
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      <div className="md:hidden">
+        <GuidedPersonal />
+      </div>
+      <div className="hidden space-y-8 md:block">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">
           Personal Details
@@ -622,6 +627,7 @@ export default function StepPersonal() {
           birth years, or numbers.
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

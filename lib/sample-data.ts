@@ -2,6 +2,7 @@ import type { CVState } from "./types";
 
 export const sampleCVState: CVState = {
   step: 8,
+  mobilePersonalPage: 0,
   template: "classic",
   cvLanguage: "en",
   geo: "global",

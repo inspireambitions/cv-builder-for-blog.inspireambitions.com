@@ -3,6 +3,7 @@ import { mkdir, readFile, stat } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 
 test("removes Google linker tracking from shared URLs", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 1440) < 640, "The mobile header keeps the language control visible.");
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       value: {
@@ -32,6 +33,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   context,
   page,
 }) => {
+  test.skip((page.viewportSize()?.width ?? 1440) < 640, "The guided mobile path has dedicated coverage.");
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       value: {
@@ -61,7 +63,6 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
 
   await page.goto("/");
   await page.getByRole("button", { name: /Build My CV/ }).click();
-  await page.getByRole("button", { name: /Next Step/ }).click();
 
   await page
     .getByPlaceholder("e.g. Sarah Al-Mansoori")
@@ -85,7 +86,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
     if (!raw) return false;
     const draft = JSON.parse(raw);
     return (
-      draft.state?.step === 2 &&
+      draft.state?.step === 1 &&
       draft.state?.personal?.name === "Mariam Hassan" &&
       draft.state?.personal?.visa_status === "Employment"
     );
@@ -113,14 +114,14 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   );
   await restorePage.close();
 
-  for (let index = 0; index < 6; index += 1) {
+  for (let index = 0; index < 7; index += 1) {
     await page.getByRole("button", { name: /Next Step/ }).click();
   }
 
   await expect(
-    page.getByText("after email unlock. No card, no watermark")
+    page.getByText(/There is no card and no watermark/)
   ).toBeVisible();
-  await page.getByRole("button", { name: "Email & Download CV" }).click();
+  await page.getByRole("button", { name: "Download my CV" }).click();
   await expect(page.getByRole("button", { name: "Unlock and Download PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
   await page.getByLabel("Email address").fill("mariam.hassan@example.com");
@@ -161,8 +162,7 @@ test("CV builder fits a mobile viewport and preview opens without horizontal pag
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("button", { name: /Build My CV/ }).click();
-  await page.getByRole("button", { name: /Next Step/ }).click();
-  await page.getByPlaceholder("e.g. Sarah Al-Mansoori").fill("Mariam Hassan");
+  await page.getByPlaceholder("For example, Amina Yusuf").fill("Mariam Hassan");
 
   await expect
     .poll(async () =>
@@ -170,7 +170,7 @@ test("CV builder fits a mobile viewport and preview opens without horizontal pag
     )
     .toBe(true);
 
-  await page.getByRole("button", { name: "Preview" }).click();
+  await page.getByRole("button", { name: "Preview CV", exact: true }).click();
   await expect(page.locator("[data-preview-container]").last()).toBeVisible();
   await expect
     .poll(async () =>

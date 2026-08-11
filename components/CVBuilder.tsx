@@ -10,6 +10,7 @@ import { createResumeLink } from "@/lib/resume-link";
 import { trackToolEvent } from "@/lib/analytics";
 import LanguageToggle from "./shared/LanguageToggle";
 import ThemeToggle from "./shared/ThemeToggle";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 
 const StepStart = dynamic(() => import("./steps/StepStart"));
 const StepTemplate = dynamic(() => import("./steps/StepTemplate"));
@@ -38,12 +39,12 @@ const STEP_I18N_KEY: Record<string, string> = {
 
 const STEP_COMPONENTS = [
   StepStart,
-  StepTemplate,
   StepPersonal,
   StepSummary,
   StepExperience,
   StepEducation,
   StepSkills,
+  StepTemplate,
   StepExtras,
   StepScore,
 ];
@@ -55,6 +56,7 @@ function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["sta
 export default function CVBuilder() {
   const {
     state,
+    updateField,
     goToStep,
     nextStep,
     prevStep,
@@ -98,6 +100,29 @@ export default function CVBuilder() {
 
   const CurrentStep = STEP_COMPONENTS[state.step] || StepStart;
   const isLastStep = state.step === 8;
+  const currentStep = STEPS[state.step];
+  const mobileProgress = state.step === 1
+    ? ((state.mobilePersonalPage + 1) / 3) * 12.5
+    : (state.step / 8) * 100;
+
+  const handleMobileBack = () => {
+    if (state.step === 1 && state.mobilePersonalPage > 0) {
+      updateField({ mobilePersonalPage: state.mobilePersonalPage - 1 });
+      return;
+    }
+    prevStep();
+  };
+
+  const handleMobileNext = () => {
+    if (state.step === 1 && state.mobilePersonalPage < 2) {
+      updateField({ mobilePersonalPage: state.mobilePersonalPage + 1 });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (isLastStep) setMobileMode("score");
+    else nextStep();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleCopyResumeLink = useCallback(async () => {
     setResumeLinkStatus("copying");
@@ -128,7 +153,7 @@ export default function CVBuilder() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="https://inspireambitions.com"
               target="_blank"
@@ -173,7 +198,7 @@ export default function CVBuilder() {
                 Delete draft
               </button>
             )}
-            <ThemeToggle />
+            <span className="hidden sm:inline-flex"><ThemeToggle /></span>
             <LanguageToggle />
           </div>
         </div>
@@ -213,8 +238,28 @@ export default function CVBuilder() {
       {/* Progress Bar */}
       {state.step > 0 && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 py-2">
-            <div className="flex items-center gap-1 overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div className="mx-auto max-w-7xl px-4 py-3 sm:py-2">
+            <div className="sm:hidden">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-[#1a2744]">
+                    {state.step === 1
+                      ? `Personal details • ${state.mobilePersonalPage + 1} of 3`
+                      : `${currentStep?.label} • ${state.step} of 8`}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#697184]">
+                    {state.step < 3 ? "About 6 minutes left" : state.step < 6 ? "You are making good progress" : "Nearly finished"}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setMobileMode(mobileMode === "preview" ? "edit" : "preview")} className="min-h-10 rounded-lg border border-[#d5c58d] bg-white px-3 text-xs font-bold text-[#806017]">
+                  {mobileMode === "preview" ? "Back to editing" : "Preview CV"}
+                </button>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#ece8dc]">
+                <div className="h-full rounded-full bg-[#806017] transition-all" style={{ width: `${mobileProgress}%` }} />
+              </div>
+            </div>
+            <div className="hidden items-center gap-1 overflow-x-auto sm:flex" style={{ WebkitOverflowScrolling: "touch" }}>
               {STEPS.slice(1).map((s) => (
                 <button
                   key={s.index}
@@ -244,7 +289,7 @@ export default function CVBuilder() {
               ))}
             </div>
             {/* Progress line */}
-            <div className="mt-2 h-1 bg-gray-200 rounded-full">
+            <div className="mt-2 hidden h-1 rounded-full bg-gray-200 sm:block">
               <div
                 className="h-1 bg-gold-500 rounded-full transition-all duration-300"
                 style={{ width: `${(state.step / 8) * 100}%` }}
@@ -254,36 +299,16 @@ export default function CVBuilder() {
         </div>
       )}
 
-      {state.step > 0 && (
-        <div className="mobile-mode-control sticky top-[69px] z-20 py-2 lg:hidden" aria-label="Builder mode">
-          <div className="mx-auto grid max-w-md grid-cols-3 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-            {(["edit", "preview", "score"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setMobileMode(mode)}
-                className={`min-h-11 rounded-md px-3 text-sm font-semibold capitalize transition-colors ${
-                  mobileMode === mode ? "bg-gold-500 text-white" : "text-gray-600 hover:bg-gray-100"
-                }`}
-                aria-pressed={mobileMode === mode}
-              >
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+      <div className="mx-auto max-w-7xl px-4 py-5 pb-28 sm:py-6 sm:pb-6">
         <div className="flex gap-6">
           {/* Form Panel */}
           <div className={`flex-1 min-w-0 ${mobileMode === "edit" || (mobileMode === "score" && state.step === 8) ? "block" : "hidden lg:block"}`}>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
+            <div className="mb-6 bg-transparent p-0 shadow-none sm:rounded-xl sm:border sm:border-gray-200 sm:bg-white sm:p-6 sm:shadow-sm [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
               <CurrentStep />
             </div>
 
-            {state.step > 0 && (
+            {state.step === 8 && (
               <div className="mb-6 rounded-xl border border-emerald-100 bg-emerald-50 p-4 sm:hidden">
                 <div className="flex flex-col gap-3">
                   <div>
@@ -413,25 +438,25 @@ export default function CVBuilder() {
         )}
       </div>
 
-      {state.step > 0 && mobileMode === "edit" && (
-        <div className="mobile-action-bar fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 px-4 pt-3 sm:hidden">
+      {state.step > 0 && mobileMode === "edit" && !isLastStep && (
+        <div className="mobile-action-bar fixed inset-x-0 bottom-0 z-30 px-4 pt-3 sm:hidden">
+          <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-[#2f6b5e]"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />Saved on this device</p>
+          <div className="flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={prevStep}
+            onClick={handleMobileBack}
             className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700"
           >
-            {t("nav.back")}
+            <span className="flex items-center gap-1.5"><ArrowLeft className="h-4 w-4" aria-hidden="true" />{t("nav.back")}</span>
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (isLastStep) setMobileMode("score");
-              else nextStep();
-            }}
+            onClick={handleMobileNext}
             className="min-h-11 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
           >
-            {isLastStep ? "Score and export" : t("nav.next")}
+            <span className="flex items-center justify-center gap-2">Save and continue<ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
           </button>
+          </div>
         </div>
       )}
 
@@ -452,7 +477,7 @@ export default function CVBuilder() {
                 <span className="text-white font-bold text-lg -ms-1">Ambitions</span>
               </a>
               <p className="text-sm text-gray-300 leading-relaxed">
-                Free career tools built by an HR Specialist with 20+ years of GCC experience.
+                Free career tools built by an HR Career Specialist with 20+ years of GCC experience.
               </p>
             </div>
 

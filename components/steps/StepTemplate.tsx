@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useCVState } from "@/lib/state";
 import { TEMPLATE_INFO } from "@/lib/constants";
 import type { TemplateType } from "@/lib/types";
@@ -19,26 +20,40 @@ const photoRules: Record<TemplateType, string> = {
 
 export default function StepTemplate() {
   const { state, updateField } = useCVState();
+  const [showAll, setShowAll] = useState(false);
+  const title = state.personal.title.toLowerCase();
+  const recommendedKey: TemplateType =
+    /hotel|hospitality|housekeep|restaurant|food|guest/.test(title) ? "service" :
+    /nurse|doctor|health|clinic|medical|pharma/.test(title) ? "care" :
+    /engineer|construction|architect|site/.test(title) ? "site" :
+    /developer|software|data|technology|cyber|product/.test(title) ? "stack" :
+    /finance|account|bank|audit/.test(title) ? "ledger" :
+    /aviation|cabin|airport|flight/.test(title) ? "crew" :
+    /logistic|retail|driver|warehouse|supply/.test(title) ? "move" :
+    /director|chief|head|executive|manager/.test(title) ? "corner" : "classic";
+  const templates = [...TEMPLATE_INFO].sort((a, b) =>
+    a.key === recommendedKey ? -1 : b.key === recommendedKey ? 1 : 0
+  );
 
   return (
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">
-          Choose how recruiters should read you
+          Choose your CV design
         </h2>
         <p className="mt-2 text-gray-600">
-          Each direction changes hierarchy, density and regional emphasis, not just colour.
+          We recommend a clear layout for {state.personal.title || "your target job"}. You can change it at any time.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {TEMPLATE_INFO.map((tpl) => {
+        {templates.map((tpl, index) => {
           const selected = state.template === tpl.key;
           return (
             <button
               key={tpl.key}
               onClick={() => updateField({ template: tpl.key as TemplateType })}
-              className={`relative overflow-hidden rounded-lg border bg-white text-start shadow-rest transition-all ${
+              className={`${index > 0 && !showAll ? "hidden md:block" : "block"} relative overflow-hidden rounded-lg border bg-white text-start shadow-rest transition-all ${
                 selected
                   ? "border-gold-600 ring-2 ring-gold-600 ring-offset-2"
                   : "border-gray-200 hover:-translate-y-0.5 hover:border-gold-600 hover:shadow-raised"
@@ -53,27 +68,13 @@ export default function StepTemplate() {
 
               {/* Checkmark */}
               {selected && (
-                <div className="absolute end-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-gold-600 shadow-raised">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
+                <span className="absolute end-3 top-3 rounded-full bg-gold-600 px-3 py-1 text-xs font-bold text-white shadow-raised">Selected</span>
               )}
 
               {/* Gulf region badge */}
-              {tpl.key === "classic" && state.geo === "gulf" && (
+              {tpl.key === recommendedKey && (
                 <span className="absolute top-3 start-3 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  Recommended for your region
+                  Recommended for your target job
                 </span>
               )}
 
@@ -93,6 +94,11 @@ export default function StepTemplate() {
           );
         })}
       </div>
+      {!showAll && (
+        <button type="button" onClick={() => setShowAll(true)} className="min-h-11 w-full rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-[#1a2744] md:hidden">
+          See all CV designs
+        </button>
+      )}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <label className="text-sm font-semibold text-gray-900" htmlFor="cv-language">CV document language</label>
         <p className="mt-1 text-xs text-gray-600">This changes headings and layout direction. Your own content stays unchanged.</p>
@@ -111,7 +117,7 @@ export default function StepTemplate() {
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Specialist Tip
+          HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
           In the Gulf/MENA region, including a professional photo on your CV is

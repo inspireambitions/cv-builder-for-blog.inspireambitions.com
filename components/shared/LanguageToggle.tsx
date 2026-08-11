@@ -15,17 +15,17 @@ export default function LanguageToggle() {
   const { locale, setLocale } = useLocale();
 
   return (
-    <label className="sr-only" htmlFor="ui-language">
-      Interface language
+    <>
+      <label className="sr-only" htmlFor="ui-language">Interface language</label>
       <select
         id="ui-language"
         aria-label="Interface language"
         value={locale}
         onChange={(event) => setLocale(event.target.value as Locale)}
-        className="not-sr-only min-h-10 rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-800"
+        className="min-h-10 max-w-24 rounded-lg border border-[#b99b45] bg-white px-2 text-sm font-medium text-[#1a2744] sm:max-w-none"
       >
         {OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
-    </label>
+    </>
   );
 }

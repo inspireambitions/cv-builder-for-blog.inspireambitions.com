@@ -11,6 +11,8 @@
 # testing
 /coverage
 /test-results
+/outputs/
+/.qa-server*.log
 
 # next.js
 /.next/
