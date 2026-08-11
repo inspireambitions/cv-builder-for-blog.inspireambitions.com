@@ -2,6 +2,7 @@
 
 import { useCVState } from "@/lib/state";
 import type { ExpEntry } from "@/lib/types";
+import RoleSentenceSuggestions from "@/components/shared/RoleSentenceSuggestions";
 
 function generateId() {
   return "exp-" + Math.random().toString(36).slice(2, 9);
@@ -77,10 +78,11 @@ export default function StepExperience() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Job Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor={`${entry.id}-role`} className="block text-sm font-medium text-gray-700 mb-1.5">
                   Job Title <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id={`${entry.id}-role`}
                   type="text"
                   value={entry.role}
                   onChange={(e) =>
@@ -93,10 +95,11 @@ export default function StepExperience() {
 
               {/* Company Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor={`${entry.id}-company`} className="block text-sm font-medium text-gray-700 mb-1.5">
                   Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id={`${entry.id}-company`}
                   type="text"
                   value={entry.company}
                   onChange={(e) =>
@@ -109,10 +112,11 @@ export default function StepExperience() {
 
               {/* Company Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor={`${entry.id}-company-description`} className="block text-sm font-medium text-gray-700 mb-1.5">
                   Company Description
                 </label>
                 <input
+                  id={`${entry.id}-company-description`}
                   type="text"
                   value={entry.companyDesc}
                   onChange={(e) =>
@@ -125,10 +129,11 @@ export default function StepExperience() {
 
               {/* Location */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor={`${entry.id}-location`} className="block text-sm font-medium text-gray-700 mb-1.5">
                   Location
                 </label>
                 <input
+                  id={`${entry.id}-location`}
                   type="text"
                   value={entry.location}
                   onChange={(e) =>
@@ -141,10 +146,11 @@ export default function StepExperience() {
 
               {/* Period */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor={`${entry.id}-dates`} className="block text-sm font-medium text-gray-700 mb-1.5">
                   Period
                 </label>
                 <input
+                  id={`${entry.id}-dates`}
                   type="text"
                   value={entry.dates}
                   onChange={(e) =>
@@ -158,29 +164,35 @@ export default function StepExperience() {
 
             {/* Key Achievements */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Key Achievements
+              <label htmlFor={`${entry.id}-description`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                What did you do or achieve?
               </label>
               <textarea
+                id={`${entry.id}-description`}
                 value={entry.description}
                 onChange={(e) =>
                   updateEntry(entry.id, "description", e.target.value)
                 }
                 rows={4}
-                placeholder={
-                  "\u2022 Reduced operational costs by 18% through process automation\n\u2022 Led a team of 12 across 3 countries to deliver a $4M project on time"
-                }
+                placeholder={"Add one duty or result per line. Use a number only when you can prove it."}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow resize-y"
+              />
+              <RoleSentenceSuggestions
+                role={entry.role}
+                targetRole={state.personal.title}
+                currentText={entry.description}
+                onChange={(value) => updateEntry(entry.id, "description", value)}
               />
             </div>
 
             {/* Employment Gap */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor={`${entry.id}-gap`} className="block text-sm font-medium text-gray-700 mb-1.5">
                 Employment Gap Explanation{" "}
                 <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <input
+                id={`${entry.id}-gap`}
                 type="text"
                 value={entry.gap}
                 onChange={(e) =>
@@ -222,10 +234,9 @@ export default function StepExperience() {
           HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          Use the Action + Number + Outcome formula. Weak: &ldquo;Managed a
-          team.&rdquo; Strong: &ldquo;Led a cross-functional team of 15,
-          delivering a $3M digital transformation project 2 weeks ahead of
-          schedule.&rdquo;
+          Start with a clear action. Add a number only when you can prove it.
+          Example: &ldquo;Checked rooms before release and corrected missed
+          items.&rdquo;
         </p>
       </div>
     </div>
