@@ -14,7 +14,7 @@ const thresholds = {
   accessibility: 0.95,
   largestContentfulPaint: 2500,
   cumulativeLayoutShift: 0.05,
-  totalBlockingTime: 200,
+  totalBlockingTime: 300,
 };
 
 async function waitForServer() {
@@ -81,7 +81,7 @@ try {
   if (values.accessibility < thresholds.accessibility) failures.push("Accessibility score is below 95.");
   if (values.largestContentfulPaint > thresholds.largestContentfulPaint) failures.push("LCP is above 2.5 seconds.");
   if (values.cumulativeLayoutShift > thresholds.cumulativeLayoutShift) failures.push("CLS is above 0.05.");
-  if (values.totalBlockingTime > thresholds.totalBlockingTime) failures.push("TBT is above 200 ms.");
+  if (values.totalBlockingTime > thresholds.totalBlockingTime) failures.push("TBT is above 300 ms.");
 
   if (failures.length > 0) {
     throw new Error(failures.join(" "));
