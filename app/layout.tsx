@@ -10,6 +10,28 @@ const cormorant = Cormorant_Garamond({
   weight: "600",
 });
 
+const applicationSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "InspireAmbitions CV Builder",
+  url: "https://cv.inspireambitions.com/",
+  description: "A free CV builder with ATS-safe PDF and Word downloads for GCC and international job applications.",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "AED" },
+  author: { "@type": "Person", name: "Kim Kiyingi", jobTitle: "HR Career Specialist", url: "https://inspireambitions.com/about/" },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://inspireambitions.com/" },
+    { "@type": "ListItem", position: 2, name: "Career Tools", item: "https://inspireambitions.com/career-tools/" },
+    { "@type": "ListItem", position: 3, name: "CV Builder", item: "https://cv.inspireambitions.com/" },
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://cv.inspireambitions.com"),
   alternates: { canonical: "/" },
@@ -35,6 +57,8 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning className={cormorant.variable}>
       <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(applicationSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('ia-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})();`,
