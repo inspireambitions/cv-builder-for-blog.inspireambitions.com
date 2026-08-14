@@ -9,7 +9,6 @@ type EventDetails = {
   surface?: string;
   format?: string;
   roleGroup?: string;
-  scoreBand?: string;
   destination?: string;
   journey?: string;
 };
@@ -31,7 +30,6 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
     surface: details.surface || "cv_builder_app",
     format: details.format,
     roleGroup: details.roleGroup,
-    scoreBand: details.scoreBand,
     destination: details.destination,
     journey: details.journey,
   };
@@ -44,7 +42,6 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
     capture_surface: payload.surface,
     export_format: details.format,
     role_group: details.roleGroup,
-    score_band: details.scoreBand,
     destination: details.destination,
     journey: details.journey,
   });
@@ -58,7 +55,6 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
       capture_surface: payload.surface,
       export_format: details.format,
       role_group: details.roleGroup,
-      score_band: details.scoreBand,
       destination: details.destination,
       journey: details.journey,
     });
