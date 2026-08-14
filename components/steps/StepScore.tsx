@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { calculateScore } from "@/lib/score";
 import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
 import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
+import { trackToolEvent } from "@/lib/analytics";
 
 // SVG ring constants
 const SIZE = 160;
@@ -123,6 +124,20 @@ export default function StepScore() {
   const { state } = useCVState();
   const score = useMemo(() => calculateScore(state), [state]);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const completionTracked = useRef(false);
+
+  const scoreBand = score.total >= 75 ? "strong" : score.total >= 50 ? "developing" : "needs_work";
+  const resultArticle = score.total >= 75
+    ? { title: "Prepare for your interview", url: "https://inspireambitions.com/interview-prep/" }
+    : score.total >= 50
+      ? { title: "Replace CV jargon with clear evidence", url: "https://inspireambitions.com/jargon-vs-plain-language-cv-2026/" }
+      : { title: "See how hiring managers scan a CV", url: "https://inspireambitions.com/hiring-manager-eye-tracking-cv-2026/" };
+
+  useEffect(() => {
+    if (completionTracked.current) return;
+    completionTracked.current = true;
+    trackToolEvent("tool_completed", { surface: "cv_score", scoreBand });
+  }, [scoreBand]);
 
   const dashOffset =
     CIRCUMFERENCE - (score.total / score.max) * CIRCUMFERENCE;
@@ -197,6 +212,27 @@ export default function StepScore() {
       />
 
       <TailorWorkspace />
+
+      <aside className="rounded-2xl border border-[#d8c895] bg-[#faf7ee] p-6" aria-labelledby="cv-next-step-title">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#2f6b5e]">Your next step</p>
+        <h2 id="cv-next-step-title" className="mt-2 text-xl font-bold text-[#1a2744]">Move from CV review to interview preparation</h2>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <a
+            href={resultArticle.url}
+            onClick={() => trackToolEvent("result_article_clicked", { surface: "cv_score", scoreBand, destination: resultArticle.url, journey: "applications" })}
+            className="min-h-12 rounded-xl border border-[#806017] px-5 py-3 text-center font-semibold text-[#806017]"
+          >
+            {resultArticle.title}
+          </a>
+          <a
+            href="https://tools.inspireambitions.com/interview-question-bank/"
+            onClick={() => trackToolEvent("next_tool_clicked", { surface: "cv_score", scoreBand, destination: "interview_question_bank", journey: "applications" })}
+            className="min-h-12 rounded-xl bg-[#806017] px-5 py-3 text-center font-semibold text-white"
+          >
+            Open interview question bank
+          </a>
+        </div>
+      </aside>
     </div>
   );
 }
