@@ -121,6 +121,17 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   await expect(
     page.getByText(/There is no card and no watermark/)
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Move from CV review to interview preparation" })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open interview question bank" })
+  ).toHaveAttribute("href", "https://tools.inspireambitions.com/interview-question-bank/");
+  await expect.poll(() =>
+    page.evaluate(() =>
+      window.dataLayer?.some((entry: Record<string, unknown>) => entry.event === "tool_completed")
+    )
+  ).toBe(true);
   await page.getByRole("button", { name: "Download my CV" }).click();
   await expect(page.getByRole("button", { name: "Unlock and Download PDF" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
