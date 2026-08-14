@@ -23,9 +23,18 @@ test("photo choice, crop, checks, reuse and removal work on desktop", async ({ p
   await expect(page.getByLabel("Photo crop preview")).toBeVisible();
   await expect(page.getByLabel("Photo quality checks")).toContainText("Resolution");
   await expect(page.getByText(/at least 600 pixels/)).toBeVisible();
-  await page.getByLabel("Move left or right").fill("58");
-  await page.getByLabel("Move up or down").fill("35");
-  await page.getByLabel("Zoom").fill("1.4");
+  for (const [label, value] of [
+    ["Move left or right", "58"],
+    ["Move up or down", "35"],
+    ["Zoom", "1.4"],
+  ] as const) {
+    await page.getByLabel(label).evaluate((input, nextValue) => {
+      const range = input as HTMLInputElement;
+      range.value = nextValue;
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+      range.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+  }
   await page.getByRole("button", { name: "Save crop" }).click();
 
   await expect(page.getByAltText("Current professional photo")).toBeVisible();
