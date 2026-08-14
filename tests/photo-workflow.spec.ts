@@ -76,7 +76,7 @@ test("Service places a larger selected photo at the upper right", async ({ page 
     localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 7, savedAt: new Date().toISOString(), state: draftState }));
   }, state);
   await page.goto("/");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   const photo = page.locator("#cv-render header img");
   await expect(photo).toHaveCSS("width", "104px");
   expect(await page.locator("#cv-render header").evaluate((header) => header.lastElementChild?.tagName)).toBe("IMG");
