@@ -9,6 +9,7 @@ import {
   VISA_STATUS_OPTIONS,
 } from "@/lib/uae";
 import { Eye, Mail, Phone, UserRound } from "lucide-react";
+import PhotoEditor from "@/components/shared/PhotoEditor";
 
 const inputClass =
   "mt-2 min-h-12 w-full rounded-xl border border-[#c8ccd3] bg-white px-4 text-base text-[#1a2744] outline-none transition focus:border-[#806017] focus:ring-2 focus:ring-[#806017]/20";
@@ -178,6 +179,8 @@ export default function GuidedPersonal() {
           <p className="rounded-xl bg-[#eef7f4] p-4 text-sm leading-6 text-[#2f6b5e]">
             These details are optional. Your CV will work without them.
           </p>
+
+          <PhotoEditor compact />
         </>
       )}
 

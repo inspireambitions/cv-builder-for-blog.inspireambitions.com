@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useCVState } from "@/lib/state";
 import { PHONE_PLACEHOLDERS } from "@/lib/constants";
 import type { SectorCredentialAuthority } from "@/lib/types";
@@ -12,14 +12,9 @@ import {
   SECTOR_CREDENTIAL_OPTIONS,
   VISA_STATUS_OPTIONS,
 } from "@/lib/uae";
-import {
-  validateEmail,
-  validateLinkedIn,
-  validatePhone,
-  validateImageUpload,
-} from "@/lib/validators";
-import { TEMPLATE_CONFIG } from "@/lib/template-config";
+import { validateEmail, validateLinkedIn, validatePhone } from "@/lib/validators";
 import GuidedPersonal from "./GuidedPersonal";
+import PhotoEditor from "@/components/shared/PhotoEditor";
 
 interface FieldStatus {
   valid?: boolean;
@@ -28,17 +23,12 @@ interface FieldStatus {
 }
 
 export default function StepPersonal() {
-  const { state, updatePersonal, updateField } = useCVState();
-  const { personal, template, geo } = state;
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const { state, updatePersonal } = useCVState();
+  const { personal, geo } = state;
 
   const [emailStatus, setEmailStatus] = useState<FieldStatus>({});
   const [phoneStatus, setPhoneStatus] = useState<FieldStatus>({});
   const [linkedinStatus, setLinkedinStatus] = useState<FieldStatus>({});
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const [photoProcessing, setPhotoProcessing] = useState(false);
-
-  const showPhoto = TEMPLATE_CONFIG[template].photo !== "hidden";
   const selectedCredentialAuthorities = new Set(
     personal.sector_credentials.map((credential) => credential.authority)
   );
@@ -95,42 +85,6 @@ export default function StepPersonal() {
       warning: result.warning,
       error: !result.valid ? result.warning : undefined,
     });
-  }
-
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    setPhotoError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validation = validateImageUpload(file);
-    if (!validation.valid) {
-      setPhotoError(validation.error ?? "Invalid image");
-      return;
-    }
-
-    setPhotoProcessing(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch("/api/normalise-image", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (!response.ok || typeof data.dataUrl !== "string") {
-        throw new Error(data.error || "Failed to process image");
-      }
-      updateField({ photo: data.dataUrl });
-    } catch (error) {
-      setPhotoError(
-        error instanceof Error
-          ? error.message
-          : "Failed to process image. Try JPG or PNG."
-      );
-    } finally {
-      setPhotoProcessing(false);
-      e.target.value = "";
-    }
   }
 
   return (
@@ -555,66 +509,7 @@ export default function StepPersonal() {
         </div>
       </div>
 
-      {/* Photo Upload */}
-      {showPhoto && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Professional Photo
-          </label>
-          <div className="flex items-center gap-6">
-            {/* Circular preview */}
-            <div
-              onClick={() => photoInputRef.current?.click()}
-              className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-gold-400 transition-colors bg-gray-50 shrink-0"
-            >
-              {state.photo ? (
-                <img
-                  src={state.photo}
-                  alt="Photo preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              )}
-            </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                disabled={photoProcessing}
-                className="text-sm font-medium text-gold-600 hover:text-gold-700 disabled:opacity-60"
-              >
-                {photoProcessing ? "Preparing photo..." : state.photo ? "Change photo" : "Upload photo"}
-              </button>
-              <p className="mt-1 text-xs text-gray-500">
-                JPG, PNG, WEBP or iPhone HEIC, max 5 MB. We strip EXIF metadata and crop for CV use.
-              </p>
-              {photoError && (
-                <p className="mt-1 text-sm text-red-600">{photoError}</p>
-              )}
-            </div>
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*,.heic,.heif"
-              onChange={handlePhotoUpload}
-              className="hidden"
-            />
-          </div>
-        </div>
-      )}
+      <PhotoEditor />
 
       {/* HR Tip */}
       <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">

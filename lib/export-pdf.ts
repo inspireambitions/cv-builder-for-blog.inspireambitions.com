@@ -105,7 +105,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     y += 4.5;
   }
 
-  if (recruiterReady && state.photo) {
+  if (recruiterReady && state.photoPreference === "photo" && state.photo) {
     try {
       pdf.addImage(state.photo, imageTypeFromDataUrl(state.photo), marginX, 16, 24, 24);
     } catch {

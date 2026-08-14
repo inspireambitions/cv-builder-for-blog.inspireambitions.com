@@ -48,13 +48,12 @@ export default function SectorTemplate({ state }: { state: CVState }) {
   const projects = state.projects.filter((item) => item.name.trim() || item.description.trim() || item.outcomes.trim());
   const publications = state.publications.filter((item) => item.title.trim() || item.outlet.trim());
   const memberships = state.memberships.filter((item) => item.org.trim());
-  const showPhoto = config.photo !== "hidden" && Boolean(state.photo);
+  const showPhoto = state.photoPreference === "photo" && config.photo !== "hidden" && Boolean(state.photo);
   const sideContent = Boolean(skills.length || languages.length || credentials.length || certifications.length);
 
   return (
     <div id="cv-render" dir={rtl ? "rtl" : "ltr"} lang={state.cvLanguage} className="w-[794px] min-h-[1123px] bg-white text-[#202124]" style={{ fontFamily: rtl ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif", fontSize: 13, lineHeight: rtl ? 1.7 : 1.5 }}>
       <header style={{ padding: "34px 40px 24px", borderBlockEnd: `3px solid ${config.accent}`, display: "flex", alignItems: "center", gap: 24 }}>
-        {showPhoto && <img src={state.photo!} alt="" style={{ inlineSize: config.photo === "prominent" ? 104 : 82, blockSize: config.photo === "prominent" ? 112 : 82, objectFit: "cover", borderRadius: config.photo === "prominent" ? 4 : "50%" }} />}
         <div style={{ flex: 1 }}>
           <div style={{ color: config.accent, fontSize: 10, fontWeight: 800 }}>{config.eyebrow}</div>
           <div style={{ marginBlockStart: 5, fontFamily: config.heading === "serif" ? "Georgia, serif" : "Arial, sans-serif", fontSize: 31, fontWeight: 800 }}>{state.personal.name}</div>
@@ -62,6 +61,7 @@ export default function SectorTemplate({ state }: { state: CVState }) {
           <div style={{ marginBlockStart: 10, color: "#5f6368", fontSize: 11 }}><bdi>{[state.personal.email, state.personal.phone, state.personal.location, state.personal.linkedin].filter(Boolean).join("  |  ")}</bdi></div>
           {getUAEHeaderParts(state).length > 0 && <div style={{ marginBlockStart: 7, color: config.accent, fontSize: 10, fontWeight: 700 }}>{getUAEHeaderParts(state).join("  |  ")}</div>}
         </div>
+        {showPhoto && <img src={state.photo!} alt="" style={{ inlineSize: config.photo === "prominent" ? 104 : 78, blockSize: config.photo === "prominent" ? 112 : 78, objectFit: "cover", borderRadius: config.photo === "prominent" ? 4 : "50%", flexShrink: 0 }} />}
       </header>
       <div style={{ display: "grid", gridTemplateColumns: config.sidebar && sideContent ? (rtl ? "1fr 2.25fr" : "2.25fr 1fr") : "1fr", minHeight: 940 }}>
         <main style={{ padding: "28px 36px 36px 40px", gridColumn: rtl && config.sidebar && sideContent ? 2 : 1 }}>

@@ -28,7 +28,7 @@ export default function Creative({ state }: { state: CVState }) {
       {/* Left Sidebar */}
       <div style={{ width: 210, flexShrink: 0, background: "linear-gradient(180deg, #2d1a44 0%, #140d22 100%)", padding: "32px 18px 28px", color: "#fff", display: "flex", flexDirection: "column", minHeight: 1123 }}>
         {/* Photo */}
-        {photo && (
+        {state.photoPreference === "photo" && photo && (
           <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
             <img
               src={photo}
