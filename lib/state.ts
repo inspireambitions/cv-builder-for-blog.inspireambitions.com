@@ -33,7 +33,7 @@ const CVContext = createContext<CVContextValue | null>(null);
 const STORAGE_KEY = "inspireambitions-cv-state";
 const DRAFTS_KEY = "inspireambitions-cv-drafts";
 const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
-const STORAGE_VERSION = 6;
+const STORAGE_VERSION = 7;
 const STEP_LAYOUT_VERSION = 5;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -90,6 +90,12 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
       incoming.templateConfirmed === true ||
       (sourceVersion < STORAGE_VERSION && template !== defaultCVState.template),
     cvLanguage: incoming.cvLanguage === "ar" ? "ar" : "en",
+    photoPreference:
+      incoming.photoPreference === "photo" || incoming.photoPreference === "photo-free"
+        ? incoming.photoPreference
+        : incoming.photo
+          ? "photo"
+          : "photo-free",
     personal: {
       ...defaultCVState.personal,
       ...personal,

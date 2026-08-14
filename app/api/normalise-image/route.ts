@@ -37,23 +37,27 @@ export async function POST(request: Request) {
     }
 
     const input = Buffer.from(await file.arrayBuffer());
-    const jpeg = await sharp(input, { limitInputPixels: 16_000_000 })
-      .rotate()
+    const image = sharp(input, { limitInputPixels: 16_000_000 }).rotate();
+    const metadata = await image.metadata();
+    const { data: jpeg, info } = await image
       .resize({
-        width: 640,
-        height: 640,
-        fit: "cover",
-        position: sharp.strategy.attention,
+        width: 1200,
+        height: 1200,
+        fit: "inside",
         withoutEnlargement: true,
       })
       .jpeg({ quality: 84, mozjpeg: true })
-      .toBuffer();
+      .toBuffer({ resolveWithObject: true });
 
     return NextResponse.json({
       dataUrl: `data:image/jpeg;base64,${jpeg.toString("base64")}`,
       mimeType: "image/jpeg",
       strippedExif: true,
-      crop: "attention",
+      crop: "user",
+      originalWidth: metadata.width ?? info.width,
+      originalHeight: metadata.height ?? info.height,
+      outputWidth: info.width,
+      outputHeight: info.height,
     });
   } catch (error) {
     console.error("Image normalise error:", error);

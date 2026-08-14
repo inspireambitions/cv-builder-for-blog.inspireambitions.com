@@ -151,6 +151,7 @@ export type TemplateType =
 export type CVLanguage = "en" | "ar";
 export type GeoType = "gulf" | "global";
 export type PlanType = "free" | "payg" | "annual";
+export type PhotoPreference = "photo" | "photo-free";
 
 /* ââ Score types ââ */
 
@@ -194,6 +195,7 @@ export interface CVState {
   templateConfirmed: boolean;
   cvLanguage: CVLanguage;
   geo: GeoType;
+  photoPreference: PhotoPreference;
   photo: string | null;
   personal: PersonalDetails;
   summary: string;
@@ -218,6 +220,7 @@ export const defaultCVState: CVState = {
   templateConfirmed: false,
   cvLanguage: "en",
   geo: "global",
+  photoPreference: "photo-free",
   photo: null,
   personal: {
     name: "",

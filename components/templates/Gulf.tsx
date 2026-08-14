@@ -31,7 +31,7 @@ export default function Gulf({ state }: { state: CVState }) {
     <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14 }}>
       {/* Header */}
       <div style={{ backgroundColor: "#292b2d", padding: "28px 40px 24px", display: "flex", alignItems: "center", gap: 20 }}>
-        {photo && (
+        {state.photoPreference === "photo" && photo && (
           <div style={{ flexShrink: 0 }}>
             <img
               src={photo}

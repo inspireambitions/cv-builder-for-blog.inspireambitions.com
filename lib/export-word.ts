@@ -20,6 +20,7 @@ import {
   getSelectedSectorCredentials,
   getUAEHeaderParts,
 } from "./uae";
+import { TEMPLATE_CONFIG } from "./template-config";
 
 function sectionHeading(text: string): Paragraph {
   return new Paragraph({
@@ -32,7 +33,7 @@ function sectionHeading(text: string): Paragraph {
   });
 }
 
-function photoRunFromDataUrl(value: string) {
+function photoRunFromDataUrl(value: string, size: number) {
   const match = value.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/i);
   if (!match) return null;
   const [, type, base64] = match;
@@ -45,7 +46,7 @@ function photoRunFromDataUrl(value: string) {
   return new ImageRun({
     type: type.toLowerCase() === "png" ? "png" : "jpg",
     data: bytes,
-    transformation: { width: 92, height: 92 },
+    transformation: { width: size, height: size },
     altText: {
       title: "Professional photo",
       description: "Candidate professional photo",
@@ -58,13 +59,16 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   const children: Paragraph[] = [];
   const recruiterReady = isRecruiterReady(options);
 
-  if (recruiterReady && state.photo) {
-    const photo = photoRunFromDataUrl(state.photo);
+  if (recruiterReady && state.photoPreference === "photo" && state.photo) {
+    const photo = photoRunFromDataUrl(
+      state.photo,
+      TEMPLATE_CONFIG[state.template].photo === "prominent" ? 104 : 78
+    );
     if (photo) {
       children.push(
         new Paragraph({
           children: [photo],
-          alignment: AlignmentType.CENTER,
+          alignment: AlignmentType.RIGHT,
           spacing: { after: 100 },
         })
       );

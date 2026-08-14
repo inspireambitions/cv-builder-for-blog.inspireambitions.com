@@ -7,6 +7,7 @@ export const sampleCVState: CVState = {
   templateConfirmed: true,
   cvLanguage: "en",
   geo: "global",
+  photoPreference: "photo-free",
   photo: null,
   personal: {
     name: "Sarah Al-Rashid",
