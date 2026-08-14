@@ -136,7 +136,7 @@ export default function StepScore() {
   useEffect(() => {
     if (completionTracked.current) return;
     completionTracked.current = true;
-    trackToolEvent("tool_completed", { surface: "cv_score", scoreBand });
+    trackToolEvent("tool_completed", { surface: "cv_score" });
   }, [scoreBand]);
 
   const dashOffset =
@@ -219,14 +219,14 @@ export default function StepScore() {
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <a
             href={resultArticle.url}
-            onClick={() => trackToolEvent("result_article_clicked", { surface: "cv_score", scoreBand, destination: resultArticle.url, journey: "applications" })}
+            onClick={() => trackToolEvent("result_article_clicked", { surface: "cv_score", destination: resultArticle.url, journey: "applications" })}
             className="min-h-12 rounded-xl border border-[#806017] px-5 py-3 text-center font-semibold text-[#806017]"
           >
             {resultArticle.title}
           </a>
           <a
             href="https://tools.inspireambitions.com/interview-question-bank/"
-            onClick={() => trackToolEvent("next_tool_clicked", { surface: "cv_score", scoreBand, destination: "interview_question_bank", journey: "applications" })}
+            onClick={() => trackToolEvent("next_tool_clicked", { surface: "cv_score", destination: "interview_question_bank", journey: "applications" })}
             className="min-h-12 rounded-xl bg-[#806017] px-5 py-3 text-center font-semibold text-white"
           >
             Open interview question bank
