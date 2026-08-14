@@ -9,10 +9,10 @@ import { recommendTemplateForTitle } from "@/lib/template-recommendation";
 
 const photoRules: Record<TemplateType, string> = {
   classic: "Photo optional",
-  site: "Photo optional",
+  site: "Photo hidden",
   service: "Photo prominent",
   care: "Photo optional",
-  ledger: "Photo optional",
+  ledger: "Photo hidden",
   crew: "Photo prominent",
   stack: "Photo hidden",
   move: "Photo optional",
