@@ -129,7 +129,9 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   ).toHaveAttribute("href", "https://tools.inspireambitions.com/interview-question-bank/");
   await expect.poll(() =>
     page.evaluate(() =>
-      window.dataLayer?.some((entry: Record<string, unknown>) => entry.event === "tool_completed")
+      (window as Window & { dataLayer?: Record<string, unknown>[] }).dataLayer?.some(
+        (entry) => entry.event === "tool_completed"
+      )
     )
   ).toBe(true);
   await page.getByRole("button", { name: "Download my CV" }).click();
