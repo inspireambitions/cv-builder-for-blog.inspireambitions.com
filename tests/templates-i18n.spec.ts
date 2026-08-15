@@ -28,7 +28,7 @@ test("ATS Clean renders a centred, photo-free, single-column document", async ({
   await page.getByRole("button", { name: /ATS Clean/ }).click();
   const previewButton = page.getByRole("button", { name: "Preview CV", exact: true });
   if (await previewButton.isVisible()) await previewButton.click();
-  const document = page.locator('#cv-render[data-template="ats-clean"]');
+  const document = page.locator('#cv-render[data-template="ats-clean"]:visible');
   await expect(document).toBeVisible();
   await expect(document).toHaveAttribute("data-layout", "single-column");
   await expect(document.locator("img")).toHaveCount(0);
