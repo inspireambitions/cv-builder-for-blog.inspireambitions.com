@@ -32,7 +32,7 @@ async function waitForServer() {
 }
 
 await mkdir(profileDir, { recursive: true });
-const server = spawn(process.execPath, [nextBin, "start", "-p", String(port)], {
+const server = spawn(process.execPath, [nextBin, "start", "-H", "127.0.0.1", "-p", String(port)], {
   cwd: root,
   stdio: "ignore",
 });

@@ -9,6 +9,9 @@ type EventDetails = {
   surface?: string;
   format?: string;
   roleGroup?: string;
+  destination?: string;
+  journey?: string;
+  scoreBand?: string;
 };
 
 type AnalyticsWindow = Window & {
@@ -28,6 +31,9 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
     surface: details.surface || "cv_builder_app",
     format: details.format,
     roleGroup: details.roleGroup,
+    destination: details.destination,
+    journey: details.journey,
+    scoreBand: details.scoreBand,
   };
 
   win.dataLayer = win.dataLayer || [];
@@ -38,6 +44,9 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
     capture_surface: payload.surface,
     export_format: details.format,
     role_group: details.roleGroup,
+    destination: details.destination,
+    journey: details.journey,
+    score_band: details.scoreBand,
   });
 
   if (typeof win.gtag === "function") {
@@ -49,6 +58,9 @@ export function trackToolEvent(eventName: string, details: EventDetails = {}) {
       capture_surface: payload.surface,
       export_format: details.format,
       role_group: details.roleGroup,
+      destination: details.destination,
+      journey: details.journey,
+      score_band: details.scoreBand,
     });
   }
 

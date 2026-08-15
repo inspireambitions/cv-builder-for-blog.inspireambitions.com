@@ -57,7 +57,7 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
     cre: "service",
   };
   const incomingTemplate = typeof incoming.template === "string" ? incoming.template : "";
-  const validTemplates: CVState["template"][] = ["classic", "site", "service", "care", "ledger", "crew", "stack", "move", "corner"];
+  const validTemplates: CVState["template"][] = ["ats-clean", "classic", "site", "service", "care", "ledger", "crew", "stack", "move", "corner"];
   const template = validTemplates.includes(incomingTemplate as CVState["template"])
     ? incomingTemplate as CVState["template"]
     : legacyTemplateMap[incomingTemplate] ?? defaultCVState.template;

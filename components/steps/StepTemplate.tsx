@@ -8,6 +8,7 @@ import TemplatePreview from "@/components/templates/TemplatePreview";
 import { recommendTemplateForTitle } from "@/lib/template-recommendation";
 
 const photoRules: Record<TemplateType, string> = {
+  "ats-clean": "Photo hidden",
   classic: "Photo optional",
   site: "Photo hidden",
   service: "Photo prominent",

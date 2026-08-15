@@ -30,6 +30,7 @@ export const LANGUAGE_LEVELS = [
 ] as const;
 
 export const TEMPLATE_INFO = [
+  { key: "ats-clean" as const, name: "ATS Clean", desc: "Compact single-column layout with centred contact details and blue section rules.", color: "bg-blue-700" },
   { key: "classic" as const, name: "Classic GCC", desc: "Balanced Gulf format for broad professional use.", color: "bg-navy-800" },
   { key: "site" as const, name: "Site", desc: "Construction and engineering, with licences and projects first.", color: "bg-slate-800" },
   { key: "service" as const, name: "Service", desc: "Hospitality and F&B, with languages and employers prominent.", color: "bg-emerald-800" },

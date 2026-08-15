@@ -65,6 +65,7 @@ const TEMPLATES: {
   badge?: string;
   photo: string;
 }[] = [
+  { key: "ats-clean", name: "ATS Clean", bestFor: "Text-first applications and ATS uploads", badge: "New", photo: "Hidden" },
   { key: "classic", name: "Classic GCC", bestFor: "Most UAE and Gulf applications", badge: "GCC-first", photo: "Optional" },
   { key: "site", name: "Site", bestFor: "Construction and engineering", photo: "Optional" },
   { key: "service", name: "Service", bestFor: "Hospitality and F&B", photo: "Prominent" },
@@ -665,7 +666,7 @@ export default function StepStart() {
       {/* ===== TEMPLATE PREVIEW GALLERY ===== */}
       <section className="max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-          Four professional directions. Choose how recruiters should read you.
+          Professional CV designs. Choose how recruiters should read you.
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
