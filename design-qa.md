@@ -1,74 +1,66 @@
-# Mobile CV Builder design QA
+# ATS Clean design QA
 
-## Evidence
+**Source visual truth**
 
-- Source visual truth: `C:\Users\Kim\.codex\generated_images\019fe25a-5877-7ba3-8555-67fa2a939292\exec-240ca60a-6935-4ab8-b919-5f164eb9f9a0.png`
-- Normalised source: `outputs/cv-builder-mobile-audit-2026-08-11/source-normalized-390x844.png`
-- Final implementation capture: `outputs/cv-builder-mobile-audit-2026-08-11/implementation-compare-390x844.png`
-- Intended content viewport: 390 x 844 CSS pixels.
-- Source pixels: 852 x 1846. It was downsampled to 390 x 844 with high-quality bicubic interpolation for a same-size comparison.
-- Implementation pixels: 390 x 844 at device scale factor 1. The in-app browser viewport override was 405 x 876 because its visible content area removes 15 x 32 pixels for browser chrome and the scrollbar.
-- State: Personal details, page 1 of 3. Name, UAE phone number and email completed. Light theme.
-- Browser-rendered evidence: captured from the local production build in the Codex in-app browser.
-- Primary interactions checked: start builder, complete and save all three personal-detail pages, open and close preview, move through all eight stages, show every CV design, switch document direction, restore a saved draft, create a private resume link, open download options and export PDF and Word.
-- Console check: no warnings or errors in the final comparison state.
+- `/workspace/scratch/6eeb5b5c8f95/references/7f965cb4-2ac2-48dc-b4ed-e8ea21aec5f8.png`
+- Source pixels: 1308 × 820 at 1×. The first 648 × 820 A4 page was used for the like-for-like layout check.
 
-## Full-view comparison
+**Rendered implementation**
 
-The source and implementation were opened together at the same 390 x 844 pixel size. The final build preserves the source hierarchy: compact brand header, labelled language control, plain progress, one clear question, three contact fields, a small live CV preview and a fixed save bar. The layout uses the approved navy, gold, cream and green palette.
+- Local Chrome preview: `http://terminal.local:4173/`
+- Browser screenshot: `/workspace/scratch/6eeb5b5c8f95/qa-artifacts/ats-clean-browser.png`
+- Implementation pixels: 318 × 449 at 1×, representing the live A4 preview at 40% zoom.
+- Normalised comparison: `/workspace/scratch/6eeb5b5c8f95/qa-artifacts/ats-clean-comparison.png`, with both pages placed on 648 × 820 white canvases.
+- CSS document size: 794 × 1123 pixels.
+- State: English, light theme, fictional candidate, ATS Clean selected, photo-free CV.
 
-The implementation keeps a small `Preview CV` shortcut beside progress. This is an intentional product feature because the builder supports a full document view at every stage. It is secondary, compact and does not compete with `Save and continue`.
+**Full-view comparison evidence**
 
-## Focused-region comparison
+- The rendered page keeps the reference structure: centred identity block, compact contact line, single-column content, blue uppercase section labels, thin blue rules, black body copy and no portrait or sidebar.
+- Margins, section widths and vertical rhythm remain within the reference proportions after normalisation.
+- The source contains enough material for two pages. The fictional browser state contains one shorter page, so page count was not treated as a visual defect.
 
-A separate crop was not needed. At 390 x 844, the full-view pair keeps the header, progress, heading, all three field labels, Lucide field icons, live preview header and fixed action bar readable at normal size.
+**Focused region comparison evidence**
 
-## Required fidelity surfaces
+- Header alignment was measured in Chrome as `text-align: center`.
+- The live document exposed `data-layout="single-column"` and contained zero image elements.
+- The name size, contact density, blue heading treatment and rule thickness were readable in the original browser capture, so no extra crop was needed.
 
-- Fonts and typography: hierarchy, weight and wrapping match the source intent. The build uses the product sans stack for forms and the existing serif only inside the CV preview.
-- Spacing and layout rhythm: the final screen removes the earlier tab strip and heavy nested card. Tap targets remain at least 44 pixels high. The compact preview reaches the first viewport without crowding the fields.
-- Colours and tokens: navy `#1a2744`, gold `#806017`, green `#2f6b5e`, white and warm off-white map cleanly to the approved visual.
-- Image and icon quality: contact, preview, saved-state and navigation icons use the Lucide icon library. No emoji, placeholder artwork or new handcrafted SVG icons were used.
-- Copy and content: the main question and supporting sentence match the approved visual. Progress and autosave language use plain British English.
-- Accessibility and behaviour: fields have visible labels, mobile keyboards receive suitable input types, focus states are visible, the language control is labelled, and the fixed controls do not cause horizontal overflow.
+**Required fidelity surfaces**
 
-## Comparison history
+- Fonts and typography: Arial-compatible sans-serif, heavy centred name, compact body text, italic grey dates and uppercase blue labels match the reference hierarchy.
+- Spacing and layout rhythm: A4 proportions, narrow page margins, full-width rules and compact section gaps match the reference.
+- Colours and tokens: white paper, black copy, grey metadata and `#1155cc` section blue match the source treatment.
+- Image quality and assets: the source has no decorative imagery. The implementation adds none and hides candidate photos for this template.
+- Copy and content: English labels mirror the source. Candidate content is fictional and intentionally differs from the supplied example.
 
-### Iteration 1
+**Primary interactions tested**
 
-- [P1] The first implementation added a large Edit and Preview tab strip above the question.
-- [P1] The language selector was trapped inside a visually hidden label, so it did not render in the header.
-- [P2] The headline and supporting copy drifted from the approved source.
-- [P2] Contact fields lacked consistent real icons.
+- Started a new CV, completed personal details, summary, work history, education and skills.
+- Selected ATS Clean and confirmed the live preview changed to a photo-free single-column document.
+- Reached the result page and confirmed the score-based article route and interview-question-bank link were present.
 
-Fixes made:
+**Console check**
 
-- Removed the tab strip and kept preview as a small secondary shortcut.
-- Separated the hidden label from the visible language select.
-- Matched the approved contact question and supporting sentence.
-- Added Lucide icons for contact fields, save state and navigation.
-- Removed the mobile resume-link control from the header so the language control remains visible.
+- No application-origin warnings or errors were recorded.
+- Chrome reported repeated metadata messages from its own extension; these were outside the application origin.
 
-Post-fix evidence: `outputs/cv-builder-mobile-audit-2026-08-11/implementation-compare-390x844.png`.
+**Findings**
 
-### Iteration 2
+- No actionable P0, P1 or P2 visual differences.
 
-No actionable P0, P1 or P2 differences remain. The live preview omits the target job title on this first page because the candidate supplies that on page 2. This is intentional data integrity, not a fidelity defect.
+**Comparison history**
 
-## Findings
+- First pass: no P0, P1 or P2 findings. No visual repair iteration was required.
 
-No actionable P0, P1 or P2 findings remain.
+**Implementation checklist**
 
-## Follow-up polish
+- Keep ATS Clean photo-free in HTML, PDF and Word outputs.
+- Keep the ten-template selection and saved-draft validation covered by browser tests.
+- Run the full Playwright matrix in GitHub Actions before merging.
 
-- [P3] Replace the existing CSS diamond brand mark with the official raster or vector brand asset if one is added to the repository.
+**Follow-up polish**
 
-## Final verification
-
-- Production build: passed.
-- Free-product guard: passed.
-- Performance budget: passed.
-- Automated suite: 52 passed, with 2 mobile duplicates of desktop-only resume-link and export checks intentionally skipped. The mobile flow has its own preview, save, download and overflow coverage.
-- Final result: no blocking visual or functional defects found.
+- None required for this release.
 
 final result: passed
