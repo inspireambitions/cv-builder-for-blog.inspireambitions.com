@@ -139,6 +139,7 @@ export interface MembershipEntry {
 }
 
 export type TemplateType =
+  | "ats-clean"
   | "classic"
   | "site"
   | "service"

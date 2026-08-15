@@ -17,6 +17,31 @@ export default function TemplatePreview({ template }: PreviewProps) {
   const config = TEMPLATE_CONFIG[template];
   const sidebar = config.sidebar;
 
+  if (template === "ats-clean") {
+    return (
+      <div className="h-full bg-white px-6 py-5 text-start font-sans text-slate-950" aria-hidden="true">
+        <header className="text-center">
+          <p className="text-[20px] font-extrabold leading-none">Nadia Rahman</p>
+          <p className="mt-1 text-[7px] text-slate-600">Regional Operations Leader</p>
+          <p className="mt-1 text-[6px]">Dubai | +971 50 555 0184 | nadia@example.com</p>
+        </header>
+        {[
+          ["Professional summary", 3],
+          ["Professional experience", 6],
+          ["Education", 2],
+          ["Skills", 4],
+        ].map(([label, count]) => (
+          <section className="mt-4" key={String(label)}>
+            <p className="border-b pb-1 text-[7px] font-extrabold uppercase text-[#1155cc]" style={{ borderColor: "#1155cc" }}>{label}</p>
+            <div className="mt-2 space-y-1">
+              {Array.from({ length: Number(count) }, (_, index) => <span key={index} className={`block h-1 ${index % 3 === 2 ? "w-4/5" : "w-full"} bg-slate-300`} />)}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="h-full bg-white text-start text-slate-950" aria-hidden="true">
       <header className="px-6 py-5 text-white" style={{ background: config.accent }}>

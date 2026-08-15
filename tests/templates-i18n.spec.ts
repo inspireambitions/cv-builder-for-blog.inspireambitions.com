@@ -12,13 +12,25 @@ async function openDesignStep(page: import("@playwright/test").Page) {
   }
 }
 
-test("all nine sector templates and five UI languages are available", async ({ page }) => {
+test("all ten templates and five UI languages are available", async ({ page }) => {
   await openDesignStep(page);
   const language = page.getByLabel("Interface language");
   await expect(language.locator("option")).toHaveCount(5);
   const showAll = page.getByRole("button", { name: "See all CV designs" });
   if (await showAll.isVisible()) await showAll.click();
-  for (const name of ["Classic GCC", "Site", "Service", "Care", "Ledger", "Crew", "Stack", "Move", "Corner"]) await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
+  for (const name of ["ATS Clean", "Classic GCC", "Site", "Service", "Care", "Ledger", "Crew", "Stack", "Move", "Corner"]) await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
+});
+
+test("ATS Clean renders a centred, photo-free, single-column document", async ({ page }) => {
+  await openDesignStep(page);
+  const showAll = page.getByRole("button", { name: "See all CV designs" });
+  if (await showAll.isVisible()) await showAll.click();
+  await page.getByRole("button", { name: /ATS Clean/ }).click();
+  const document = page.locator('#cv-render[data-template="ats-clean"]');
+  await expect(document).toBeVisible();
+  await expect(document).toHaveAttribute("data-layout", "single-column");
+  await expect(document.locator("img")).toHaveCount(0);
+  await expect(document.locator("header")).toHaveCSS("text-align", "center");
 });
 
 test("Arabic CV mode mirrors the rendered document", async ({ page }) => {

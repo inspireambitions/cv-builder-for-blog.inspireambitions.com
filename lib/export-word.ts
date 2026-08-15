@@ -22,13 +22,13 @@ import {
 } from "./uae";
 import { TEMPLATE_CONFIG } from "./template-config";
 
-function sectionHeading(text: string): Paragraph {
+function sectionHeading(text: string, colour = "1a2744"): Paragraph {
   return new Paragraph({
     text,
     heading: HeadingLevel.HEADING_2,
     spacing: { before: 300, after: 100 },
     border: {
-      bottom: { color: "1a2744", space: 1, style: BorderStyle.SINGLE, size: 6 },
+      bottom: { color: colour, space: 1, style: BorderStyle.SINGLE, size: 6 },
     },
   });
 }
@@ -58,11 +58,13 @@ function photoRunFromDataUrl(value: string, size: number) {
 export async function exportWord(state: CVState, options: ExportOptions = {}) {
   const children: Paragraph[] = [];
   const recruiterReady = isRecruiterReady(options);
+  const templateConfig = TEMPLATE_CONFIG[state.template];
+  const sectionColour = state.template === "ats-clean" ? "1155CC" : "1A2744";
 
-  if (recruiterReady && state.photoPreference === "photo" && state.photo) {
+  if (recruiterReady && templateConfig.photo !== "hidden" && state.photoPreference === "photo" && state.photo) {
     const photo = photoRunFromDataUrl(
       state.photo,
-      TEMPLATE_CONFIG[state.template].photo === "prominent" ? 104 : 78
+      templateConfig.photo === "prominent" ? 104 : 78
     );
     if (photo) {
       children.push(
@@ -136,7 +138,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Professional Summary
   if (state.summary) {
-    children.push(sectionHeading("Professional Summary"));
+    children.push(sectionHeading("Professional Summary", sectionColour));
     children.push(
       new Paragraph({
         children: [new TextRun({ text: state.summary, size: 22 })],
@@ -148,7 +150,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   // Work Experience
   const filledExp = state.experience.filter((e) => e.role.trim());
   if (filledExp.length > 0) {
-    children.push(sectionHeading("Work Experience"));
+    children.push(sectionHeading("Work Experience", sectionColour));
     for (const exp of filledExp) {
       children.push(
         new Paragraph({
@@ -205,7 +207,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   // Education
   const filledEdu = state.education.filter((e) => e.degree.trim());
   if (filledEdu.length > 0) {
-    children.push(sectionHeading("Education"));
+    children.push(sectionHeading("Education", sectionColour));
     for (const edu of filledEdu) {
       children.push(
         new Paragraph({
@@ -231,7 +233,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   // Certifications
   const sectorCredentials = getSelectedSectorCredentials(state);
   if (state.certifications.length > 0 || sectorCredentials.length > 0) {
-    children.push(sectionHeading("Professional Certifications & Credentials"));
+    children.push(sectionHeading(state.template === "ats-clean" ? "Certificates & Development" : "Professional Certifications & Credentials", sectionColour));
     for (const credential of sectorCredentials) {
       children.push(
         new Paragraph({
@@ -262,7 +264,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Skills
   if (state.skills.length > 0) {
-    children.push(sectionHeading("Skills"));
+    children.push(sectionHeading("Skills", sectionColour));
     children.push(
       new Paragraph({
         children: [new TextRun({ text: state.skills.join("  •  "), size: 22 })],
@@ -274,7 +276,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   // Languages
   const filledLangs = state.languages.filter((l) => l.language.trim());
   if (filledLangs.length > 0) {
-    children.push(sectionHeading("Languages"));
+    children.push(sectionHeading("Languages", sectionColour));
     for (const lang of filledLangs) {
       children.push(
         new Paragraph({
@@ -289,7 +291,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Achievements
   if (state.achievements.length > 0) {
-    children.push(sectionHeading("Achievements & Awards"));
+    children.push(sectionHeading("Achievements & Awards", sectionColour));
     for (const a of state.achievements) {
       children.push(
         new Paragraph({
@@ -309,7 +311,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Volunteer
   if (state.volunteer.length > 0) {
-    children.push(sectionHeading("Volunteer Work"));
+    children.push(sectionHeading("Volunteer Work", sectionColour));
     for (const v of state.volunteer) {
       children.push(
         new Paragraph({
@@ -328,7 +330,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Projects
   if (state.projects.length > 0) {
-    children.push(sectionHeading("Personal Projects"));
+    children.push(sectionHeading("Personal Projects", sectionColour));
     for (const p of state.projects) {
       children.push(
         new Paragraph({
@@ -347,7 +349,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Publications
   if (state.publications.length > 0) {
-    children.push(sectionHeading("Publications & Media"));
+    children.push(sectionHeading("Publications & Media", sectionColour));
     for (const pub of state.publications) {
       children.push(
         new Paragraph({
@@ -364,7 +366,7 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   // Memberships
   if (state.memberships.length > 0) {
-    children.push(sectionHeading("Professional Memberships"));
+    children.push(sectionHeading("Professional Memberships", sectionColour));
     for (const m of state.memberships) {
       children.push(
         new Paragraph({

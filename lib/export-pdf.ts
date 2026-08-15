@@ -42,6 +42,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
   const maxWidth = pageWidth - marginX * 2;
   let y = 18;
   const recruiterReady = isRecruiterReady(options);
+  const sectionColour: [number, number, number] = state.template === "ats-clean" ? [17, 85, 204] : [26, 39, 68];
 
   function ensureSpace(needed = 10) {
     if (y + needed <= pageHeight - 18) return;
@@ -93,19 +94,19 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
   function sectionHeading(text: string) {
     ensureSpace(18);
     y += 1;
-    pdf.setDrawColor(26, 39, 68);
+    pdf.setDrawColor(...sectionColour);
     pdf.setLineWidth(0.4);
     writeLines(text.toUpperCase(), {
       size: 11,
       style: "bold",
-      color: [26, 39, 68],
+      color: sectionColour,
       after: 1,
     });
     pdf.line(marginX, y, pageWidth - marginX, y);
     y += 4.5;
   }
 
-  if (recruiterReady && state.photoPreference === "photo" && state.photo) {
+  if (recruiterReady && state.template !== "ats-clean" && state.photoPreference === "photo" && state.photo) {
     try {
       pdf.addImage(state.photo, imageTypeFromDataUrl(state.photo), marginX, 16, 24, 24);
     } catch {

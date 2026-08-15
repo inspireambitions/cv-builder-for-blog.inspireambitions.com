@@ -23,6 +23,7 @@ const StepExtras = dynamic(() => import("./steps/StepExtras"));
 const StepScore = dynamic(() => import("./steps/StepScore"));
 
 const SectorTemplate = dynamic(() => import("./templates/SectorTemplate"));
+const ATSCleanTemplate = dynamic(() => import("./templates/ATSCleanTemplate"));
 import SaveToast from "./shared/SaveToast";
 
 /** Maps step keys from STEPS to i18n translation keys */
@@ -50,6 +51,7 @@ const STEP_COMPONENTS = [
 ];
 
 function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["state"] }) {
+  if (state.template === "ats-clean") return <ATSCleanTemplate state={state} />;
   return <SectorTemplate state={state} />;
 }
 

@@ -11,6 +11,7 @@ export type TemplateConfig = {
 };
 
 export const TEMPLATE_CONFIG: Record<TemplateType, TemplateConfig> = {
+  "ats-clean": { id: "ats-clean", accent: "#1155cc", soft: "#ffffff", heading: "sans", sidebar: false, photo: "hidden", eyebrow: "ATS CLEAN" },
   classic: { id: "classic", accent: "#1a2744", soft: "#f3f5f8", heading: "serif", sidebar: true, photo: "optional", eyebrow: "GCC PROFESSIONAL" },
   site: { id: "site", accent: "#263238", soft: "#edf0f1", heading: "sans", sidebar: true, photo: "hidden", eyebrow: "ENGINEERING & DELIVERY" },
   service: { id: "service", accent: "#285c4d", soft: "#edf5f1", heading: "serif", sidebar: true, photo: "prominent", eyebrow: "HOSPITALITY & SERVICE" },
