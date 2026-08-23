@@ -146,25 +146,72 @@ So:
 
 ---
 
-## 6. "Save it on their account" — what can and cannot ship today
+## 6. Accounts, practice history, and how we ask for it
 
 **There is no account system.** No database, no auth library, no user table.
 Confirmed from `package.json`. Real accounts are days of work, not today.
 
-What ships today and delivers the same user promise:
+### What ships today
 
-> A permanent, private, fragment-encrypted report link, emailed to them on
-> verification. It re-opens the full report on any device. It is functionally
-> "their account" for this one artefact.
+A permanent, private, fragment-encrypted report link, emailed on verification.
+It re-opens the full report on any device. It is functionally "their account" for
+this one artefact.
 
-What that link cannot do — and must therefore not be described as an account in
-the UI — is list past reports, show progress across attempts, or be revoked.
-Call it **"your saved report link,"** never "your account."
+Call it **"your saved report link,"** never "your account." It cannot list past
+reports, cannot show progress across attempts, and cannot be revoked — so the UI
+must not imply that it can.
 
-A real account with report history is the correct next step, and it is also what
-the progress-tracking ask needs. It is a separate project.
+### Practice history — phase 2, and it needs a datastore
+
+Keeping a history of practice sessions is the right next step and the thing that
+makes an account worth having. It cannot be faked with links: a fragment-encrypted
+URL is immutable, so every new session would mint a new link and there would be
+nothing to accumulate into.
+
+Scope it honestly:
+
+- **Today**: session history in `localStorage`, same-device only, clearly labelled
+  as such. This mirrors `components/tailoring/OutcomeFeedback.tsx`, which already
+  does exactly this.
+- **Phase 2**: a datastore, real accounts, cross-device history, and a working
+  delete. That is a separate project and must not be smuggled into this build.
+
+**Do not ship copy that promises cross-device history before the datastore
+exists.** Local-only history described as "your history" is the same category of
+broken promise as a language selector that does not translate.
+
+### Consent framing — benefit-first, and it must be true
+
+History is stored **only on explicit opt-in**, and the ask must lead with what the
+user gets, not what we get.
+
+Write the ask like this:
+
+> **Keep your practice history?**
+> See how your answers improve each time you practise, and spot the questions
+> that keep catching you out.
+> You can delete your history at any time. We never sell it or share it.
+> `[ Keep my history ]  [ No thanks ]`
+
+Rules that make that honest rather than a dark pattern:
+
+- **"No thanks" is a real, equally weighted button** — not greyed out, not a
+  faint text link, not preselected against.
+- Declining costs the user **nothing** they already have. The report stays
+  unlocked and the saved link still works.
+- **Every benefit named must actually be delivered.** If the copy says "see how
+  your answers improve," the product must show a comparison across attempts. If
+  that view is not built, that sentence does not ship.
+- Delete must genuinely delete, and it must be reachable in one step from wherever
+  history is displayed.
+- Never bundle history consent with marketing consent. Two separate choices.
+- No pre-ticked boxes anywhere in this flow.
+
+The test for every line of this copy: would it still read as fair if the user knew
+exactly what we get out of it? If not, rewrite it.
 
 ---
+
 
 ## 7. Non-negotiables for the implementer
 
@@ -201,10 +248,15 @@ the progress-tracking ask needs. It is a separate project.
 6. The WhatsApp share link contains score and verdict only — asserted by a test
    that greps the shared payload for answer text.
 7. Only verified addresses reach the Resend audience.
-8. Full flow passes in `ar` with `dir="rtl"`.
-9. `npm run ci` green.
+8. History opt-in defaults to OFF; declining leaves the report unlocked and the
+   saved link working; "No thanks" is the same visual weight as the accept button.
+9. No copy anywhere claims a benefit the build does not deliver — specifically,
+   no cross-device or improvement-over-time language until that view exists.
+10. Full flow passes in `ar` with `dir="rtl"`.
+11. `npm run ci` green.
 
 ## 9. Out of scope for this build
 
-Real accounts, report history, progress dashboards, password login, social login,
-payments.
+Real accounts, cross-device report history, progress dashboards, password login,
+social login, payments. Local-only session history is in scope **only** if it is
+labelled same-device and carries no improvement-tracking promise.
