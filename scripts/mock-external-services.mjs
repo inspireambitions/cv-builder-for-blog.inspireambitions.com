@@ -44,6 +44,25 @@ const server = createServer(async (request, response) => {
     return send(response, 200, { id: "contact_test", object: "contact" });
   }
 
+  if (request.method === "GET" && url.pathname === "/contacts") {
+    return send(response, 200, { data: [] });
+  }
+
+  if (url.pathname === "/wp-json/ia-mail/v1/cv-welcome") {
+    if (request.headers.authorization !== "Bearer test-bridge-key") {
+      return send(response, 401, { message: "Authentication required" });
+    }
+    if (request.method === "GET") return send(response, 200, { ready: true });
+    const body = await readJson(request);
+    if (String(body.email || "").startsWith("idempotency-")) {
+      const key = JSON.stringify([body.email, body.firstName, body.format]);
+      const deduped = emailRequests.has(key);
+      emailRequests.set(key, true);
+      return send(response, 200, { sent: true, deduped });
+    }
+    return send(response, 503, { message: "Simulated email outage" });
+  }
+
   if (request.method === "POST" && url.pathname === "/emails") {
     const body = await readJson(request);
     const recipient = String(body.to?.[0] || "");

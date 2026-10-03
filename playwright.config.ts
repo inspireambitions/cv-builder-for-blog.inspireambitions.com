@@ -29,6 +29,8 @@ export default defineConfig({
             ...process.env,
             RESEND_API_KEY: "test-resend-key",
             RESEND_API_BASE: "http://127.0.0.1:3216",
+            IA_CV_EMAIL_BRIDGE_SECRET: "test-bridge-key",
+            IA_CV_EMAIL_BRIDGE_URL: "http://127.0.0.1:3216/wp-json/ia-mail/v1/cv-welcome",
             RESEND_FROM_EMAIL: "Inspire Ambitions <info@inspireambitions.com>",
             ANTHROPIC_API_KEY: "test-anthropic-key",
             ANTHROPIC_API_BASE: "http://127.0.0.1:3216",

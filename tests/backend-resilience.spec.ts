@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("download gate survives a Resend email outage", async ({ request }) => {
+test("download gate survives a Cloudflare bridge outage", async ({ request }) => {
   const response = await request.post("/api/subscribe", {
     data: {
       email: "candidate@gmail.com",
@@ -19,7 +19,7 @@ test("download gate survives a Resend email outage", async ({ request }) => {
   });
 });
 
-test("download gate health check verifies the Resend sender", async ({ request }) => {
+test("download gate health check verifies the bridge and subscriber service", async ({ request }) => {
   const response = await request.get("/api/subscribe");
   expect(response.status()).toBe(200);
   await expect(response.json()).resolves.toEqual({ ok: true });
