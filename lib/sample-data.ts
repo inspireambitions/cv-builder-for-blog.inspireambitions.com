@@ -1,4 +1,22 @@
 import type { CVState } from "./types";
+import { defaultCVState } from "./types";
+
+// Fictional example for the public homepage. No candidate details.
+export const sampleServiceCVState: CVState = {
+  ...defaultCVState,
+  step: 8,
+  template: "service",
+  templateConfirmed: true,
+  personal: { ...defaultCVState.personal, name: "Alex Morgan", title: "Room Attendant", phone: "+971 50 000 0000", email: "alex@example.com", location: "Dubai, UAE" },
+  summary: "Room attendant with experience in guest room cleaning and hotel service. Skilled in safe chemical use, linen care and guest requests. Speaks English and Tagalog.",
+  experience: [
+    { id: "sample-service", role: "Room Attendant", company: "Sample Hotel", companyDesc: "Fictional hotel", location: "Dubai, UAE", dates: "Jan 2023 to Present", description: "Clean guest rooms and public areas to the hotel standard.\nChange bed linen and restock guest supplies.\nReport maintenance faults and lost property.\nHelp new staff learn the room cleaning checklist.", gap: "" },
+    { id: "sample-cleaning", role: "Public Area Cleaner", company: "Sample Resort", companyDesc: "Fictional resort", location: "Manila, Philippines", dates: "Jan 2020 to Dec 2022", description: "Clean shared spaces and report safety concerns.\nUse cleaning chemicals according to safety instructions.\nRespond to guest requests and support the housekeeping team.", gap: "" },
+  ],
+  education: [{ id: "sample-school", degree: "Secondary school", institution: "Sample School", year: "2019", grade: "" }],
+  skills: ["Room cleaning", "Linen care", "Safe chemical use", "Guest service", "Teamwork"],
+  languages: [{ id: "sample-english", language: "English", level: "Fluent" }, { id: "sample-tagalog", language: "Tagalog", level: "Native" }],
+};
 
 export const sampleCVState: CVState = {
   step: 8,

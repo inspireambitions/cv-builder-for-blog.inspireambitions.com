@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCVState } from "@/lib/state";
-import { calculateScore } from "@/lib/score";
+import { calculateScore, getMissingCVItems } from "@/lib/score";
 import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
 import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
@@ -34,7 +34,7 @@ function getLayerColor(label: string): string {
       return "bg-purple-500";
     case "Gulf Readiness":
       return "bg-amber-500";
-    case "ATS & Formatting":
+    case "Computer readability":
       return "bg-green-500";
     default:
       return "bg-gray-500";
@@ -121,7 +121,8 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
 }
 
 export default function StepScore() {
-  const { state } = useCVState();
+  const { state, goToStep } = useCVState();
+  const missing = getMissingCVItems(state);
   const score = useMemo(() => calculateScore(state), [state]);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const completionTracked = useRef(false);
@@ -149,9 +150,10 @@ export default function StepScore() {
     <div className="space-y-8">
       <section className="rounded-2xl border border-[#d8c895] bg-[#faf7ee] p-6 text-center sm:p-8">
         <p className="text-sm font-bold text-[#2f6b5e]">Your work is saved</p>
-        <h1 className="mt-2 text-3xl font-bold text-[#1a2744]">Your CV is ready to review</h1>
+        <h1 className="mt-2 text-3xl font-bold text-ink">{missing.length ? `Almost there: ${missing.length} things missing` : "Your CV is ready"}</h1>
+        {missing.length > 0 && <ul className="mt-4 space-y-2">{missing.map((item) => <li key={item.key}><button type="button" onClick={() => goToStep(item.step)} className="min-h-12 px-4 text-accent underline">{item.label}</button></li>)}</ul>}
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#586174]">
-          Preview it, then download a clean PDF, an editable Word file or a quick JPEG. There is no card and no watermark.
+          Check your details, then choose a file to download.
         </p>
         <button
           type="button"

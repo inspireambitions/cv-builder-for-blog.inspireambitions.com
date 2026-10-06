@@ -3,6 +3,8 @@
 import { useCVState } from "@/lib/state";
 import type { ExpEntry } from "@/lib/types";
 import RoleSentenceSuggestions from "@/components/shared/RoleSentenceSuggestions";
+import ExperienceDates from "@/components/shared/ExperienceDates";
+import { getRoleExamples } from "@/lib/role-examples";
 
 function generateId() {
   return "exp-" + Math.random().toString(36).slice(2, 9);
@@ -54,7 +56,9 @@ export default function StepExperience() {
       </div>
 
       <div className="space-y-6">
-        {entries.map((entry, index) => (
+        {entries.map((entry, index) => {
+          const examples = getRoleExamples(entry.role || state.personal.title);
+          return (
           <div
             key={entry.id}
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5"
@@ -88,7 +92,7 @@ export default function StepExperience() {
                   onChange={(e) =>
                     updateEntry(entry.id, "role", e.target.value)
                   }
-                  placeholder="e.g. Senior Project Manager"
+                  placeholder={examples.title}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
               </div>
@@ -105,7 +109,7 @@ export default function StepExperience() {
                   onChange={(e) =>
                     updateEntry(entry.id, "company", e.target.value)
                   }
-                  placeholder="e.g. AECOM"
+                  placeholder="Your workplace name"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
               </div>
@@ -122,7 +126,7 @@ export default function StepExperience() {
                   onChange={(e) =>
                     updateEntry(entry.id, "companyDesc", e.target.value)
                   }
-                  placeholder="e.g. A $2B logistics provider operating across 14 countries"
+                  placeholder={examples.company}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
               </div>
@@ -145,21 +149,7 @@ export default function StepExperience() {
               </div>
 
               {/* Period */}
-              <div className="md:col-span-2">
-                <label htmlFor={`${entry.id}-dates`} className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Period
-                </label>
-                <input
-                  id={`${entry.id}-dates`}
-                  type="text"
-                  value={entry.dates}
-                  onChange={(e) =>
-                    updateEntry(entry.id, "dates", e.target.value)
-                  }
-                  placeholder="e.g. Jan 2020 to Present"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
-                />
-              </div>
+              <ExperienceDates entry={entry} onChange={(next) => updateField({ experience: entries.map((item) => item.id === entry.id ? next : item) })} />
             </div>
 
             {/* Key Achievements */}
@@ -174,7 +164,7 @@ export default function StepExperience() {
                   updateEntry(entry.id, "description", e.target.value)
                 }
                 rows={4}
-                placeholder={"Add one duty or result per line. Use a number only when you can prove it."}
+                placeholder={examples.duty}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow resize-y"
               />
               <RoleSentenceSuggestions
@@ -203,7 +193,7 @@ export default function StepExperience() {
               />
             </div>
           </div>
-        ))}
+        ); })}
       </div>
 
       {/* Add Experience button */}

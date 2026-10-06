@@ -5,6 +5,11 @@ export interface ExpEntry {
   companyDesc: string;
   location: string;
   dates: string;
+  startMonth?: string;
+  startYear?: string;
+  endMonth?: string;
+  endYear?: string;
+  current?: boolean;
   description: string;
   gap: string;
 }

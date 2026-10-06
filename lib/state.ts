@@ -13,6 +13,7 @@ import type { CVState } from "./types";
 import { defaultCVState } from "./types";
 import { readResumeLinkFromHash, removeResumeHash } from "./resume-link";
 import React from "react";
+import { migrateExperienceDates } from "./experience-dates";
 
 interface CVContextValue {
   state: CVState;
@@ -106,6 +107,7 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
         : [],
     },
     score: null,
+    experience: (Array.isArray(incoming.experience) ? incoming.experience : defaultCVState.experience).map(migrateExperienceDates),
   };
 }
 

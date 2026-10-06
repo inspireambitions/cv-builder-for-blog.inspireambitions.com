@@ -33,4 +33,5 @@ jobs:
           name: cv-builder-browser-evidence
           path: |
             outputs/step-01/
+            outputs/step-02/
             test-results/

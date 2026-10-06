@@ -82,7 +82,7 @@ test("download gate exposes email-only dual exports without account, card, paywa
   await page.getByRole("button", { name: "Download my CV" }).click();
 
   await expect(page.getByText("Free. No card. No watermark.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Download picture, no email/ })).toBeVisible();
   await expect(page.getByText(/paywall/i)).toHaveCount(0);
 
   await page.getByLabel("Email address").fill("phase13@example.com");
@@ -94,9 +94,9 @@ test("download gate exposes email-only dual exports without account, card, paywa
     page.getByText(/download is ready.*confirmation email/i)
   ).toBeVisible();
 
-  await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download PDF for company computers" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "ATS Word (.docx)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Word (if a company wants to edit it)" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Recruiter Word" })).toBeVisible();
 });
 

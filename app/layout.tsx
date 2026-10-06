@@ -15,7 +15,7 @@ const applicationSchema = {
   "@type": "WebApplication",
   name: "InspireAmbitions CV Builder",
   url: "https://cv.inspireambitions.com/",
-  description: "A free CV builder with ATS-safe PDF and Word downloads for GCC and international job applications.",
+  description: "A free CV builder with easy for company computers to read PDF and Word downloads for GCC and international job applications.",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "AED" },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   title: "InspireAmbitions CV Builder - Free CV Builder by an HR Career Specialist",
   description:
-    "Build a clear CV in minutes. Get free ATS-safe PDF and Word files with no watermark. Built by an HR Career Specialist with GCC and Africa experience.",
+    "Build a clear CV in minutes. Get free easy for company computers to read PDF and Word files with no watermark. Built by an HR Career Specialist with GCC and Africa experience.",
   keywords: [
     "CV builder",
     "resume builder",

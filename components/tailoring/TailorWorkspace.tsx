@@ -24,7 +24,7 @@ async function requestTailoring(body: string) {
         body,
       });
     } catch (caught) {
-      lastError = caught instanceof Error ? caught : new Error("Tailoring failed. Please try again.");
+      lastError = caught instanceof Error ? caught : new Error("We could not match this job. Try again.");
       if (attempt === 2) throw lastError;
       await wait(1_500 * (attempt + 1));
       continue;
@@ -34,11 +34,11 @@ async function requestTailoring(body: string) {
     const fallback = response.status === 429 || response.status === 503
       ? "The review service is busy. Your CV is safe and unchanged. Please wait, then try again."
       : "The review could not finish. Your CV is safe and unchanged. Please try again.";
-    lastError = new Error(payload.error || fallback);
+    lastError = new Error(fallback);
     if (response.status !== 503 || attempt === 2) throw lastError;
     await wait(1_500 * (attempt + 1));
   }
-  throw lastError ?? new Error("Tailoring failed. Please try again.");
+  throw lastError ?? new Error("We could not match this job. Try again.");
 }
 
 function statusStyle(status: "supported" | "partial" | "gap") {
@@ -76,8 +76,8 @@ export default function TailorWorkspace() {
         surface: "score_workspace",
         format: payload.integrity?.passed ? "evidence_passed" : "evidence_failed",
       });
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Tailoring failed. Please try again.");
+    } catch {
+      setError("We could not finish the match. Your CV is unchanged. Try again.");
       setView("input");
       trackToolEvent("cv_tailoring_failed", { surface: "score_workspace" });
     }
@@ -107,17 +107,16 @@ export default function TailorWorkspace() {
     return (
       <section className="border-y border-gray-200 bg-white py-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gold-600">Premium beta</p>
-          <h3 className="mt-2 text-2xl font-bold text-gray-950">Tailor this CV to a UAE job</h3>
+          <h3 className="mt-2 text-2xl font-bold text-gray-950">Match my CV to a job advert</h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-gray-600">
-            Paste a real vacancy. Grok drafts the targeted version, Sonnet reviews it, and the evidence gate blocks unsupported claims before you can apply the changes.
+            Paste a job advert. We suggest changes using only what is already in your CV. You choose what to keep.
           </p>
           <button
             type="button"
             onClick={() => setView("input")}
             className="mt-6 min-h-12 bg-gray-950 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
           >
-            Tailor to a Job
+            Match my CV to a job advert
           </button>
         </div>
       </section>
@@ -181,7 +180,7 @@ export default function TailorWorkspace() {
           {error && <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setView("closed")} className="min-h-12 border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
-            <button type="button" onClick={runTailoring} className="min-h-12 bg-gray-950 px-6 text-sm font-semibold text-white hover:bg-gray-800">Run Premium Review</button>
+            <button type="button" onClick={runTailoring} className="min-h-12 bg-gray-950 px-6 text-sm font-semibold text-white hover:bg-gray-800">Check this job advert</button>
           </div>
         </div>
       </section>
@@ -196,8 +195,8 @@ export default function TailorWorkspace() {
         <div className="flex flex-col gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gold-600">Agency review complete</p>
-            <h3 className="mt-2 text-2xl font-bold text-gray-950">{final.roleTitle || jobTitle || "Tailored CV"}{final.company ? ` at ${final.company}` : ""}</h3>
-            <p className="mt-2 text-sm text-gray-600">Drafted by {result.draftProvider}; reviewed by {result.reviewProvider}.</p>
+            <h3 className="mt-2 text-2xl font-bold text-gray-950">{final.roleTitle || jobTitle || "Matched CV"}{final.company ? ` at ${final.company}` : ""}</h3>
+            <p className="mt-2 text-sm text-gray-600">Check each change against your own experience before adding it.</p>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-gray-950">{deterministicMatch.score}</span>
@@ -208,7 +207,7 @@ export default function TailorWorkspace() {
         <div className="border border-gray-200 bg-gray-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><h4 className="font-bold text-gray-950">{deterministicMatch.verdict}</h4><p className="mt-1 text-sm text-gray-600">The score is calculated in code. The same CV and vacancy always return the same result.</p></div>
-            <div className="text-xs text-gray-600">Skills {deterministicMatch.components.skills}/40 · Role {deterministicMatch.components.title}/15 · GCC {deterministicMatch.components.gcc}/15 · ATS {deterministicMatch.components.ats}/10</div>
+            <div className="text-xs text-gray-600">Skills {deterministicMatch.components.skills}/40 · Role {deterministicMatch.components.title}/15 · GCC {deterministicMatch.components.gcc}/15 · Computer reading {deterministicMatch.components.ats}/10</div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2" aria-label="GCC compliance">
             {deterministicMatch.compliance.map((item) => <span key={item.label} className={`border px-2 py-1 text-xs font-semibold ${item.met ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-900"}`}>{item.met ? "Ready" : "Missing"}: {item.label}</span>)}
@@ -242,7 +241,7 @@ export default function TailorWorkspace() {
         )}
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-gray-500">Tailored summary</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wide text-gray-500">Updated about you</h4>
           <p className="mt-3 border-s-4 border-gold-500 ps-4 text-base leading-7 text-gray-800">{final.summary.text}</p>
         </div>
 
@@ -303,7 +302,7 @@ export default function TailorWorkspace() {
             disabled={!result.integrity.passed || !result.review.approved || applied}
             className="min-h-12 bg-gold-500 px-6 text-sm font-semibold text-white hover:bg-gold-600 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
-            {applied ? "Tailored Version Applied" : result.review.approved ? "Apply to My CV" : "Review Not Approved"}
+            {applied ? "Changes added to your CV" : result.review.approved ? "Apply to My CV" : "Review Not Approved"}
           </button>
         </div>
       </div>

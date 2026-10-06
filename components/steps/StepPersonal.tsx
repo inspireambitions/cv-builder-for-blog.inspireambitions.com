@@ -126,7 +126,7 @@ export default function StepPersonal() {
             type="text"
             value={personal.title}
             onChange={(e) => updatePersonal({ title: e.target.value })}
-            placeholder="e.g. Senior Project Manager"
+            placeholder="e.g. Room Attendant"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
           />
         </div>
@@ -333,10 +333,10 @@ export default function StepPersonal() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              NOC Available
+              Letter from your sponsor allowing you to change job (NOC)
             </label>
             <select
-              aria-label="NOC Available"
+              aria-label="Letter from your sponsor allowing you to change job (NOC)"
               value={personal.noc_available}
               onChange={(e) =>
                 updatePersonal({

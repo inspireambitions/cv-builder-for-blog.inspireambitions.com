@@ -10,9 +10,9 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "hero.badge": "Built by an HR Career Specialist",
     "hero.headline": "Build a CV That Gets You Hired",
     "hero.subheadline":
-      "Build a clear, evidence-led CV for UAE and international roles. Free ATS-safe PDF and Word export by email. No watermark. No credit card.",
+      "Build a clear, evidence-led CV for UAE and international roles. Free PDF and Word downloads after one email unlock. No watermark. No credit card.",
     "hero.buildCta": "Build My CV for Free",
-    "hero.uploadCta": "Upload & Tailor to a Job",
+    "hero.uploadCta": "I already have a CV",
     "hero.trust1": "Free forever",
     "hero.trust2": "No credit card",
     "hero.trust3": "Built from real hiring experience",
@@ -26,7 +26,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
       "Clear prompts shaped by more than 20 years of HR experience across the Gulf and Africa.",
     "feature.freeExport": "Free PDF & Word Export",
     "feature.freeExportDesc":
-      "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
+      "Free PDF and editable Word downloads after one email unlock. No watermark. No credit card.",
     "feature.gulfReady": "Gulf/MENA Ready",
     "feature.gulfReadyDesc":
       "Built for GCC applications, with a dedicated Gulf template, photo support and Arabic-friendly layouts.",
@@ -54,7 +54,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     // Steps
     "step.template": "Template",
     "step.personal": "Personal Details",
-    "step.summary": "Professional Summary",
+    "step.summary": "About you (2 to 3 lines)",
     "step.experience": "Work Experience",
     "step.education": "Education & Certs",
     "step.skills": "Skills & Languages",
@@ -75,7 +75,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "personal.photoHint": "Recommended for this template",
 
     // Summary (Step 3)
-    "summary.title": "Professional Summary",
+    "summary.title": "About you (2 to 3 lines)",
     "summary.target": "Aim for 300\u2013600 characters",
     "summary.prompt1": "Who are you professionally?",
     "summary.prompt2": "What is your biggest achievement?",
@@ -146,13 +146,13 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     // Download modal
     "download.title": "Download Your CV",
     "download.subtitle":
-      "Choose PDF for ATS systems or Word when you want an editable file.",
-    "download.jpeg": "JPEG Preview Image",
+      "Choose PDF for sending to companies or Word if a company wants to edit it.",
+    "download.jpeg": "Picture (good for WhatsApp)",
     "download.jpegDesc":
       "High-resolution image. Perfect for sharing online.",
     "download.pdf": "PDF Document",
     "download.pdfDesc":
-      "ATS-friendly format. Recommended for job applications.",
+      "Easy for company computers to read. Best for sending to companies.",
     "download.word": "Word Document",
     "download.wordDesc": "Editable .docx format. Easy to customize further.",
     "download.free": "FREE",
@@ -174,7 +174,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "tip.education":
       "Professional certifications like CIPD, PMP, SHRM, and CFA often carry more weight than your university name in hiring decisions. Always list them prominently.",
     "tip.skills":
-      "Mirror the exact keywords from the job description. If the posting says \u2018stakeholder management\u2019, use that exact phrase \u2014 not \u2018managing stakeholders\u2019. ATS systems match keywords literally.",
+      "Mirror the exact keywords from the job description. If the posting says \u2018stakeholder management\u2019, use that exact phrase \u2014 not \u2018managing stakeholders\u2019. Company computers match keywords literally.",
     "tip.template":
       "In the Gulf/MENA region, including a professional photo on your CV is standard practice. In Europe and North America, it\u2019s generally discouraged. Choose a template that matches your target market.",
   },
@@ -187,7 +187,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "hero.badge": "\u0628\u064f\u0646\u064a \u0628\u0648\u0627\u0633\u0637\u0629 \u0623\u062e\u0635\u0627\u0626\u064a \u0645\u0648\u0627\u0631\u062f \u0628\u0634\u0631\u064a\u0629",
     "hero.headline": "\u0623\u0646\u0634\u0626 \u0633\u064a\u0631\u0629 \u0630\u0627\u062a\u064a\u0629 \u062a\u062d\u0635\u0644 \u0628\u0647\u0627 \u0639\u0644\u0649 \u0648\u0638\u064a\u0641\u0629",
     "hero.subheadline":
-      "\u0623\u0643\u062b\u0631 \u0645\u0646\u0634\u0626 \u0633\u064a\u0631 \u0630\u0627\u062a\u064a\u0629 \u0645\u0635\u062f\u0627\u0642\u064a\u0629 \u0641\u064a \u0627\u0644\u0639\u0627\u0644\u0645. \u062a\u0635\u062f\u064a\u0631 JPEG \u0645\u062c\u0627\u0646\u064a. \u0628\u062f\u0648\u0646 \u0639\u0644\u0627\u0645\u0629 \u0645\u0627\u0626\u064a\u0629. \u0628\u062f\u0648\u0646 \u0628\u0637\u0627\u0642\u0629 \u0627\u0626\u062a\u0645\u0627\u0646.",
+      "\u0623\u0643\u062b\u0631 \u0645\u0646\u0634\u0626 \u0633\u064a\u0631 \u0630\u0627\u062a\u064a\u0629 \u0645\u0635\u062f\u0627\u0642\u064a\u0629 \u0641\u064a \u0627\u0644\u0639\u0627\u0644\u0645. \u062a\u0635\u062f\u064a\u0631 Picture \u0645\u062c\u0627\u0646\u064a. \u0628\u062f\u0648\u0646 \u0639\u0644\u0627\u0645\u0629 \u0645\u0627\u0626\u064a\u0629. \u0628\u062f\u0648\u0646 \u0628\u0637\u0627\u0642\u0629 \u0627\u0626\u062a\u0645\u0627\u0646.",
     "hero.buildCta": "\u0623\u0646\u0634\u0626 \u0633\u064a\u0631\u062a\u064a \u0627\u0644\u0630\u0627\u062a\u064a\u0629 \u2014 \u0645\u062c\u0627\u0646\u0627\u064b",
     "hero.uploadCta": "\u0627\u0631\u0641\u0639 \u0648\u062d\u0633\u0651\u0646 \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a",
     "hero.trust1": "\u0645\u062c\u0627\u0646\u064a \u0644\u0644\u0623\u0628\u062f",
@@ -201,7 +201,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "feature.hrApproved": "\u0645\u0639\u062a\u0645\u062f \u0645\u0646 \u0623\u062e\u0635\u0627\u0626\u064a \u0645\u0648\u0627\u0631\u062f \u0628\u0634\u0631\u064a\u0629",
     "feature.hrApprovedDesc":
       "\u0643\u0644 \u0646\u0635\u064a\u062d\u0629 \u0648\u0645\u0639\u064a\u0627\u0631 \u062a\u0642\u064a\u064a\u0645 \u0643\u062a\u0628\u0647\u0627 \u0623\u062e\u0635\u0627\u0626\u064a \u0645\u0648\u0627\u0631\u062f \u0628\u0634\u0631\u064a\u0629 \u0645\u0645\u0627\u0631\u0633 \u064a\u0641\u0631\u0632 \u0627\u0644\u0633\u064a\u0631 \u0627\u0644\u0630\u0627\u062a\u064a\u0629 \u064a\u0648\u0645\u064a\u0627\u064b.",
-    "feature.freeExport": "\u062a\u0635\u062f\u064a\u0631 JPEG \u0645\u062c\u0627\u0646\u064a",
+    "feature.freeExport": "\u062a\u0635\u062f\u064a\u0631 Picture \u0645\u062c\u0627\u0646\u064a",
     "feature.freeExportDesc":
       "\u062d\u0645\u0651\u0644 \u0633\u064a\u0631\u062a\u0643 \u0627\u0644\u0630\u0627\u062a\u064a\u0629 \u0643\u0635\u0648\u0631\u0629 \u0639\u0627\u0644\u064a\u0629 \u0627\u0644\u062f\u0642\u0629. \u0628\u062f\u0648\u0646 \u0639\u0644\u0627\u0645\u0629 \u0645\u0627\u0626\u064a\u0629. \u0628\u062f\u0648\u0646 \u0628\u0637\u0627\u0642\u0629 \u0627\u0626\u062a\u0645\u0627\u0646.",
     "feature.gulfReady": "\u062c\u0627\u0647\u0632 \u0644\u0644\u062e\u0644\u064a\u062c \u0648\u0627\u0644\u0634\u0631\u0642 \u0627\u0644\u0623\u0648\u0633\u0637",
@@ -325,13 +325,13 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     // Download modal
     "download.title": "\u062d\u0645\u0651\u0644 \u0633\u064a\u0631\u062a\u0643 \u0627\u0644\u0630\u0627\u062a\u064a\u0629",
     "download.subtitle":
-      "\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u0646\u0633\u064a\u0642 \u0627\u0644\u0645\u0641\u0636\u0644 \u0644\u062f\u064a\u0643. JPEG \u0645\u062c\u0627\u0646\u064a \u062f\u0627\u0626\u0645\u0627\u064b.",
-    "download.jpeg": "\u0635\u0648\u0631\u0629 JPEG",
+      "\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u0646\u0633\u064a\u0642 \u0627\u0644\u0645\u0641\u0636\u0644 \u0644\u062f\u064a\u0643. Picture \u0645\u062c\u0627\u0646\u064a \u062f\u0627\u0626\u0645\u0627\u064b.",
+    "download.jpeg": "\u0635\u0648\u0631\u0629 Picture",
     "download.jpegDesc":
       "\u0635\u0648\u0631\u0629 \u0639\u0627\u0644\u064a\u0629 \u0627\u0644\u062f\u0642\u0629. \u0645\u062b\u0627\u0644\u064a\u0629 \u0644\u0644\u0645\u0634\u0627\u0631\u0643\u0629 \u0639\u0628\u0631 \u0627\u0644\u0625\u0646\u062a\u0631\u0646\u062a.",
     "download.pdf": "\u0645\u0633\u062a\u0646\u062f PDF",
     "download.pdfDesc":
-      "\u062a\u0646\u0633\u064a\u0642 \u0645\u062a\u0648\u0627\u0641\u0642 \u0645\u0639 ATS. \u0645\u0648\u0635\u0649 \u0628\u0647 \u0644\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062a\u0648\u0638\u064a\u0641.",
+      "سهل القراءة في برامج الشركات. مناسب لإرسال طلبات العمل.",
     "download.word": "\u0645\u0633\u062a\u0646\u062f Word",
     "download.wordDesc": "\u062a\u0646\u0633\u064a\u0642 .docx \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0639\u062f\u064a\u0644.",
     "download.free": "\u0645\u062c\u0627\u0646\u064a",
@@ -353,7 +353,7 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "tip.education":
       "\u0627\u0644\u0634\u0647\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0647\u0646\u064a\u0629 \u0645\u062b\u0644 CIPD \u0648 PMP \u0648 SHRM \u063a\u0627\u0644\u0628\u0627\u064b \u0645\u0627 \u062a\u062d\u0645\u0644 \u0648\u0632\u0646\u0627\u064b \u0623\u0643\u0628\u0631 \u0645\u0646 \u0627\u0633\u0645 \u0627\u0644\u062c\u0627\u0645\u0639\u0629 \u0641\u064a \u0642\u0631\u0627\u0631\u0627\u062a \u0627\u0644\u062a\u0648\u0638\u064a\u0641.",
     "tip.skills":
-      "\u0637\u0627\u0628\u0642 \u0627\u0644\u0643\u0644\u0645\u0627\u062a \u0627\u0644\u0645\u0641\u062a\u0627\u062d\u064a\u0629 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0645\u0646 \u0648\u0635\u0641 \u0627\u0644\u0648\u0638\u064a\u0641\u0629. \u0623\u0646\u0638\u0645\u0629 ATS \u062a\u0637\u0627\u0628\u0642 \u0627\u0644\u0643\u0644\u0645\u0627\u062a \u062d\u0631\u0641\u064a\u0627\u064b.",
+      "أضف المهارات التي تملكها فقط. استخدم كلمات إعلان الوظيفة إذا كانت تصف عملك فعلاً.",
     "tip.template":
       "\u0641\u064a \u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u062e\u0644\u064a\u062c\u060c \u062a\u0636\u0645\u064a\u0646 \u0635\u0648\u0631\u0629 \u0645\u0647\u0646\u064a\u0629 \u0641\u064a \u0633\u064a\u0631\u062a\u0643 \u0627\u0644\u0630\u0627\u062a\u064a\u0629 \u0647\u0648 \u0645\u0645\u0627\u0631\u0633\u0629 \u0645\u0639\u062a\u0627\u062f\u0629. \u0641\u064a \u0623\u0648\u0631\u0648\u0628\u0627 \u0648\u0623\u0645\u0631\u064a\u0643\u0627 \u0627\u0644\u0634\u0645\u0627\u0644\u064a\u0629\u060c \u064a\u064f\u0646\u0635\u062d \u0639\u0627\u062f\u0629\u064b \u0628\u0639\u062f\u0645 \u062a\u0636\u0645\u064a\u0646\u0647\u0627.",
   },
@@ -365,7 +365,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "header.cvBuilder": "CV बिल्डर",
     "hero.badge": "HR करियर विशेषज्ञ द्वारा निर्मित",
     "hero.headline": "ऐसा CV बनाएं जो नौकरी दिलाए",
-    "hero.subheadline": "UAE और अंतरराष्ट्रीय भूमिकाओं के लिए स्पष्ट CV बनाएं। PDF और Word ईमेल से निःशुल्क। JPEG बिना ईमेल के।",
+    "hero.subheadline": "UAE और अंतरराष्ट्रीय भूमिकाओं के लिए स्पष्ट CV बनाएं। PDF और Word ईमेल से निःशुल्क। Picture बिना ईमेल के।",
     "hero.buildCta": "मेरा CV बनाएं, निःशुल्क",
     "hero.uploadCta": "CV अपलोड करें और नौकरी के अनुसार बनाएं",
     "hero.trust1": "हमेशा निःशुल्क",
@@ -384,7 +384,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "download.title": "अपना CV डाउनलोड करें",
     "download.pdf": "PDF डाउनलोड",
     "download.word": "Word डाउनलोड",
-    "download.jpeg": "JPEG डाउनलोड",
+    "download.jpeg": "Picture डाउनलोड",
     "toast.saved": "प्रगति सुरक्षित है",
   },
   ur: {
@@ -392,7 +392,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "header.cvBuilder": "سی وی بلڈر",
     "hero.badge": "HR کیریئر ماہر کی تیار کردہ",
     "hero.headline": "ایسا سی وی بنائیں جو ملازمت دلائے",
-    "hero.subheadline": "UAE اور بین الاقوامی ملازمتوں کے لیے واضح سی وی بنائیں۔ PDF اور Word ای میل کے ذریعے مفت۔ JPEG بغیر ای میل۔",
+    "hero.subheadline": "UAE اور بین الاقوامی ملازمتوں کے لیے واضح سی وی بنائیں۔ PDF اور Word ای میل کے ذریعے مفت۔ Picture بغیر ای میل۔",
     "hero.buildCta": "میرا سی وی مفت بنائیں",
     "hero.uploadCta": "سی وی اپ لوڈ کریں اور ملازمت کے مطابق بنائیں",
     "hero.trust1": "ہمیشہ مفت",
@@ -411,7 +411,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "download.title": "اپنا سی وی ڈاؤن لوڈ کریں",
     "download.pdf": "PDF ڈاؤن لوڈ",
     "download.word": "Word ڈاؤن لوڈ",
-    "download.jpeg": "JPEG ڈاؤن لوڈ",
+    "download.jpeg": "Picture ڈاؤن لوڈ",
     "toast.saved": "پیش رفت محفوظ ہے",
   },
   tl: {
@@ -419,7 +419,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "header.cvBuilder": "CV Builder",
     "hero.badge": "Ginawa ng isang HR Career Specialist",
     "hero.headline": "Gumawa ng CV na tumutulong sa iyong matanggap",
-    "hero.subheadline": "Gumawa ng malinaw na CV para sa UAE at pandaigdigang trabaho. Libreng PDF at Word sa email. Walang email para sa JPEG.",
+    "hero.subheadline": "Gumawa ng malinaw na CV para sa UAE at pandaigdigang trabaho. Libreng PDF at Word sa email. Walang email para sa Picture.",
     "hero.buildCta": "Gawin ang CV ko, libre",
     "hero.uploadCta": "Mag-upload at iangkop sa trabaho",
     "hero.trust1": "Libre habang-buhay",
@@ -438,7 +438,7 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
     "download.title": "I-download ang iyong CV",
     "download.pdf": "I-download ang PDF",
     "download.word": "I-download ang Word",
-    "download.jpeg": "I-download ang JPEG",
+    "download.jpeg": "I-download ang Picture",
     "toast.saved": "Naka-save ang progreso",
   },
 };

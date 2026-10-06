@@ -40,10 +40,10 @@ export default function StepSummary() {
     <div className="space-y-8">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">
-          Professional Summary
+          About you (2 to 3 lines)
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Write a compelling overview that makes recruiters want to read more
+          Describe your work and strengths in 2 to 3 lines.
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function StepSummary() {
           value={state.summary}
           onChange={(e) => updateField({ summary: e.target.value })}
           rows={8}
-          placeholder="Write your professional summary here..."
+          placeholder="Write 2 to 3 lines about your work."
           className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow resize-y"
         />
         <div className="flex items-center justify-between mt-2">
@@ -90,11 +90,8 @@ export default function StepSummary() {
           HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          A weak summary: &ldquo;Experienced professional seeking new
-          opportunities.&rdquo; A strong summary: &ldquo;Senior Project Manager
-          with 8 years delivering $50M+ infrastructure programmes across the
-          GCC. Reduced delivery timelines by 23% through agile methodology
-          adoption at AECOM.&rdquo;
+          Name your job, your skills and the work you know.
+          Only add results you can explain and prove.
         </p>
       </div>
     </div>

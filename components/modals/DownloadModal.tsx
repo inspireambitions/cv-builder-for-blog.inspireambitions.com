@@ -203,7 +203,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           Download Your CV
         </h2>
         <p className="mt-2 text-sm leading-6 text-gray-500">
-          JPEG is instant with no email. PDF and Word ask for your email once on this device.
+          Pictures download with no email. PDF and Word ask for your email once on this device.
         </p>
 
         {error && (
@@ -224,8 +224,8 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           disabled={downloading !== null}
           className="mt-5 w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
         >
-          <div className="font-semibold text-gray-900">Download JPEG, no email</div>
-          <p className="mt-1 text-sm text-gray-600">Instant, anonymous and watermark-free. PDF is better for ATS applications.</p>
+          <div className="font-semibold text-gray-900">Download picture, no email</div>
+          <p className="mt-1 text-sm text-gray-600">Instant, anonymous and watermark-free. PDF is best for sending to companies.</p>
         </button>
 
         {emailStatus !== "unlocked" ? (
@@ -254,7 +254,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
                 : "Unlock and Download PDF"}
             </button>
             <p className="text-xs leading-5 text-gray-500">
-              PDF and Word are free. We ask for your email and may send practical Gulf job-search guidance. Unsubscribe anytime. Prefer not to share it? Use the JPEG button above.
+              PDF and Word are free. We ask for your email and may send practical Gulf job-search guidance. Unsubscribe anytime. Prefer not to share it? Use the picture button above.
             </p>
           </form>
         ) : (
@@ -262,7 +262,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           {atsReport && (
             <div className={`border p-4 ${atsReport.passed ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`} aria-live="polite">
               <div className="flex items-center justify-between gap-4">
-                <div className={`font-semibold ${atsReport.passed ? "text-emerald-950" : "text-amber-950"}`}>Finished-PDF ATS check</div>
+                <div className={`font-semibold ${atsReport.passed ? "text-emerald-950" : "text-amber-950"}`}>Company computer reading check</div>
                 <div className={`text-sm font-bold ${atsReport.passed ? "text-emerald-800" : "text-amber-800"}`}>{atsReport.score}/100</div>
               </div>
               <ul className="mt-2 space-y-1 text-xs text-gray-700">
@@ -280,7 +280,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Download ATS-safe PDF
+                  Download PDF for company computers
                 </div>
                 <p className="mt-0.5 text-sm text-gray-600">
                   No photo, no columns, selectable text for applicant tracking systems.
@@ -318,7 +318,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
               disabled={downloading !== null}
               className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
-              <div className="font-semibold text-gray-900">ATS Word (.docx)</div>
+              <div className="font-semibold text-gray-900">Word (if a company wants to edit it)</div>
               <p className="mt-0.5 text-sm text-gray-600">
                 Editable, text-first version.
               </p>
@@ -359,10 +359,10 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-semibold text-gray-900">
-                    JPEG Preview Image
+                    Picture (good for WhatsApp)
                   </div>
                   <p className="mt-0.5 text-sm text-gray-500">
-                    Useful for quick visual sharing, not recommended for ATS.
+                    Good for WhatsApp. Use PDF for company applications.
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-gray-600">

@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       { label: "Readable text layer", passed: text.length >= 120, detail: `${text.length.toLocaleString()} characters extracted` },
       { label: "Contact details", passed: missingContact.length === 0, detail: missingContact.length ? `Missing: ${missingContact.join(", ")}` : "Name, email and phone remain readable" },
       { label: "Character integrity", passed: brokenGlyphs === 0, detail: brokenGlyphs ? `${brokenGlyphs} broken glyph markers found` : "No broken glyph markers found" },
-      { label: "ATS-safe contact text", passed: decorativeContactGlyphs === 0, detail: decorativeContactGlyphs ? `${decorativeContactGlyphs} decorative contact icons entered the text layer` : "No decorative contact icons in the text layer" },
+      { label: "Readable contact details", passed: decorativeContactGlyphs === 0, detail: decorativeContactGlyphs ? `${decorativeContactGlyphs} decorative contact icons entered the text layer` : "No decorative contact icons in the text layer" },
       { label: "Skill coverage", passed: skills.length === 0 || coveredSkills.length / skills.length >= 0.7, detail: skills.length ? `${coveredSkills.length}/${skills.length} selected skills found` : "No selected skills to check" },
     ];
     return NextResponse.json({

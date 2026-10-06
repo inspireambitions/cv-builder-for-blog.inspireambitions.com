@@ -86,7 +86,7 @@ test("sector templates preserve every entered evidence section", async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await seedDraft(page, completeState("corner"));
   await page.goto("/");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Preview CV" }).click();
   const preview = page.getByLabel("CV preview");
 
@@ -129,11 +129,11 @@ test("anonymous JPEG export supports Tailwind OKLCH colours", async ({ page }) =
   await page.setViewportSize({ width: 390, height: 844 });
   await seedDraft(page, completeState());
   await page.goto("/");
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Download my CV" }).click();
 
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: /Download JPEG, no email/ }).click();
+  await page.getByRole("button", { name: /Download picture, no email/ }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("Andrew_Kakooza_InspireAmbitions.jpg");
   await mkdir("test-results/production-defects", { recursive: true });

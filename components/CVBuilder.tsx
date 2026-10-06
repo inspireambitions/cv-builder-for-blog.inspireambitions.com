@@ -163,6 +163,8 @@ export default function CVBuilder() {
           <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="https://inspireambitions.com"
+              dir="ltr"
+              data-testid="brand"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xl font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity"
@@ -185,7 +187,7 @@ export default function CVBuilder() {
                 onClick={handleCopyResumeLink}
                 disabled={resumeLinkStatus === "copying"}
                 className="hidden min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-60 sm:inline-flex"
-                aria-label="Copy private resume link"
+                aria-label="Copy link to continue on another phone"
               >
                 {resumeLinkStatus === "copying"
                   ? "Saving..."
@@ -193,7 +195,7 @@ export default function CVBuilder() {
                   ? "Link copied"
                   : resumeLinkStatus === "error"
                   ? "Try again"
-                  : "Resume link"}
+                  : "Continue on another phone"}
               </button>
             )}
             {state.step > 0 && (
@@ -205,7 +207,7 @@ export default function CVBuilder() {
                 Delete draft
               </button>
             )}
-            <span className="hidden sm:inline-flex"><ThemeToggle /></span>
+            <span className={state.step > 0 ? "hidden md:inline-flex" : "inline-flex"}><ThemeToggle /></span>
             <LanguageToggle />
           </div>
         </div>
@@ -220,7 +222,7 @@ export default function CVBuilder() {
               {new Date(restoredAt).toLocaleString()}.
             </p>
             <p className="text-xs text-emerald-800 sm:ms-auto">
-              Autosave is active. Resume links are encrypted in the private URL fragment and never sent to our server.
+              Your changes save on this device. Keep shared CV links private.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -320,17 +322,17 @@ export default function CVBuilder() {
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="text-sm font-semibold text-emerald-950">
-                      Continue on another device
+                      Continue on another phone
                     </p>
                     <p className="mt-1 text-xs leading-5 text-emerald-800">
-                      Copy an encrypted resume link. The private CV data stays in the URL fragment, not server logs.
+                      Save this link to open your CV on another phone.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleCopyResumeLink}
                     disabled={resumeLinkStatus === "copying"}
-                    aria-label="Copy private resume link"
+                    aria-label="Copy link to continue on another phone"
                     className="min-h-11 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
                   >
                     {resumeLinkStatus === "copying"
@@ -339,7 +341,7 @@ export default function CVBuilder() {
                       ? "Link copied"
                       : resumeLinkStatus === "error"
                       ? "Try again"
-                      : "Copy Resume Link"}
+                      : "Copy link for another phone"}
                   </button>
                   <button
                     type="button"
@@ -454,21 +456,21 @@ export default function CVBuilder() {
             onClick={handleMobileBack}
             className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700"
           >
-            <span className="flex items-center gap-1.5"><ArrowLeft className="h-4 w-4" aria-hidden="true" />{t("nav.back")}</span>
+            <span className="flex items-center gap-1.5"><ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />{t("nav.back")}</span>
           </button>
           <button
             type="button"
             onClick={handleMobileNext}
             className="min-h-11 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
           >
-            <span className="flex items-center justify-center gap-2">Save and continue<ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+            <span className="flex items-center justify-center gap-2">Save and continue<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" /></span>
           </button>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-200 mt-12">
+      {state.step > 0 ? <footer className="py-8 text-center text-sm text-ink-muted"><a href="https://inspireambitions.com/career-tools/" className="underline">More free career tools</a></footer> : <footer className="bg-gray-900 text-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Brand */}
@@ -547,7 +549,7 @@ export default function CVBuilder() {
             </p>
           </div>
         </div>
-      </footer>
+      </footer>}
 
       <SaveToast />
     </div>

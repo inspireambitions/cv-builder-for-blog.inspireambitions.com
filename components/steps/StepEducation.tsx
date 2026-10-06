@@ -1,6 +1,7 @@
 "use client";
 
 import { useCVState } from "@/lib/state";
+import { getRoleExamples } from "@/lib/role-examples";
 import type { EduEntry, CertEntry } from "@/lib/types";
 
 function generateEduId() {
@@ -117,7 +118,7 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "degree", e.target.value)
                     }
-                    placeholder="e.g. BSc Computer Science"
+                  placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").education}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -133,7 +134,7 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "institution", e.target.value)
                     }
-                    placeholder="e.g. University of Manchester"
+                    placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").institution}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -166,7 +167,7 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "grade", e.target.value)
                     }
-                    placeholder="e.g. First Class Honours / 3.8 GPA"
+                    placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").grade}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -242,7 +243,7 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "name", e.target.value)
                       }
-                      placeholder="e.g. CIPD Level 7, PMP, AWS Solutions Architect"
+                      placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").education}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
@@ -258,7 +259,7 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "issuer", e.target.value)
                       }
-                      placeholder="e.g. PMI, CIPD, AWS"
+                      placeholder="Your training provider"
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
