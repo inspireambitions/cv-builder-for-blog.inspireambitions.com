@@ -16,9 +16,9 @@ Scope: brief 07 B5, C5 and preparation for R11. Step 4 has not started.
 
 ## Release gate: pending
 
-The brief names PostHog organisation Job Strike. The connected account exposes only Inspire Ambitions / Default project, project 253679. Kim must confirm this project or connect the intended organisation. No project events were read and no project configuration was changed.
+Kim approved Inspire Ambitions / Default project, project 253679, on 6 October 2026. This replaces the Job Strike target named in the brief. The project uses UTC. No project configuration has changed.
 
-The adapter remains disabled. Do not merge this step as complete or activate capture until the target, host and public project token have been checked. No public token belongs in chat.
+The project settings link confirms the EU region. Kim approved preview analytics; the three settings now target only the step 3 preview branch, using https://eu.i.posthog.com. Existing deployments do not change until a new build. Production remains disabled. Live ingestion verification is pending. Hosted CI still fails its unchanged speed limit at 2,591 ms, despite the local pass. No public token belongs in chat.
 
 Settings required after target confirmation:
 
@@ -32,7 +32,7 @@ Use the existing deployment settings. Do not hard-code credentials in source. Mi
 
 Status: not measured. This is not a zero per cent completion rate.
 
-No Google Analytics reporting connection is available in this session. The PostHog target remains unconfirmed. Existing source also lacked cv_exported and did not consistently emit tool_started for the direct homepage form path. Do not infer a valid historical funnel from those incomplete events.
+No Google Analytics reporting connection is available in this session. Kim confirmed the PostHog target, but the new capture adapter is not active. Existing source also lacked cv_exported and did not consistently emit tool_started for the direct homepage form path. Do not infer a valid historical funnel from those incomplete events.
 
 After activation, record distinct opted-in sessions with full_form_started, then cv_exported within 24 hours. Filter product=cv-builder and measurement_version=1. Record numerator, denominator, date range, project timezone and format. Include returning drafts in the stated cohort. Do not count full_form_completed as a download. That event means the review screen opened.
 

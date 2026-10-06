@@ -37,3 +37,4 @@ jobs:
             outputs/step-02/
             outputs/step-03/
             test-results/
+            .lighthouseci/latest-report.json
