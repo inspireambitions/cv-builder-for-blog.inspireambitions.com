@@ -2,12 +2,14 @@
 
 import type { CVState } from "./types";
 import { getCleanBuilderUrl } from "./clean-url";
+import { DRAFT_VERSION } from "./step-layout";
 
 const RESUME_HASH_KEY = "resume";
 const RESUME_LINK_VERSION = 1;
 
 type ResumeLinkPayload = {
   version: number;
+  stateVersion?: number;
   savedAt: string;
   state: CVState;
 };
@@ -48,6 +50,7 @@ export async function createResumeLink(state: CVState) {
   const key = await importAesKey(keyBytes, ["encrypt"]);
   const payload: ResumeLinkPayload = {
     version: RESUME_LINK_VERSION,
+    stateVersion: DRAFT_VERSION,
     savedAt: new Date().toISOString(),
     state: { ...state, score: null },
   };

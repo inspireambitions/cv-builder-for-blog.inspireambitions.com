@@ -103,7 +103,7 @@ export function computeGulfMatchScore(state: CVState, jobDescription: string, jo
   if (title < 10) gaps.push({ id: "title", label: "Target role alignment", reason: "Your headline and recent roles do not clearly match the vacancy title.", target: "personal", weight: 15 });
   if (requiredYears > candidateYears) gaps.push({ id: "years", label: `${requiredYears}+ years requested`, reason: "The vacancy asks for more experience than the dated roles currently show.", target: "experience", weight: 10 });
   for (const item of compliance.filter((entry) => !entry.met)) gaps.push({ id: `gcc-${item.label}`, label: item.label, reason: "This GCC detail is missing or not yet stated.", target: "personal", weight: 15 });
-  if (!state.summary.trim()) gaps.push({ id: "summary", label: "Professional summary", reason: "A focused summary helps recruiters understand your fit quickly.", target: "summary", weight: 10 });
+  if (!state.summary.trim()) gaps.push({ id: "summary", label: "About you (2 to 3 lines)", reason: "Name your work and skills to help recruiters understand your CV.", target: "summary", weight: 10 });
   gaps.sort((a, b) => b.weight - a.weight || a.label.localeCompare(b.label));
 
   const score = Math.max(0, Math.min(100, skills + title + years + credentials + gcc + ats));

@@ -10,10 +10,11 @@
     "lint": "eslint .",
     "check:perf": "node scripts/check-performance-budget.mjs",
     "check:free": "node scripts/check-free-product.mjs",
+    "check:plain": "node --test scripts/check-plain-language.test.mjs && node scripts/check-plain-language.mjs",
     "test:e2e": "playwright test",
     "test:email": "node scripts/test-email-migration.cjs",
     "test:lighthouse": "node scripts/run-lighthouse.mjs",
-    "ci": "npm run check:free && npm run test:email && npm run build && npm run check:perf && npm run test:e2e && npm run test:lighthouse"
+    "ci": "npm run check:free && npm run check:plain && npm run test:email && npm run build && npm run check:perf && npm run test:e2e && npm run test:lighthouse"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

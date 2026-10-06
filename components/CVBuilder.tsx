@@ -41,10 +41,10 @@ const STEP_I18N_KEY: Record<string, string> = {
 const STEP_COMPONENTS = [
   StepStart,
   StepPersonal,
-  StepSummary,
   StepExperience,
   StepEducation,
   StepSkills,
+  StepSummary,
   StepTemplate,
   StepExtras,
   StepScore,
@@ -65,6 +65,7 @@ export default function CVBuilder() {
     resetState,
     restoredAt,
     dismissRestoreBanner,
+    hydrated,
   } = useCVState();
   const { t, dir, locale } = useLocale();
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -73,6 +74,16 @@ export default function CVBuilder() {
   const [resumeLinkStatus, setResumeLinkStatus] = useState<
     "idle" | "copying" | "copied" | "error"
   >("idle");
+  const started = useRef(false);
+  useEffect(() => {
+    if (!hydrated || state.step === 0) return;
+    if (!started.current) {
+      started.current = true;
+      trackToolEvent("full_form_started", { lang: locale });
+    }
+    trackToolEvent("full_form_step_viewed", { stepKey: STEPS[state.step]?.key, lang: locale });
+    if (state.step === 8) trackToolEvent("full_form_completed", { lang: locale });
+  }, [hydrated, locale, state.step]);
 
   // Sync html dir/lang on mount & locale change
   useEffect(() => {

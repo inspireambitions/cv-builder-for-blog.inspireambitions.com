@@ -14,6 +14,7 @@ import { defaultCVState } from "./types";
 import { readResumeLinkFromHash, removeResumeHash } from "./resume-link";
 import React from "react";
 import { migrateExperienceDates } from "./experience-dates";
+import { DRAFT_VERSION, migrateStep } from "./step-layout";
 
 interface CVContextValue {
   state: CVState;
@@ -34,8 +35,7 @@ const CVContext = createContext<CVContextValue | null>(null);
 const STORAGE_KEY = "inspireambitions-cv-state";
 const DRAFTS_KEY = "inspireambitions-cv-drafts";
 const ACTIVE_DRAFT_ID_KEY = "inspireambitions-cv-active-draft-id";
-const STORAGE_VERSION = 7;
-const STEP_LAYOUT_VERSION = 5;
+const STORAGE_VERSION = DRAFT_VERSION;
 const DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface StoredDraft {
@@ -63,25 +63,10 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
     ? incomingTemplate as CVState["template"]
     : legacyTemplateMap[incomingTemplate] ?? defaultCVState.template;
 
-  const legacyStepMap: Record<number, number> = {
-    0: 0,
-    1: 6,
-    2: 1,
-    3: 2,
-    4: 3,
-    5: 4,
-    6: 5,
-    7: 7,
-    8: 8,
-  };
-  const incomingStep = typeof incoming.step === "number" ? incoming.step : 0;
-
   return {
     ...defaultCVState,
     ...incoming,
-    step: sourceVersion < STEP_LAYOUT_VERSION
-      ? legacyStepMap[incomingStep] ?? 0
-      : Math.max(0, Math.min(8, incomingStep)),
+    step: migrateStep(incoming.step, sourceVersion),
     mobilePersonalPage: Math.max(
       0,
       Math.min(2, typeof incoming.mobilePersonalPage === "number" ? incoming.mobilePersonalPage : 0)
@@ -89,7 +74,7 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
     template,
     templateConfirmed:
       incoming.templateConfirmed === true ||
-      (sourceVersion < STORAGE_VERSION && template !== defaultCVState.template),
+      (sourceVersion < 7 && template !== defaultCVState.template),
     cvLanguage: incoming.cvLanguage === "ar" ? "ar" : "en",
     photoPreference:
       incoming.photoPreference === "photo" || incoming.photoPreference === "photo-free"
@@ -210,7 +195,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       try {
         const linkedDraft = await readResumeLinkFromHash();
         if (linkedDraft && mounted) {
-          const linkedState = normalizeState(linkedDraft.state);
+          const linkedState = normalizeState(linkedDraft.state, linkedDraft.stateVersion ?? 7);
           if (linkedState) {
             setState(linkedState);
             latestState.current = linkedState;

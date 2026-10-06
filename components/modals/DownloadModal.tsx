@@ -155,6 +155,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         }
       }
       trackToolEvent("cv_download_completed", { format });
+      trackToolEvent("cv_exported", { format });
       if (!localStorage.getItem(REVIEW_PROMPT_KEY)) {
         localStorage.setItem(REVIEW_PROMPT_KEY, "shown");
         setShowReview(true);

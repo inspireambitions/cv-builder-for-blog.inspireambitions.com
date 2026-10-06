@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,10 +8,12 @@ import ThemeToggle from "@/components/shared/ThemeToggle";
 import { removeShareTrackingParams } from "@/lib/clean-url";
 
 const BuilderShell = dynamic(() => import("@/components/BuilderShell"));
+const subscribeToReady = () => () => {};
 
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [resumeExisting, setResumeExisting] = useState(false);
+  const interactive = useSyncExternalStore(subscribeToReady, () => true, () => false);
 
   useEffect(() => {
     const hasDraft = Boolean(localStorage.getItem("inspireambitions-cv-state"));
@@ -45,13 +47,14 @@ export default function Home() {
           Create, check and download a recruiter-ready CV. No card, no trial and no surprise payment.
         </p>
         <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
-          <button type="button" onClick={() => setStarted(true)} className="min-h-12 bg-gold-600 px-6 py-3 font-semibold text-white hover:bg-gold-700">
+          <button type="button" disabled={!interactive} onClick={() => setStarted(true)} className="min-h-12 bg-gold-600 px-6 py-3 font-semibold text-white hover:bg-gold-700 disabled:cursor-wait">
             Build My CV
           </button>
-          <button type="button" onClick={() => setStarted(true)} className="min-h-12 border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-900 hover:bg-gray-50">
+          <button type="button" disabled={!interactive} onClick={() => setStarted(true)} className="min-h-12 border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-900 hover:bg-gray-50 disabled:cursor-wait">
             I already have a CV
           </button>
         </div>
+        <noscript>Turn on JavaScript to build your CV.</noscript>
         <div className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-gray-600">
           <span>Free forever</span><span>No credit card</span><span>GCC-ready</span><span>Private by design</span>
         </div>

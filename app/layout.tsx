@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond } from "next/font/google";
 import DeferredAnalytics from "@/components/shared/DeferredAnalytics";
+import UsagePreference from "@/components/shared/UsagePreference";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -65,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-gray-50"><DeferredAnalytics />{children}</body>
+      <body className="min-h-screen bg-gray-50"><DeferredAnalytics />{children}<UsagePreference /></body>
     </html>
   );
 }

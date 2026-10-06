@@ -1,7 +1,7 @@
 export const COMPARISONS = {
   zety: {
     name: "Zety",
-    summary: "Zety offers a guided global resume builder. Inspire Ambitions focuses on free Gulf-ready CVs, evidence controls and an ungated JPEG option.",
+    summary: "Zety offers a guided global resume builder. Inspire Ambitions offers free Gulf-ready CVs and picture downloads with no email step.",
     source: "https://zety.com/pricing",
     sourceLabel: "Zety pricing",
     fact: "Zety's official pricing page lists TXT downloads in its free package and multiple-format downloads in paid packages.",

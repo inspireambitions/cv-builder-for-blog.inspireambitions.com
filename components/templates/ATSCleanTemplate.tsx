@@ -71,7 +71,7 @@ export default function ATSCleanTemplate({ state }: { state: CVState }) {
       <main style={{ padding: "3px 52px 40px" }}>
         {state.summary.trim() && (
           <section style={{ marginBlockEnd: 14 }}>
-            <SectionHeading rtl={rtl}>{state.cvLanguage === "en" ? "Professional Summary" : labels.summary}</SectionHeading>
+            <SectionHeading rtl={rtl}>{state.cvLanguage === "en" ? "Summary" : labels.summary}</SectionHeading>
             <p>{state.summary}</p>
           </section>
         )}

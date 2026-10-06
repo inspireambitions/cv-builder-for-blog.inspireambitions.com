@@ -71,7 +71,7 @@ export default function Gulf({ state }: { state: CVState }) {
           {/* Summary */}
           {summary.trim() && (
             <section style={{ marginBottom: 22 }}>
-              <GulfHeading>Professional Summary</GulfHeading>
+              <GulfHeading>Summary</GulfHeading>
               <p style={{ fontSize: 14, lineHeight: 1.6, color: "#333" }}>{summary}</p>
             </section>
           )}
