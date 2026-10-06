@@ -10,6 +10,7 @@ async function openDesignStep(page: import("@playwright/test").Page) {
   } else {
     for (let index = 0; index < 5; index += 1) await page.getByRole("button", { name: /Next Step/ }).click();
   }
+  await expect(page.getByRole("heading", { name: "Choose your CV design", exact: true })).toBeVisible();
 }
 
 test("all ten templates and five UI languages are available", async ({ page }) => {
