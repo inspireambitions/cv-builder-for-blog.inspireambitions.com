@@ -19,14 +19,14 @@ test("all ten templates and five UI languages are available", async ({ page }) =
   await expect(language.locator("option")).toHaveCount(5);
   const showAll = page.getByRole("button", { name: "See all CV designs" });
   if (await showAll.isVisible()) await showAll.click();
-  for (const name of ["ATS Clean", "Classic GCC", "Site", "Service", "Care", "Ledger", "Crew", "Stack", "Move", "Corner"]) await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
+  for (const name of ["Clear", "Classic GCC", "Site", "Service", "Care", "Ledger", "Crew", "Stack", "Move", "Corner"]) await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();
 });
 
-test("ATS Clean renders a centred, photo-free, single-column document", async ({ page }) => {
+test("Clear renders a centred, photo-free, single-column document", async ({ page }) => {
   await openDesignStep(page);
   const showAll = page.getByRole("button", { name: "See all CV designs" });
   if (await showAll.isVisible()) await showAll.click();
-  await page.getByRole("button", { name: /ATS Clean/ }).click();
+  await page.getByRole("button", { name: /Clear/ }).click();
   const previewButton = page.getByRole("button", { name: "Preview CV", exact: true });
   if (await previewButton.isVisible()) await previewButton.click();
   const document = page.locator('#cv-render[data-template="ats-clean"]:visible');

@@ -22,8 +22,8 @@ for (const locale of ["en", "ar", "ur"] as const) {
     const restore = page.getByRole("button", { name: "Continue", exact: true });
     if (await restore.isVisible()) await restore.click();
     await page.getByRole("button", { name: "Download my CV", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Download JPEG, no email" })).toBeEnabled();
-    await expect(page.getByText("JPEG is instant with no email.", { exact: false })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Download picture, no email" })).toBeEnabled();
+    await expect(page.getByText("Pictures download with no email.", { exact: false })).toBeVisible();
     await mkdir("outputs/step-01", { recursive: true });
     await page.screenshot({ path: `outputs/step-01/download-${locale}-360.png`, fullPage: true });
   });

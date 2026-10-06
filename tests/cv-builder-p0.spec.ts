@@ -19,7 +19,7 @@ test("removes Google linker tracking from shared URLs", async ({ page }) => {
   await expect.poll(() => new URL(page.url()).search).toBe("");
 
   await page.getByRole("button", { name: /Build My CV/ }).click();
-  await page.getByRole("button", { name: "Copy private resume link" }).click();
+  await page.getByRole("button", { name: "Copy link to continue on another phone" }).click();
 
   const resumeLink = await page.evaluate(
     () => (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink
@@ -68,14 +68,14 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
     .getByPlaceholder("e.g. Sarah Al-Mansoori")
     .fill("Mariam Hassan");
   await page
-    .getByPlaceholder("e.g. Senior Project Manager")
+    .getByPlaceholder("e.g. Room Attendant")
     .fill("F&B Supervisor");
   await page
     .getByPlaceholder("firstname.lastname@gmail.com")
     .fill("mariam.hassan@example.com");
   await page.getByLabel("Visa Status").selectOption("Employment");
   await page.getByPlaceholder("e.g. Immediate, 30 days").fill("Immediate");
-  await page.getByLabel("NOC Available").selectOption("Yes");
+  await page.getByLabel("Letter from your sponsor allowing you to change job (NOC)").selectOption("Yes");
   await page.getByPlaceholder("Start typing or skip").fill("Philippines");
   await page.getByLabel("Arabic Proficiency").selectOption("Conversational");
   await page.getByRole("button", { name: "RERA" }).click();
@@ -97,10 +97,10 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   await expect(page.getByPlaceholder("e.g. Sarah Al-Mansoori")).toHaveValue(
     "Mariam Hassan"
   );
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
-  await page.getByRole("button", { name: "Copy private resume link" }).click();
-  await expect(page.getByRole("button", { name: "Copy private resume link" })).toContainText("Link copied");
+  await page.getByRole("button", { name: "Copy link to continue on another phone" }).click();
+  await expect(page.getByRole("button", { name: "Copy link to continue on another phone" })).toContainText("Link copied");
   const resumeLink = await page.evaluate(
     () => (window as unknown as { __copiedResumeLink?: string }).__copiedResumeLink
   );
@@ -119,7 +119,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   }
 
   await expect(
-    page.getByText(/There is no card and no watermark/)
+    page.getByRole("heading", { name: /Almost there:/ })
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Move from CV review to interview preparation" })
@@ -136,23 +136,23 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   ).toBe(true);
   await page.getByRole("button", { name: "Download my CV" }).click();
   await expect(page.getByRole("button", { name: "Unlock and Download PDF" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Download JPEG, no email/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Download picture, no email/ })).toBeVisible();
   await page.getByLabel("Email address").fill("mariam.hassan@example.com");
   const initialPdf = page.waitForEvent("download");
   await page.getByRole("button", { name: "Unlock and Download PDF" }).click();
   await initialPdf;
-  await expect(page.getByRole("button", { name: "Download ATS-safe PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download PDF for company computers" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download Recruiter-ready PDF" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "ATS Word (.docx)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Word (if a company wants to edit it)" })).toBeVisible();
 
   const pdfDownloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download ATS-safe PDF" }).click();
+  await page.getByRole("button", { name: "Download PDF for company computers" }).click();
   const pdfDownload = await pdfDownloadPromise;
   expect(pdfDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV_ATS\.pdf$/);
   await mkdir("test-results/cv-builder-p0", { recursive: true });
   const pdfPath = "test-results/cv-builder-p0/mariam-hassan.pdf";
   await pdfDownload.saveAs(pdfPath);
-  await expect(page.getByText("Finished-PDF ATS check")).toBeVisible();
+  await expect(page.getByText("Company computer reading check")).toBeVisible();
   await expect(page.getByText(/Readable text layer/)).toBeVisible();
   const parser = new PDFParse({ data: await readFile(pdfPath) });
   const parsedPdf = await parser.getText();
@@ -161,7 +161,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   expect(parsedPdf.text).toContain("Visa: Employment");
 
   const wordDownloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "ATS Word (.docx)" }).click();
+  await page.getByRole("button", { name: "Word (if a company wants to edit it)" }).click();
   const wordDownload = await wordDownloadPromise;
   expect(wordDownload.suggestedFilename()).toMatch(/InspireAmbitions_CV_ATS\.docx$/);
   const wordPath = "test-results/cv-builder-p0/mariam-hassan.docx";

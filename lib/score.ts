@@ -90,7 +90,7 @@ function scoreSummary(state: CVState): ScoreCriterion {
   if (len > 200) s = 8;
   else if (len > 100) s = 5;
   else if (len > 30) s = 2;
-  return { score: s, max: 8, level: level(s, 8), label: "Professional Summary", tip: s < 8 ? "Write a 3-4 sentence summary highlighting your top achievements and what you bring to a Gulf employer." : undefined };
+  return { score: s, max: 8, level: level(s, 8), label: "About you (2 to 3 lines)", tip: s < 8 ? "Write a 3-4 sentence summary highlighting your top achievements and what you bring to a Gulf employer." : undefined };
 }
 
 function scoreExperience(state: CVState): ScoreCriterion {
@@ -239,7 +239,7 @@ function scoreLinkedin(state: CVState): ScoreCriterion {
 function scoreProfessionalTitle(state: CVState): ScoreCriterion {
   const has = state.personal.title.trim().length > 0;
   const s = has ? 5 : 0;
-  return { score: s, max: 5, level: level(s, 5), label: "Professional Title", tip: s < 5 ? "Add a clear job title (e.g. 'Senior HR Business Partner'). ATS systems parse this field." : undefined };
+  return { score: s, max: 5, level: level(s, 5), label: "Professional Title", tip: s < 5 ? "Add a clear job title (e.g. 'Senior HR Business Partner'). Company computers parse this field." : undefined };
 }
 
 function scoreSummaryKeywords(state: CVState): ScoreCriterion {
@@ -249,13 +249,13 @@ function scoreSummaryKeywords(state: CVState): ScoreCriterion {
   if (words.length >= 40) s = 5;
   else if (words.length >= 20) s = 3;
   else if (words.length >= 5) s = 1;
-  return { score: s, max: 5, level: level(s, 5), label: "Summary Depth", tip: s < 5 ? "Expand your summary to 40+ words. ATS systems extract keywords from this section first." : undefined };
+  return { score: s, max: 5, level: level(s, 5), label: "Summary Depth", tip: s < 5 ? "Expand your summary to 40+ words. Company computers extract keywords from this section first." : undefined };
 }
 
 function atsFormattingLayer(state: CVState): ScoreLayer {
   const criteria = [scoreLinkedin(state), scoreProfessionalTitle(state), scoreSummaryKeywords(state)];
   const total = criteria.reduce((a, c) => a + c.score, 0);
-  return { label: "ATS & Formatting", score: total, max: 15, criteria };
+  return { label: "Computer readability", score: total, max: 15, criteria };
 }
 
 /* ââââââââââââââââââââââââââââââââââââââââââ
@@ -301,4 +301,16 @@ export function calculateScore(state: CVState): ScoreResult {
     breakdown,
     topTips,
   };
+}
+
+export function getMissingCVItems(state: CVState) {
+  const missing: { key: string; label: string; step: number }[] = [];
+  if (!state.personal.name.trim()) missing.push({ key: "name", label: "Add your name", step: 1 });
+  if (state.personal.phone.replace(/\D/g, "").length < 7 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.personal.email.trim())) {
+    missing.push({ key: "contact", label: "Add a phone number or email", step: 1 });
+  }
+  if (!state.experience.some((entry) => entry.role.trim() && (entry.company.trim() || entry.companyDesc.trim()) && entry.description.trim())) {
+    missing.push({ key: "job", label: "Add one job and your duties", step: 3 });
+  }
+  return missing;
 }

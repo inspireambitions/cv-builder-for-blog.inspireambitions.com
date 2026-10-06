@@ -48,7 +48,7 @@ const DEFAULT_FEEDBACK: FeedbackItem[] = [
 
 const FEEDBACK_SECTION_TITLES = [
   "Header Section",
-  "Professional Summary",
+  "About you (2 to 3 lines)",
   "Experience Section",
   "Skills Section",
   "Format & Structure",
@@ -65,7 +65,7 @@ const TEMPLATES: {
   badge?: string;
   photo: string;
 }[] = [
-  { key: "ats-clean", name: "ATS Clean", bestFor: "Text-first applications and ATS uploads", badge: "New", photo: "Hidden" },
+  { key: "ats-clean", name: "Clear", bestFor: "Text-first applications and company applications", badge: "New", photo: "Hidden" },
   { key: "classic", name: "Classic GCC", bestFor: "Most UAE and Gulf applications", badge: "GCC-first", photo: "Optional" },
   { key: "site", name: "Site", bestFor: "Construction and engineering", photo: "Optional" },
   { key: "service", name: "Service", bestFor: "Hospitality and F&B", photo: "Prominent" },
@@ -94,7 +94,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Free PDF & Word Export",
-    desc: "Email-gated ATS-safe PDF and editable Word files. No watermark. No credit card.",
+    desc: "Free PDF and editable Word downloads after one email unlock. No watermark. No credit card.",
   },
   {
     icon: (
@@ -556,7 +556,7 @@ export default function StepStart() {
 
         {/* Subheadline */}
         <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Build a clear, evidence-led CV for UAE and international roles. Free ATS-safe PDF and Word export by email. No watermark. No credit card.
+          Build a clear, evidence-led CV for UAE and international roles. Free PDF and Word downloads after one email unlock. No watermark. No credit card.
         </p>
 
         {/* CTAs */}
@@ -574,7 +574,7 @@ export default function StepStart() {
               disabled={!hydrated}
               className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all disabled:cursor-wait disabled:opacity-60"
             >
-              Upload &amp; Tailor to a Job
+              I already have a CV
             </button>
           </div>
         )}
@@ -704,7 +704,7 @@ export default function StepStart() {
                   <p className="mt-1 min-h-10 text-xs leading-5 text-gray-500">Best for: {t.bestFor}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase text-gray-600">
                     <span className="rounded-full bg-gray-100 px-2 py-1">Photo: {t.photo}</span>
-                    <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">ATS-safe</span>
+                    <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">easy for company computers to read</span>
                   </div>
                 </div>
               </button>

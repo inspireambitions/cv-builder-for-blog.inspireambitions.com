@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCVState } from "@/lib/state";
 import { LANGUAGE_LEVELS } from "@/lib/constants";
 import type { LangEntry } from "@/lib/types";
+import { getRoleExamples } from "@/lib/role-examples";
 
 function generateLangId() {
   return "lang-" + Math.random().toString(36).slice(2, 9);
@@ -90,7 +91,8 @@ export default function StepSkills() {
             value={skillInput}
             onChange={(e) => setSkillInput(e.target.value)}
             onKeyDown={handleSkillKeyDown}
-            placeholder="e.g. Stakeholder Management"
+            aria-label="Add a skill"
+            placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").skill}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
           />
           <button
@@ -233,10 +235,8 @@ export default function StepSkills() {
           HR Career Specialist Tip
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          Mirror the exact keywords from the job description. If the posting
-          says &ldquo;stakeholder management&rdquo;, use that exact phrase instead of
-          &ldquo;managing stakeholders&rdquo;. ATS systems match keywords
-          literally.
+          Use the job advert&apos;s words only when they describe your skills.
+          Do not add skills you do not have.
         </p>
       </div>
     </div>

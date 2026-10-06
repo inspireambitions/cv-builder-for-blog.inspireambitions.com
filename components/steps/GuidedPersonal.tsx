@@ -151,7 +151,7 @@ export default function GuidedPersonal() {
                 <input value={personal.driving_license} onChange={(event) => updatePersonal({ driving_license: event.target.value })} placeholder="For example, UAE light vehicle" className={inputClass} />
               </label>
               <label className="block text-sm font-semibold">
-                NOC available
+                Letter from your sponsor allowing you to change job (NOC)
                 <select value={personal.noc_available} onChange={(event) => updatePersonal({ noc_available: event.target.value as typeof personal.noc_available })} className={inputClass}>
                   {NOC_OPTIONS.map((option) => <option key={option || "blank"} value={option}>{option || "Leave blank"}</option>)}
                 </select>

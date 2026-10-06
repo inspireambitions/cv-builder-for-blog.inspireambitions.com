@@ -86,7 +86,7 @@ export default function StepTemplate() {
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase">
                   <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">{photoRules[tpl.key]}</span>
-                  <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">ATS-safe</span>
+                  <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">easy for company computers to read</span>
                 </div>
               </div>
             </button>
