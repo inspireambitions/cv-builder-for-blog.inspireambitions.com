@@ -195,6 +195,8 @@ export interface ScoreResult {
 /* ââ CV state ââ */
 
 export interface CVState {
+  builderMode?: "full" | "talk";
+  talk?: import("./talk-flow").TalkProgress;
   step: number;
   mobilePersonalPage: number;
   template: TemplateType;

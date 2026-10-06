@@ -40,3 +40,31 @@ jobs:
             outputs/step-03/
             test-results/
             .lighthouseci/latest-report.json
+  talk-mode:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_POSTHOG_ENABLED: "true"
+      NEXT_PUBLIC_TALK_MODE: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check:free
+      - run: npm run check:plain
+      - run: npm run test:email
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run check:perf
+      - run: npx playwright test tests/step-04-talk.spec.ts
+      - name: Save Talk Mode evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cv-builder-talk-mode-evidence
+          path: |
+            outputs/step-04/
+            test-results/

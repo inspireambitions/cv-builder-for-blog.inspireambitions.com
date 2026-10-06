@@ -15,6 +15,7 @@ import { readResumeLinkFromHash, removeResumeHash } from "./resume-link";
 import React from "react";
 import { migrateExperienceDates } from "./experience-dates";
 import { DRAFT_VERSION, migrateStep } from "./step-layout";
+import { normalizeTalk } from "./talk-flow";
 
 interface CVContextValue {
   state: CVState;
@@ -67,6 +68,8 @@ function normalizeState(value: unknown, sourceVersion = STORAGE_VERSION): CVStat
     ...defaultCVState,
     ...incoming,
     step: migrateStep(incoming.step, sourceVersion),
+    builderMode: incoming.builderMode === "talk" ? "talk" : "full",
+    talk: normalizeTalk(incoming.talk, Array.isArray(incoming.experience) ? incoming.experience : defaultCVState.experience),
     mobilePersonalPage: Math.max(
       0,
       Math.min(2, typeof incoming.mobilePersonalPage === "number" ? incoming.mobilePersonalPage : 0)

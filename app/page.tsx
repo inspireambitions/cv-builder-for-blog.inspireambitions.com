@@ -6,12 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 import { removeShareTrackingParams } from "@/lib/clean-url";
+import { TALK_MODE_ENABLED } from "@/lib/talk-flow";
 
 const BuilderShell = dynamic(() => import("@/components/BuilderShell"));
 const subscribeToReady = () => () => {};
 
 export default function Home() {
   const [started, setStarted] = useState(false);
+  const [entryMode, setEntryMode] = useState<"full" | "talk" | "upload">("full");
   const [resumeExisting, setResumeExisting] = useState(false);
   const interactive = useSyncExternalStore(subscribeToReady, () => true, () => false);
 
@@ -28,7 +30,7 @@ export default function Home() {
     }
   }, []);
 
-  if (started) return <BuilderShell startImmediately={!resumeExisting} />;
+  if (started) return <BuilderShell startImmediately={!resumeExisting} entryMode={entryMode} />;
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -46,14 +48,18 @@ export default function Home() {
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-gray-600">
           Create, check and download a recruiter-ready CV. No card, no trial and no surprise payment.
         </p>
-        <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+        {TALK_MODE_ENABLED ? <div className="mt-8 grid w-full max-w-md gap-3">
+          <button disabled={!interactive} className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white" onClick={() => { setEntryMode("talk"); setStarted(true); }}>Answer simple questions<span className="block text-sm">Recommended</span></button>
+          <button disabled={!interactive} className="min-h-12 rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-ink" onClick={() => { setEntryMode("upload"); setStarted(true); }}>I already have a CV</button>
+          <button disabled={!interactive} className="min-h-12 rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-ink" onClick={() => { setEntryMode("full"); setStarted(true); }}>Fill in the full form</button>
+        </div> : <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
           <button type="button" disabled={!interactive} onClick={() => setStarted(true)} className="min-h-12 bg-gold-600 px-6 py-3 font-semibold text-white hover:bg-gold-700 disabled:cursor-wait">
             Build My CV
           </button>
           <button type="button" disabled={!interactive} onClick={() => setStarted(true)} className="min-h-12 border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-900 hover:bg-gray-50 disabled:cursor-wait">
             I already have a CV
           </button>
-        </div>
+        </div>}
         <noscript>Turn on JavaScript to build your CV.</noscript>
         <div className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-gray-600">
           <span>Free forever</span><span>No credit card</span><span>GCC-ready</span><span>Private by design</span>

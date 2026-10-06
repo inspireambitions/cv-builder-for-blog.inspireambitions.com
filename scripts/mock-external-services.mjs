@@ -83,6 +83,14 @@ const server = createServer(async (request, response) => {
 
   if (request.method === "POST" && url.pathname === "/v1/messages") {
     const body = await readJson(request);
+    if (body.tools?.some((tool) => tool.name === "save_cv_lines")) {
+      const payload = JSON.parse(body.messages[0].content);
+      if (payload.metadata.jobTitle === "Fixture outage") return send(response, 503, { error: { type: "overloaded_error", message: "Simulated outage" } });
+      const lines = payload.metadata.jobTitle === "Fixture unsupported"
+        ? [{ text: "Cleaned 40 rooms at Marriott with a HACCP certificate.", source: "Cleaned rooms." }, { text: "Changed towels.", source: "Changed towels." }, { text: "Cleaned rooms.", source: "Cleaned rooms." }]
+        : [{ text: "Cleaned rooms.", source: "Cleaned rooms." }, { text: "Changed towels.", source: "Changed towels." }];
+      return send(response, 200, { id: "msg_talk_test", type: "message", role: "assistant", model: body.model, content: [{ type: "tool_use", id: "toolu_talk", name: "save_cv_lines", input: { lines } }], stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 20, output_tokens: 20 } });
+    }
     const serialised = JSON.stringify(body.messages || []);
     const marker = serialised.includes("STRUCTURED_RETRY_TEST")
       ? "structured-retry"

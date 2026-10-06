@@ -248,6 +248,21 @@ export function getRoleSuggestionGroup(role: string, targetRole = "") {
   return GROUPS.find((group) => group.matches.test(value)) ?? GENERAL_ROLE_SUGGESTIONS;
 }
 
+// A shared library, not a second set of CV facts. Candidates choose each line.
+export function getRoleFamilies() {
+  return [...GROUPS, GENERAL_ROLE_SUGGESTIONS];
+}
+
+export function getTalkSentences(key: string) {
+  const family = getRoleFamilies().find((group) => group.key === key) ?? GENERAL_ROLE_SUGGESTIONS;
+  return [...new Set([...family.sentences,
+    "Checked my work and corrected mistakes before finishing.",
+    "Kept the next shift informed about unfinished tasks.",
+    "Asked my supervisor for help when a task was unclear.",
+    "Helped new team members learn their daily tasks.",
+  ])];
+}
+
 export function appendExperienceSentence(current: string, sentence: string) {
   const lines = current
     .split("\n")
