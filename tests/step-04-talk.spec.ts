@@ -20,6 +20,10 @@ test("Talk evidence rejects new numbers, employers, certificates and duties", ()
   expect(isTalkTextGrounded("Cleaned rooms.", source)).toBe(true);
   expect(isTalkTextGrounded("Cleaned rooms.", "Did not clean rooms.")).toBe(false);
   expect(isTalkTextGrounded("Cleaned 30 rooms.", "Cleaned 300 rooms.")).toBe(false);
+  expect(isTalkTextGrounded("Managed 5 rooms.", "Managed 30 rooms and trained 5 staff.")).toBe(false);
+  expect(isTalkTextGrounded("Trained 30 staff.", "Managed 30 rooms and trained 5 staff.")).toBe(false);
+  expect(isTalkTextGrounded("Managed 30 staff.", "Managed 30 rooms and trained 5 staff.")).toBe(false);
+  expect(isTalkTextGrounded("I worked.", "English.")).toBe(false);
 });
 test("branching progress follows jobs and dates, and restoration is bounded", () => {
   const state = structuredClone(defaultCVState);
