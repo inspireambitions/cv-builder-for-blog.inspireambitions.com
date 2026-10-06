@@ -20,6 +20,7 @@ AI routes whitelist the submitted work fields, reject unsupported vocabulary and
 - AI-off flows produced valid JPEG, PDF and Word files on mobile and desktop. PDF and Word content was parsed. JPEG pixels were inspected.
 - Back, refresh, switching to Full form, adding another job and approving AI suggestions passed.
 - Screenshots cover 24 screens at 360px in English, Arabic layout and Urdu layout. Arabic and Urdu questions are still English.
+- Final enabled run: 17 tests passed, three desktop duplicates of the mobile screenshot matrix skipped. Every mobile screen passed axe checks for serious and critical WCAG findings. Full form also passed the width check with Talk Mode enabled.
 - Model responses in these tests use a local mock. Live provider feedback has not been verified in this step. No external email was sent.
 
 The fallback reuses buildPlainSummary and omits guessed years or country totals. Unsupported AI rewrites fall back to candidate-selected sentences. Real-user completion remains unmeasured.
