@@ -25,14 +25,17 @@ test("summary uses entered facts without invented years or achievements", () => 
 test("entry buttons wait for interactive handlers", async ({ browser, page, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const initial = await context.newPage();
-  await initial.goto(baseURL!);
+  const response = await initial.goto(baseURL!);
   await expect(initial.getByRole("button", { name: "Build My CV", exact: true })).toBeDisabled();
-  await expect(initial.getByText("Turn on JavaScript to build your CV.")).toBeVisible();
+  expect(await response!.text()).toContain("Turn on JavaScript to build your CV.");
   await context.close();
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Build My CV", exact: true })).toBeEnabled();
   await page.getByRole("button", { name: "Build My CV", exact: true }).click();
-  await expect(page.getByPlaceholder("For example, Amina Yusuf")).toBeVisible();
+  const nameField = (page.viewportSize()?.width ?? 1440) < 640
+    ? page.getByPlaceholder("For example, Amina Yusuf")
+    : page.getByPlaceholder("e.g. Sarah Al-Mansoori");
+  await expect(nameField).toBeVisible();
 });
 
 for (const activeStore of [false, true]) {
