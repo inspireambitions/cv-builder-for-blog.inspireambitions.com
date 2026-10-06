@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import lighthouse from "lighthouse";
 import { launch } from "chrome-launcher";
@@ -62,6 +62,7 @@ try {
   if (!result) throw new Error("Lighthouse returned no result.");
 
   const report = result.lhr;
+  await writeFile(join(root, ".lighthouseci", "latest-report.json"), JSON.stringify(report));
   const values = {
     performance: report.categories.performance.score ?? 0,
     accessibility: report.categories.accessibility.score ?? 0,

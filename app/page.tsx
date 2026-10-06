@@ -59,7 +59,7 @@ export default function Home() {
           <span>Free forever</span><span>No credit card</span><span>GCC-ready</span><span>Private by design</span>
         </div>
         <figure className="mt-10 w-full max-w-sm">
-          <Image src="/samples/room-attendant.webp" width={794} height={1123} sizes="(max-width: 640px) 85vw, 384px" alt="Finished fictional room attendant CV in the Service design" className="h-auto w-full shadow-raised" />
+          <Image src="/samples/room-attendant.webp" preload width={794} height={1123} sizes="(max-width: 640px) 85vw, 384px" alt="Finished fictional room attendant CV in the Service design" className="h-auto w-full shadow-raised" />
           <figcaption className="mt-3 text-sm text-ink-muted">Fictional sample CV. Your CV uses your own facts.</figcaption>
         </figure>
       </section>

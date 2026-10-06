@@ -40,6 +40,10 @@ Only sessions that opted in before opening the form belong in this baseline. The
 
 ## Evidence
 
+Final local verification on 6 October 2026 passed: full CI, 126 browser tests with 10 intentional skips, two plain-language guard tests, eight email migration scenarios, production build and asset budgets. Lint has zero errors and three existing image warnings. The first-screen sample image now preloads. Lighthouse reported performance 100, accessibility 100, LCP 1,888 ms, CLS 0 and TBT 60 ms. The thresholds remain unchanged. Lighthouse saves its diagnostic report in .lighthouseci/latest-report.json.
+
+These results cover the local release candidate. Hosted checks must finish before merge. Production remains unchanged and the analytics release gate below remains open.
+
 Tests cover every old step index, active draft lists, refresh, old private links, saved design confirmation, generated profile facts and edits, all planned capture events, disabled capture, denied consent, unsupported hosts and transport failures.
 
 360-pixel profile captures use English, Arabic and Urdu settings. Full translation remains step 5. These captures check layout and direction, not completed translation.
