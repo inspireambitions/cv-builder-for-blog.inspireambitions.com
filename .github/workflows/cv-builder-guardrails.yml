@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:free
+      - run: npm run check:plain
       - run: npm run test:email
       - run: npx playwright install --with-deps chromium
       - name: Pin Lighthouse to Playwright Chromium
@@ -34,4 +35,6 @@ jobs:
           path: |
             outputs/step-01/
             outputs/step-02/
+            outputs/step-03/
             test-results/
+            .lighthouseci/latest-report.json

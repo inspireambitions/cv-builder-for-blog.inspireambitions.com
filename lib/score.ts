@@ -310,7 +310,7 @@ export function getMissingCVItems(state: CVState) {
     missing.push({ key: "contact", label: "Add a phone number or email", step: 1 });
   }
   if (!state.experience.some((entry) => entry.role.trim() && (entry.company.trim() || entry.companyDesc.trim()) && entry.description.trim())) {
-    missing.push({ key: "job", label: "Add one job and your duties", step: 3 });
+    missing.push({ key: "job", label: "Add one job and your duties", step: 2 });
   }
   return missing;
 }

@@ -61,7 +61,7 @@ export default function Corporate({ state }: { state: CVState }) {
           {/* Summary */}
           {summary.trim() && (
             <section style={{ marginBottom: 22 }}>
-              <SectionHeading>Professional Summary</SectionHeading>
+              <SectionHeading>Summary</SectionHeading>
               <p style={{ fontSize: 14, lineHeight: 1.6, color: "#333" }}>{summary}</p>
             </section>
           )}

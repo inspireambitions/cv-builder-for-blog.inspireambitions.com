@@ -1,9 +1,10 @@
 "use client";
+import { captureMeasurement, type MeasurementDetails } from "./measurement";
 
 const DEFAULT_SOURCE = "cv-builder";
 const DEFAULT_TOOL = "CV Builder";
 
-type EventDetails = {
+type EventDetails = MeasurementDetails & {
   source?: string;
   tool?: string;
   surface?: string;
@@ -21,6 +22,7 @@ type AnalyticsWindow = Window & {
 
 export function trackToolEvent(eventName: string, details: EventDetails = {}) {
   if (typeof window === "undefined") return;
+  captureMeasurement(eventName, details);
 
   const win = window as AnalyticsWindow;
   const payload = {

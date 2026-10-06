@@ -22,7 +22,7 @@ test("mobile candidates can add and edit role wording", async ({ page }) => {
   await page.getByLabel("Target job").fill("Cruise Ship Kitchen Steward");
   await page.getByRole("button", { name: "Save and continue" }).click();
   await page.getByRole("button", { name: "Save and continue" }).click();
-  await page.getByRole("button", { name: "Save and continue" }).click();
+  await expect(page.getByRole("heading", { name: "Work Experience", exact: true })).toBeVisible();
 
   await page.getByLabel("Job Title").fill("Kitchen Steward");
   await expect(page.getByText("Suggested wording for Kitchen steward")).toBeVisible();

@@ -1,34 +1,39 @@
 "use client";
 
 import { useCVState } from "@/lib/state";
+import { useEffect, useRef } from "react";
+import { buildPlainSummary } from "@/lib/plain-summary";
 
 const PROMPTS = [
   {
-    label: "Who are you professionally?",
+    label: "What work do you do?",
     starter:
-      "I am a [Your Title] with [X] years of experience in [Industry]. ",
+      "I work as a ",
   },
   {
-    label: "What is your biggest achievement?",
+    label: "What did you improve?",
     starter:
-      "My most significant achievement was [describe outcome], where I [action taken] resulting in [measurable impact]. ",
+      "At work, I helped to ",
   },
   {
-    label: "What role are you targeting?",
+    label: "What work do you want?",
     starter:
-      "I am seeking a [Target Role] position where I can leverage my expertise in [Key Skills] to [Value Proposition]. ",
+      "I am looking for work as a ",
   },
 ];
 
 export default function StepSummary() {
   const { state, updateField } = useCVState();
   const charCount = state.summary.length;
-
-  function getCounterColor() {
-    if (charCount < 100) return "text-red-600";
-    if (charCount < 300) return "text-amber-600";
-    return "text-green-600";
-  }
+  const initialised = useRef(false);
+  useEffect(() => {
+    if (initialised.current) return;
+    initialised.current = true;
+    if (!state.summary.trim()) {
+      const summary = buildPlainSummary(state);
+      if (summary) updateField({ summary });
+    }
+  }, [state, updateField]);
 
   function insertPrompt(starter: string) {
     const current = state.summary;
@@ -59,7 +64,7 @@ export default function StepSummary() {
               {prompt.label}
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Click to insert starter text
+              Tap to add a sentence starter
             </p>
           </button>
         ))}
@@ -75,11 +80,11 @@ export default function StepSummary() {
           className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow resize-y"
         />
         <div className="flex items-center justify-between mt-2">
-          <p className={`text-sm font-medium ${getCounterColor()}`}>
+          <p className="text-sm font-medium text-gray-600">
             {charCount} characters
           </p>
           <p className="text-sm text-gray-500">
-            Aim for 300 to 600 characters
+            Keep it clear and true
           </p>
         </div>
       </div>

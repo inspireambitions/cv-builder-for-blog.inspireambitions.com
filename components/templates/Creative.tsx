@@ -108,7 +108,7 @@ export default function Creative({ state }: { state: CVState }) {
         {/* Summary */}
         {summary.trim() && (
           <section style={{ marginBottom: 22 }}>
-            <MainHeading>Professional Summary</MainHeading>
+            <MainHeading>Summary</MainHeading>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: "#333" }}>{summary}</p>
           </section>
         )}

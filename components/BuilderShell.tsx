@@ -11,8 +11,8 @@ function StartedBuilder({ startImmediately }: { startImmediately: boolean }) {
   const [handoffMessage, setHandoffMessage] = useState("");
 
   useEffect(() => {
-    if (startImmediately && state.step === 0) goToStep(1);
-  }, [goToStep, startImmediately, state.step]);
+    if (hydrated && startImmediately && state.step === 0) goToStep(1);
+  }, [goToStep, hydrated, startImmediately, state.step]);
 
   useEffect(() => {
     if (!hydrated || handoffChecked.current) return;
@@ -27,7 +27,7 @@ function StartedBuilder({ startImmediately }: { startImmediately: boolean }) {
       .then((data) => {
         setState((current) => ({
           ...current,
-          step: Math.max(current.step, 3),
+          step: Math.max(current.step, 2),
           personal: { ...current.personal, title: current.personal.title || data.role, location: current.personal.location || data.country },
           experience: [{ id: `risk-handoff-${Date.now()}`, role: data.role, company: "", companyDesc: "", location: data.country, dates: "", description: data.tasks.map((task) => `• ${task}`).join("\n"), gap: "" }, ...current.experience],
         }));

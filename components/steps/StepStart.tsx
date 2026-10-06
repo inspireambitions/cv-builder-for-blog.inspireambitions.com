@@ -580,7 +580,7 @@ export default function StepStart() {
         )}
         {mode === "hero" && (
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">
-            Already have a CV? Upload it, improve it, then tailor the reviewed version to a real vacancy.
+            Already have a CV? Upload it and check it against a job advert.
           </p>
         )}
 
