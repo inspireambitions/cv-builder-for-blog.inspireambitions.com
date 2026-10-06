@@ -8,6 +8,8 @@ on:
 jobs:
   guardrails:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_POSTHOG_ENABLED: "true"
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

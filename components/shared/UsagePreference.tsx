@@ -16,7 +16,7 @@ function subscribe(listener: () => void) {
 export default function UsagePreference() {
   const allowed = useSyncExternalStore(subscribe, readPreference, () => false);
   if (process.env.NEXT_PUBLIC_POSTHOG_ENABLED !== "true") return null;
-  return <div className="mx-auto max-w-xl px-4 py-4 text-sm text-gray-600">
+  return <div className="mx-auto max-w-xl px-4 pt-4 pb-[calc(112px+env(safe-area-inset-bottom,0px))] text-sm text-gray-600 sm:pb-4">
     <label className="flex min-h-12 items-center gap-3">
       <input type="checkbox" checked={allowed} onChange={(event) => {
         const checked = event.target.checked;
