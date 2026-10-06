@@ -1,36 +1,10 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
+import { sendCVConfirmation, verifyCVEmailBridge } from "@/lib/transactional-email";
 
 export const runtime = "nodejs";
 
-type ResendDomain = {
-  name?: string;
-  status?: string;
-  capabilities?: { sending?: string };
-};
-
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(value);
-}
-
-function senderAddress() {
-  return (
-    process.env.RESEND_FROM_EMAIL ||
-    process.env.EMAIL_FROM ||
-    "Inspire Ambitions <info@inspireambitions.com>"
-  );
-}
-
-function senderDomain() {
-  return senderAddress().match(/@([^>\s]+)/)?.[1]?.toLowerCase() ?? "";
-}
-
-function tagValue(value: unknown) {
-  return (
-    String(value || "unknown")
-      .replace(/[^a-zA-Z0-9_-]/g, "_")
-      .slice(0, 256) || "unknown"
-  );
 }
 
 async function resend(path: string, body?: unknown, idempotencyKey?: string) {
@@ -47,26 +21,15 @@ async function resend(path: string, body?: unknown, idempotencyKey?: string) {
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     cache: "no-store",
+    signal: AbortSignal.timeout(10000),
   });
 }
 
 export async function GET() {
   try {
-    const response = await resend("/domains");
-    if (!response.ok) throw new Error(`Resend health check returned ${response.status}`);
-
-    const payload = (await response.json()) as { data?: ResendDomain[] };
-    const domain = payload.data?.find(
-      (item) => item.name?.toLowerCase() === senderDomain()
-    );
-    const ready =
-      Boolean(domain) &&
-      domain?.capabilities?.sending === "enabled" &&
-      ["verified", "partially_verified", "partially_failed"].includes(
-        domain?.status || ""
-      );
-
-    if (!ready) throw new Error("The configured Resend sender domain is not ready");
+    await verifyCVEmailBridge();
+    const response = await resend('/contacts?limit=1');
+    if (!response.ok) throw new Error('Subscriber service check failed');
 
     return NextResponse.json(
       { ok: true },
@@ -74,7 +37,7 @@ export async function GET() {
     );
   } catch (error) {
     console.error(
-      "Resend health check failed",
+      "Email service health check failed",
       error instanceof Error ? error.message : error
     );
     return NextResponse.json(
@@ -127,29 +90,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const emailRequest = {
-      from: senderAddress(),
-      to: [email],
-      subject: "Your free CV downloads are unlocked",
-      html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#1c1d1f"><h1>Your CV downloads are unlocked</h1><p>Greetings from Inspire Ambitions${firstName ? `, ${firstName}` : ""}.</p><p>You can return to the CV builder on this device and download PDF or Word without entering your email again.</p><h2>Three quick Gulf CV checks</h2><ol><li>State your current location and notice period.</li><li>Use numbers to prove results.</li><li>Match only skills you can support with evidence.</li></ol><p><a href="https://cv.inspireambitions.com">Return to the free CV builder</a></p><p>If the tool helped, leave an honest review on <a href="https://www.trustpilot.com/evaluate/inspireambitions.com">Trustpilot</a>. We ask every user the same way.</p><p style="font-size:12px;color:#666">You can unsubscribe from any guidance email with one tap.</p></div>`,
-      tags: [
-        { name: "source", value: "cv_builder" },
-        { name: "requested_format", value: tagValue(payload.format || "pdf") },
-      ],
-    };
-    const idempotencyKey = `cv-welcome-${createHash("sha256")
-      .update(JSON.stringify(emailRequest))
-      .digest("base64url")}`;
-    const welcome = await resend(
-      "/emails",
-      emailRequest,
-      idempotencyKey
-    );
-    if (!welcome.ok) throw new Error(await welcome.text());
+    await sendCVConfirmation(email, firstName, String(payload.format || "pdf"));
     emailSent = true;
   } catch (error) {
     console.error(
-      "Resend welcome email failed",
+      "Cloudflare welcome email failed",
       error instanceof Error ? error.message : error
     );
   }

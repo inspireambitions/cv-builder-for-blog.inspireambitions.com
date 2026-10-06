@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:free
+      - run: npm run test:email
       - run: npx playwright install --with-deps chromium
       - name: Pin Lighthouse to Playwright Chromium
         run: |
@@ -25,3 +26,11 @@ jobs:
       - run: npm run check:perf
       - run: npm run test:e2e
       - run: npm run test:lighthouse
+      - name: Save browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cv-builder-browser-evidence
+          path: |
+            outputs/step-01/
+            test-results/
