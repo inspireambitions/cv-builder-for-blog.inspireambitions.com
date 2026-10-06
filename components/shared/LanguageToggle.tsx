@@ -22,7 +22,7 @@ export default function LanguageToggle() {
         aria-label="Interface language"
         value={locale}
         onChange={(event) => setLocale(event.target.value as Locale)}
-        className="min-h-10 max-w-24 rounded-lg border border-[#b99b45] bg-white px-2 text-sm font-medium text-[#1a2744] sm:max-w-none"
+        className="min-h-12 max-w-24 rounded-lg border border-[#b99b45] bg-white px-2 text-sm font-medium text-[#1a2744] sm:max-w-none"
       >
         {OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>

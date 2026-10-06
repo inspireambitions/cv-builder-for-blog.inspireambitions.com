@@ -25,6 +25,7 @@ const StepScore = dynamic(() => import("./steps/StepScore"));
 const SectorTemplate = dynamic(() => import("./templates/SectorTemplate"));
 const ATSCleanTemplate = dynamic(() => import("./templates/ATSCleanTemplate"));
 import SaveToast from "./shared/SaveToast";
+import { defaultTalkProgress, TALK_MODE_ENABLED } from "@/lib/talk-flow";
 
 /** Maps step keys from STEPS to i18n translation keys */
 const STEP_I18N_KEY: Record<string, string> = {
@@ -55,7 +56,7 @@ function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["sta
   return <SectorTemplate state={state} />;
 }
 
-export default function CVBuilder() {
+export default function CVBuilder({ initialUpload = false }: { initialUpload?: boolean }) {
   const {
     state,
     updateField,
@@ -170,7 +171,7 @@ export default function CVBuilder() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className={`max-w-7xl mx-auto px-4 py-3 flex items-center justify-between ${TALK_MODE_ENABLED ? "flex-wrap gap-3" : ""}`}>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="https://inspireambitions.com"
@@ -219,6 +220,7 @@ export default function CVBuilder() {
               </button>
             )}
             <span className={state.step > 0 ? "hidden md:inline-flex" : "inline-flex"}><ThemeToggle /></span>
+            {TALK_MODE_ENABLED && <button className="min-h-12 rounded-lg border border-gray-300 px-3 text-sm" onClick={() => updateField({ builderMode: "talk", talk: state.talk ?? defaultTalkProgress })}>Simple questions</button>}
             <LanguageToggle />
           </div>
         </div>
@@ -325,7 +327,7 @@ export default function CVBuilder() {
           {/* Form Panel */}
           <div className={`flex-1 min-w-0 ${mobileMode === "edit" || (mobileMode === "score" && state.step === 8) ? "block" : "hidden lg:block"}`}>
             <div className="mb-6 bg-transparent p-0 shadow-none sm:rounded-xl sm:border sm:border-gray-200 sm:bg-white sm:p-6 sm:shadow-sm [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
-              <CurrentStep />
+              {state.step === 0 ? <StepStart initialUpload={initialUpload} /> : <CurrentStep />}
             </div>
 
             {state.step === 8 && (
