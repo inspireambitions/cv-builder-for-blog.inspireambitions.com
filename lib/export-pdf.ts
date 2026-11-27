@@ -147,15 +147,10 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
   if (filledEducation.length > 0) {
     sectionHeading(labels.education);
     for (const edu of filledEducation) {
-      writeLines([edu.degree, edu.institution].filter(Boolean).join(", "), {
+      writeLines([[edu.degree, edu.institution].filter(Boolean).join(", "), edu.year, edu.grade].filter(Boolean).join(" | "), {
         size: 10.8,
         style: "bold",
         after: 1,
-      });
-      writeLines([edu.year, edu.grade].filter(Boolean).join(" | "), {
-        size: 9.5,
-        color: [100, 100, 100],
-        after: 2,
       });
     }
   }
@@ -213,12 +208,9 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
   if (filledAchievements.length > 0) {
     sectionHeading(labels.achievements);
     for (const achievement of filledAchievements) {
-      writeLines(achievement.title, { size: 10.5, style: "bold", after: 1 });
+      writeLines([achievement.title, achievement.awardingBody, achievement.year].filter(Boolean).join(" | "),
+        { size: 10.5, style: "bold", after: 1 });
       writeLines(achievement.body, { after: 1.5 });
-      writeLines(
-        [achievement.awardingBody, achievement.year].filter(Boolean).join(" | "),
-        { size: 9.5, color: [100, 100, 100], after: 2 }
-      );
     }
   }
 
@@ -231,9 +223,7 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
   for (const { label, values } of extras) {
     if (!values.some((entry) => entry.some((value) => value?.trim()))) continue;
     sectionHeading(label);
-    for (const value of values) for (const [index, text] of value.entries()) {
-      if (text) writeLines(text, index === 0 ? { style: "bold" } : {});
-    }
+    for (const value of values) writeLines(value.filter(Boolean).join(" | "));
   }
 
   function measure(layout: BodyLayout) {
