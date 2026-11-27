@@ -1,5 +1,5 @@
 import { migrateExperienceDates } from "./experience-dates";
-import { getRoleSuggestionGroup, findRoleSuggestionFamily } from "./role-suggestions";
+import { getRoleFamilyForJob } from "./role-suggestions";
 import { hasNamedSystem } from "./skill-names";
 import type { CVState } from "./types";
 import { validatePhone, locationParts } from "./validators";
@@ -40,8 +40,7 @@ export function checkCV(cv: CVState, asOf = new Date()): CVIssue[] {
     const lines = job.description.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     const field = `${job.id}-description`;
     if (lines.length < 2) add(`few-${job.id}`, `${name}: add ${lines.length ? "one more line" : "two lines"} or answer the quick questions.`, 2, field);
-    const matched = getRoleSuggestionGroup(job.role);
-    const group = matched.key === "general" ? findRoleSuggestionFamily(job.roleFamily) ?? matched : matched;
+    const group = getRoleFamilyForJob(job.role, job.roleFamily);
     const library = new Set(group.sentences.map(dutyKey));
     if (lines.length && lines.every((line) => library.has(dutyKey(line)))) {
       add(`library-${job.id}`, `${name}: add one thing in your own words or answer the quick questions.`, 2, field);

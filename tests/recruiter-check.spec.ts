@@ -55,3 +55,19 @@ test("gives download advice and takes a candidate with email only to the phone f
   await phone.fill("+971 50 000 0001");
   await expect(phone).toHaveValue("+971 50 000 0001");
 });
+
+test("does not invent gaps from nested work or exactly six months off", () => {
+  const makeJob = (id: string, dates: string) => ({ ...draft.experience[0], id, dates });
+  const timeline = [
+    makeJob("first", "Jun 2015 to Jan 2024"),
+    makeJob("overlap", "Mar 2017 to Feb 2018"),
+    makeJob("next", "Aug 2024 to Present"),
+  ];
+  const gapIds = () => checkCV(finishCV({ ...draft, experience: timeline }, asOf).cv, asOf)
+    .filter((issue) => issue.id.startsWith("gap-")).map((issue) => issue.id);
+  expect(gapIds()).toEqual([]);
+  timeline[2].dates = "Sep 2024 to Present";
+  expect(gapIds()).toEqual(["gap-next"]);
+  timeline[1].dates = "2017 to 2018";
+  expect(gapIds()).toEqual([]);
+});
