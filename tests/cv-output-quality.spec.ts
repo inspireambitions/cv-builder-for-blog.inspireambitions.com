@@ -14,6 +14,10 @@ import person1 from "./fixtures/people/01-reservation-agent.json";
 import person3 from "./fixtures/people/03-driver.json";
 import person5 from "./fixtures/people/05-kitchen-steward.json";
 import person8 from "./fixtures/people/08-waiter.json";
+import person6 from "./fixtures/people/06-cleaner.json";
+import person15 from "./fixtures/people/15-accounts-clerk.json";
+import person19 from "./fixtures/people/19-school-leaver.json";
+import { packPages, contactLines } from "../lib/cv-page-layout";
 
 type Person = {
   personal: Partial<CVState["personal"]>;
@@ -21,6 +25,7 @@ type Person = {
   experience: Partial<CVState["experience"][number]>[];
   education?: Partial<CVState["education"][number]>[];
   skills: string[];
+  languages?: { id: string; language: string; level: string }[];
 };
 
 function draftFor(person: Person, template: TemplateType = "ats-clean"): CVState {
@@ -39,6 +44,11 @@ function draftFor(person: Person, template: TemplateType = "ats-clean"): CVState
       ...defaultCVState.education[0], ...entry, id: `education-${index}`,
     })),
     skills: [...person.skills],
+    languages: (person.languages ?? []).map((language) => ({
+      ...language,
+      level: ["Native", "Fluent", "Professional", "Conversational", "Basic"].includes(language.level)
+        ? language.level as CVState["languages"][number]["level"] : "",
+    })),
   };
 }
 
@@ -55,15 +65,39 @@ function flat(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
 
+test("fits short CVs on one balanced page and avoids a near-empty last page", async () => {
+  for (const person of [person6, person19]) {
+    const output = await buildPDF(draftFor(person));
+    expect(output.pageCount).toBe(1);
+    expect(output.pageFills[0], person.personal.name).toBeGreaterThanOrEqual(0.65);
+    expect(output.pageFills[0], person.personal.name).toBeLessThanOrEqual(0.85);
+    expect(await pdfText(output.blob)).toContain(person.personal.name);
+  }
+  const long = await buildPDF(draftFor(person15));
+  expect(long.pageCount).toBe(2);
+  expect(long.pageLineCounts.at(-1)).toBeGreaterThanOrEqual(6);
+  expect(await pdfText(long.blob)).toContain("Example Ledger Delta");
+});
+
+test("moves full groups onto an otherwise short final page and wraps contacts between items", () => {
+  const rows = Array.from({ length: 13 }, (_, index) => ({ height: 1, index, keepWithNext: index === 7 }));
+  const pages = packPages(rows, 11);
+  expect(pages.flat()).toEqual(rows);
+  expect(pages[1]).toHaveLength(6);
+  expect(contactLines(["Dubai, UAE", "+971 50 000 0001", "amina@example.com"], (line) => line.length, 35))
+    .toEqual(["Dubai, UAE | +971 50 000 0001", "amina@example.com"]);
+});
+
 test("renderers consume the finished view, including both capture exports", () => {
-  const entries = readdirSync("components/templates").filter((name) => name.endsWith(".tsx") && name !== "TemplatePreview.tsx");
+  const sharedViews = new Set(["TemplatePreview.tsx", "DocumentContact.tsx", "DocumentWorkEntry.tsx"]);
+  const entries = readdirSync("components/templates").filter((name) => name.endsWith(".tsx") && !sharedViews.has(name));
   for (const path of [...entries.map((name) => `components/templates/${name}`), "lib/export-pdf.ts", "lib/export-word.ts"]) {
     const source = readFileSync(path, "utf8");
     expect(source, path).toMatch(/const \{ cv \} = finishCV\(draft\)/);
     expect(source, path).not.toMatch(/\b(?:state|draft)(?:\?\.|\.)experience\b|\{[^}]*\bexperience\b[^}]*\}\s*=\s*(?:state|draft)\b/);
   }
   expect(readFileSync("lib/export-jpeg.ts", "utf8")).toContain("captureCV(draft)");
-  expect(readFileSync("lib/export-pdf.ts", "utf8")).toContain("captureCV(draft)");
+  expect(readFileSync("lib/export-pdf.ts", "utf8")).toContain("buildPDF(draft, options)");
   expect(readFileSync("lib/capture-cv.ts", "utf8")).toContain("createElement(Template, { state: draft })");
 });
 

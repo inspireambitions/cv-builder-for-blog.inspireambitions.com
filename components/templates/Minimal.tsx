@@ -1,5 +1,9 @@
 "use client";
 
+import DocumentWorkEntry from "./DocumentWorkEntry";
+import DocumentContact from "./DocumentContact";
+import { documentBodyLayout } from "@/lib/cv-page-layout";
+
 import { cvContactParts, finishCV } from "@/lib/cv-finish";
 import type { CVState } from "@/lib/types";
 import {
@@ -10,6 +14,7 @@ import {
 
 export default function Minimal({ state: draft }: { state: CVState }) {
   const { cv } = finishCV(draft);
+  const layout = documentBodyLayout(cv);
   const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = cv;
 
   const contactParts = cvContactParts(cv);
@@ -28,7 +33,7 @@ export default function Minimal({ state: draft }: { state: CVState }) {
   const filledMemberships = memberships.filter(m => m.org.trim());
 
   return (
-    <div id="cv-render" data-finished-cv="true" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "Arial, sans-serif", fontSize: 14, color: "#202226", padding: "44px 52px" }}>
+    <div id="cv-render" data-finished-cv="true" className="cv-document w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "Arial, sans-serif", fontSize: `${layout.size}pt`, lineHeight: layout.leading, color: "#202226", padding: "44px 52px" }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         {personal.name.trim() && (
@@ -43,7 +48,7 @@ export default function Minimal({ state: draft }: { state: CVState }) {
         )}
         {contactParts.length > 0 && (
           <div style={{ fontFamily: "'Courier New', monospace", fontSize: 11, color: "#666", marginTop: 10 }}>
-            {contactParts.join("  \u00b7  ")}
+            <DocumentContact parts={contactParts} />
           </div>
         )}
         {uaeHeaderParts.length > 0 && (
@@ -71,26 +76,7 @@ export default function Minimal({ state: draft }: { state: CVState }) {
             <section style={{ marginBottom: 24 }}>
               <MinimalHeading>Experience</MinimalHeading>
               {filledExperience.map((exp) => (
-                <div key={exp.id} style={{ marginBottom: 16 }}>
-                  {exp.role.trim() && <div style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>{exp.role}</div>}
-                  {exp.company.trim() && <div style={{ fontSize: 13, color: "#555" }}>{exp.company}</div>}
-                  {exp.companyDesc.trim() && <div style={{ fontSize: 12, fontStyle: "italic", color: "#666" }}>{exp.companyDesc}</div>}
-                  {(exp.location.trim() || exp.dates.trim()) && (
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
-                      {[exp.location, exp.dates].filter(Boolean).join("  \u00b7  ")}
-                    </div>
-                  )}
-                  {exp.description.trim() && (
-                    <ul style={{ margin: "5px 0 0 16px", padding: 0, listStyleType: "disc" }}>
-                      {exp.description.split("\n").filter(l => l.trim()).map((line, i) => (
-                        <li key={i} style={{ fontSize: 13, lineHeight: 1.5, color: "#444", marginBottom: 2 }}>{line.trim()}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {exp.gap.trim() && (
-                    <div style={{ fontSize: 12, fontStyle: "italic", color: "#666", marginTop: 3 }}>{exp.gap}</div>
-                  )}
-                </div>
+                <DocumentWorkEntry key={exp.id} item={exp} note="Career note" />
               ))}
             </section>
           )}

@@ -1,0 +1,30 @@
+{
+  "personal": {
+    "name": "Lina Daro",
+    "title": "Cleaner",
+    "email": "lina@example.com",
+    "phone": "+971 50 000 0006",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Cleaner",
+      "company": "Example Shore Cleaning",
+      "location": "Dubai",
+      "dates": "Jun 2026 to Present",
+      "description": "clean meeting rooms\nwipe desks and door handles\nsegregate cleaning supplies"
+    }
+  ],
+  "skills": [
+    "Cleaning schedules",
+    "Waste sorting",
+    "Safe chemical storage"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}
