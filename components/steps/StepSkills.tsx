@@ -137,7 +137,7 @@ export default function StepSkills() {
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Languages</h2>
           <p className="mt-1 text-sm text-gray-600">
-            List the languages you speak and your proficiency level
+            Add at least one language and choose how well you speak it.
           </p>
         </div>
 
@@ -145,52 +145,39 @@ export default function StepSkills() {
           {languages.map((entry, index) => (
             <div
               key={entry.id}
-              className="flex items-end gap-4"
+              className="space-y-3 rounded-lg border border-gray-200 p-3"
             >
               {/* Language name */}
-              <div className="flex-1">
-                {index === 0 && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Language
-                  </label>
-                )}
+              <label className="block text-sm font-medium text-gray-700">
+                {index === 0 ? "Language" : `Language ${index + 1}`}
                 <input
+                  data-cv-fix={index === 0 ? "languages" : undefined}
                   type="text"
                   value={entry.language}
                   onChange={(e) =>
                     updateLang(entry.id, "language", e.target.value)
                   }
                   placeholder="e.g. English"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
+                  className="mt-1 w-full min-h-12 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
-              </div>
+              </label>
 
               {/* Proficiency level */}
-              <div className="flex-1">
-                {index === 0 && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Proficiency
-                  </label>
-                )}
-                <select
-                  value={entry.level}
-                  onChange={(e) =>
-                    updateLang(entry.id, "level", e.target.value)
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow bg-white"
-                >
-                  <option value="">Choose your level</option>
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-gray-700">How well do you speak it?</legend>
+                <div className="flex flex-wrap gap-2">
                   {LANGUAGE_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
+                    <label key={level} className="cursor-pointer">
+                      <input type="radio" name={`lang-level-${entry.id}`} className="peer sr-only"
+                        checked={entry.level === level} onChange={() => updateLang(entry.id, "level", level)} />
+                      <span className="flex min-h-11 items-center rounded-lg border border-gray-300 px-3 text-sm text-gray-800 peer-checked:border-gold-600 peer-checked:bg-amber-50 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-600">{level}</span>
+                    </label>
                   ))}
-                </select>
-              </div>
+                </div>
+              </fieldset>
 
               {/* Remove button (not for first row) */}
-              <div className="w-20 flex-shrink-0">
-                {index > 0 ? (
+              {index > 0 && (
                   <button
                     type="button"
                     onClick={() => removeLang(entry.id)}
@@ -198,10 +185,7 @@ export default function StepSkills() {
                   >
                     Remove
                   </button>
-                ) : (
-                  <div className="py-2.5" />
-                )}
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -210,6 +194,7 @@ export default function StepSkills() {
         <button
           type="button"
           onClick={addLang}
+          data-cv-fix={languages.length ? undefined : "languages"}
           className="flex items-center gap-2 bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
         >
           <svg
