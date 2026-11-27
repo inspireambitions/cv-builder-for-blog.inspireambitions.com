@@ -5,6 +5,7 @@ import type { ExpEntry } from "@/lib/types";
 import RoleSentenceSuggestions from "@/components/shared/RoleSentenceSuggestions";
 import ExperienceDates from "@/components/shared/ExperienceDates";
 import { getRoleExamples } from "@/lib/role-examples";
+import { getRoleMove } from "@/lib/profile-builder";
 
 function generateId() {
   return "exp-" + Math.random().toString(36).slice(2, 9);
@@ -24,7 +25,7 @@ export default function StepExperience() {
   const { state, updateField } = useCVState();
   const entries = state.experience;
 
-  function updateEntry(id: string, field: keyof ExpEntry, value: string) {
+  function updateEntry(id: string, field: keyof ExpEntry, value: string | undefined) {
     updateField({
       experience: entries.map((e) =>
         e.id === id ? { ...e, [field]: value } : e
@@ -58,6 +59,7 @@ export default function StepExperience() {
       <div className="space-y-6">
         {entries.map((entry, index) => {
           const examples = getRoleExamples(entry.role || state.personal.title);
+          const move = getRoleMove(entry, entries, new Date());
           return (
           <div
             key={entry.id}
@@ -150,6 +152,12 @@ export default function StepExperience() {
 
               {/* Period */}
               <ExperienceDates entry={entry} onChange={(next) => updateField({ experience: entries.map((item) => item.id === entry.id ? next : item) })} />
+              {move && <label className="flex min-h-12 cursor-pointer items-center gap-3 text-sm text-gray-700 md:col-span-2">
+                <input type="checkbox" className="h-5 w-5 shrink-0 accent-gold-600"
+                  checked={entry.promotionConfirmation === move.confirmation}
+                  onChange={(event) => updateEntry(entry.id, "promotionConfirmation", event.target.checked ? move.confirmation : undefined)} />
+                This was a promotion from <bdi>{move.from}</bdi>
+              </label>}
             </div>
 
             {/* Key Achievements */}

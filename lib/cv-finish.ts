@@ -1,15 +1,19 @@
 import { experienceDateText, migrateExperienceDates } from "./experience-dates";
+import { cleanCVProse, findBannedCVPhrase } from "./banned-phrases";
+import { buildProfile, latestHeldRole } from "./profile-builder";
 import { getRoleSuggestionGroup } from "./role-suggestions";
 import { cleanAllCaps, cleanSkillName, hasNamedSystem, uppercaseFirst } from "./skill-names";
 import type { CVState, ExpEntry } from "./types";
 import { getVerbForms } from "./verb-forms";
 
 export type FinishChange = {
-  kind: "job-order" | "education-order" | "headline" | "dates" | "bullet" | "skills" | "empty-sections";
+  kind: "job-order" | "education-order" | "headline" | "dates" | "bullet" | "skills" | "empty-sections" | "profile" | "wording";
   jobId?: string;
 };
 
 type Tense = "present" | "past" | undefined;
+const goalFromDraft = Symbol("goalFromDraft");
+type FinishedCV = CVState & { [goalFromDraft]: string };
 
 // These can start a noun phrase rather than describe an action.
 const nounPhrase = /^(?:booking (?:engine|system|errors?)|training (?:records?|materials?|sessions?)|driving licen[cs]e|cleaning (?:supplies|equipment|schedule)|filing system|processing time)\b/i;
@@ -36,6 +40,7 @@ function prepareJob(entry: ExpEntry) {
 
 function normaliseBullet(value: string, tense: Tense) {
   let line = value.trim().replace(/^(?:(?:[-–—](?!\.?\p{N})|[•*])\s*)+/u, "");
+  line = cleanCVProse(line);
   const firstWord = line.match(/^[a-z]+(?=\s|$)/i)?.[0];
   if (firstWord && getVerbForms(firstWord)) line = cleanAllCaps(line);
   line = line.replace(/\s+/g, " ").replace(/[.!?۔。]+$/u, "");
@@ -85,7 +90,7 @@ function finishSkills(values: string[]) {
   const skills = new Map<string, string>();
   for (const value of values.flatMap((value) => value.split(/[,;|\n•،؛]/u))) {
     const name = cleanSkillName(value);
-    if (name && !skills.has(name.toLowerCase())) skills.set(name.toLowerCase(), name);
+    if (name && !findBannedCVPhrase(name) && !skills.has(name.toLowerCase())) skills.set(name.toLowerCase(), name);
   }
   return [...skills.values()].slice(0, 10);
 }
@@ -99,8 +104,16 @@ function hasText(...fields: string[]) {
 }
 
 /** Build a document view. Never use the result to overwrite the saved draft. */
-export function finishCV(state: CVState): { cv: CVState; changes: FinishChange[] } {
+export function finishCV(
+  state: CVState | FinishedCV,
+  asOf = new Date(),
+): { cv: FinishedCV; changes: FinishChange[] } {
   const changes: FinishChange[] = [];
+  function cleanNarrative(value: string) {
+    const clean = findBannedCVPhrase(value ?? "") ? "" : value;
+    if (clean !== value) changes.push({ kind: "wording" });
+    return clean;
+  }
   const jobs = state.experience.map(prepareJob);
   const experience = [...jobs]
     .sort((a, b) => b.group - a.group || (b.end || b.start) - (a.end || a.start) || b.start - a.start)
@@ -108,33 +121,34 @@ export function finishCV(state: CVState): { cv: CVState; changes: FinishChange[]
       const description = finishBullets(job, tense);
       if (dates !== job.dates) changes.push({ kind: "dates", jobId: job.id });
       if (description !== job.description) changes.push({ kind: "bullet", jobId: job.id });
-      return { ...job, role: job.role.trim(), dates, description };
+      return { ...job, role: job.role.trim(), dates, description, companyDesc: cleanNarrative(job.companyDesc), gap: cleanNarrative(job.gap) };
     });
   if (experience.some((job, index) => job.id !== state.experience[index].id)) changes.push({ kind: "job-order" });
 
   const education = [...state.education].sort((a, b) => educationYear(b.year) - educationYear(a.year));
   if (education.some((entry, index) => entry.id !== state.education[index].id)) changes.push({ kind: "education-order" });
 
-  const title = experience.find((job) => job.role)?.role ?? "";
+  const title = latestHeldRole(experience, asOf)?.role ?? "";
   if (title !== state.personal.title) changes.push({ kind: "headline" });
   const skills = finishSkills(state.skills);
   if (skills.length !== state.skills.length || skills.some((skill, index) => skill !== state.skills[index])) changes.push({ kind: "skills" });
 
   const extras = {
     certifications: state.certifications.filter((item) => hasText(item.name, item.issuer, item.date, item.expiry)),
-    achievements: state.achievements.filter((item) => hasText(item.title, item.body, item.awardingBody, item.year)),
-    volunteer: state.volunteer.filter((item) => hasText(item.role, item.org, item.dates, item.impact)),
-    projects: state.projects.filter((item) => hasText(item.name, item.description, item.url, item.outcomes)),
+    achievements: state.achievements.map((item) => ({ ...item, body: cleanNarrative(item.body) })).filter((item) => hasText(item.title, item.body, item.awardingBody, item.year)),
+    volunteer: state.volunteer.map((item) => ({ ...item, impact: cleanNarrative(item.impact) })).filter((item) => hasText(item.role, item.org, item.dates, item.impact)),
+    projects: state.projects.map((item) => ({ ...item, description: cleanNarrative(item.description), outcomes: cleanNarrative(item.outcomes) })).filter((item) => hasText(item.name, item.description, item.url, item.outcomes)),
     publications: state.publications.filter((item) => hasText(item.title, item.outlet, item.date, item.url)),
     memberships: state.memberships.filter((item) => hasText(item.org, item.level, item.year)),
   };
   const extraKeys = Object.keys(extras) as (keyof typeof extras)[];
   if (extraKeys.some((key) => extras[key].length < state[key].length)) changes.push({ kind: "empty-sections" });
 
-  return {
-    cv: { ...state, ...extras, summary: state.summary.trim(), personal: { ...state.personal, title }, experience, education, skills },
-    changes,
-  };
+  const targetRole = goalFromDraft in state ? state[goalFromDraft] : state.personal.title;
+  const profile = buildProfile({ ...state, experience, skills }, targetRole, asOf);
+  if (profile !== state.summary.trim()) changes.push({ kind: "profile" });
+  const cv = { ...state, ...extras, summary: profile, personal: { ...state.personal, title }, experience, education, skills, [goalFromDraft]: targetRole };
+  return { cv, changes };
 }
 
 export function cvContactParts(cv: CVState) {

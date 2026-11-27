@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { calculateScore, getMissingCVItems } from "@/lib/score";
+import { finishCV } from "@/lib/cv-finish";
 import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
 import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
@@ -124,7 +125,7 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
 export default function StepScore() {
   const { state, goToStep } = useCVState();
   const missing = getMissingCVItems(state);
-  const score = useMemo(() => calculateScore(state), [state]);
+  const score = useMemo(() => calculateScore(finishCV(state).cv), [state]);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const completionTracked = useRef(false);
 

@@ -13,6 +13,8 @@ const copy = {
     bullet: "Tidied work bullets and kept up to six per job.",
     skills: "Tidied skill names and kept up to ten skills.",
     "empty-sections": "Left blank extra entries out of your CV.",
+    profile: "Built your profile from your work, skills and languages.",
+    wording: "Left out phrases flagged by the CV language check.",
   },
   ar: {
     count: (n: number) => `عدد التعديلات على سيرتك الذاتية: ${n}`,
@@ -24,6 +26,8 @@ const copy = {
     bullet: "راجعنا نقاط الخبرة وأبقينا ست نقاط كحد أقصى لكل وظيفة.",
     skills: "راجعنا أسماء المهارات وأبقينا عشر مهارات كحد أقصى.",
     "empty-sections": "لم نعرض الخانات الإضافية الفارغة في سيرتك الذاتية.",
+    profile: "كتبنا الملف المهني من خبراتك ومهاراتك ولغاتك.",
+    wording: "حذفنا العبارات التي لا تتوافق مع مراجعة صياغة السيرة الذاتية.",
   },
 };
 
