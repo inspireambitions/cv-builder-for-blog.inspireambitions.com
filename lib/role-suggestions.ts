@@ -1,3 +1,5 @@
+import { ADDITIONAL_ROLE_FAMILIES } from "./role-families";
+
 export interface RoleSuggestionGroup {
   key: string;
   label: string;
@@ -233,19 +235,18 @@ export const GENERAL_ROLE_SUGGESTIONS: RoleSuggestionGroup = {
   key: "general",
   label: "General work",
   matches: /.*/,
-  sentences: [
-    "Completed assigned duties in line with company procedures and deadlines.",
-    "Helped customers or colleagues and passed difficult issues to the supervisor.",
-    "Kept work records accurate and reported problems without delay.",
-    "Checked tools, stock or documents before starting each task.",
-    "Worked with the team to complete daily duties during busy periods.",
-    "Followed safety rules and kept the work area clean and organised.",
-  ],
+  sentences: [],
 };
 
+export const ROLE_SUGGESTION_FAMILIES: readonly RoleSuggestionGroup[] = [...ADDITIONAL_ROLE_FAMILIES, ...GROUPS];
+
+export function findRoleSuggestionFamily(key: string | undefined) {
+  return ROLE_SUGGESTION_FAMILIES.find((group) => group.key === key);
+}
+
 export function getRoleSuggestionGroup(role: string, targetRole = "") {
-  const value = `${role} ${targetRole}`.trim().toLowerCase();
-  return GROUPS.find((group) => group.matches.test(value)) ?? GENERAL_ROLE_SUGGESTIONS;
+  const value = (role.trim() || targetRole.trim()).toLowerCase().replace(/\s+/g, " ");
+  return ROLE_SUGGESTION_FAMILIES.find((group) => group.matches.test(value)) ?? GENERAL_ROLE_SUGGESTIONS;
 }
 
 export function appendExperienceSentence(current: string, sentence: string) {

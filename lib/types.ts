@@ -11,6 +11,7 @@ export interface ExpEntry {
   endYear?: string;
   current?: boolean;
   promotionConfirmation?: string;
+  roleFamily?: string;
   description: string;
   gap: string;
 }

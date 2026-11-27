@@ -1,6 +1,18 @@
 // Base, simple past and -ing forms. The last column, where present, accepts
 // an alternate spelling or a distinct past participle.
 const rows = `
+ask asked asking
+correct corrected correcting
+hand handed handing
+lay laid laying
+mark marked marking
+match matched matching
+peel peeled peeling
+place placed placing
+save saved saving
+steam steamed steaming
+tag tagged tagging
+watch watched watching
 accept accepted accepting
 access accessed accessing
 accompany accompanied accompanying
