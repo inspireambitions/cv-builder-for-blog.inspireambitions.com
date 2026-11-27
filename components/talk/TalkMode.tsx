@@ -21,6 +21,7 @@ import { getRoleExamples } from "@/lib/role-examples";
 import { detectGeo } from "@/lib/geo";
 import { trackToolEvent } from "@/lib/analytics";
 import LanguageToggle from "@/components/shared/LanguageToggle";
+import { visibleLanguageOptions } from "@/lib/ui-languages";
 
 const PhotoEditor = dynamic(() => import("@/components/shared/PhotoEditor"));
 const SectorTemplate = dynamic(() => import("@/components/templates/SectorTemplate"));
@@ -28,18 +29,16 @@ const ATSCleanTemplate = dynamic(() => import("@/components/templates/ATSCleanTe
 const DownloadModal = dynamic(() => import("@/components/modals/DownloadModal"));
 const control = "min-h-12 rounded-lg border border-gray-300 bg-white px-4 py-3 text-start text-base text-ink transition-colors hover:border-accent active:bg-gray-100 disabled:opacity-60";
 const field = "mt-2 min-h-12 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-ink";
-const LANGUAGES = [{ code: "en", label: "English" }, { code: "ar", label: "العربية" }, { code: "hi", label: "हिन्दी" }, { code: "ur", label: "اردو" }, { code: "tl", label: "Tagalog" }] as const;
 const LEVELS: { label: string; value: LangEntry["level"] }[] = [{ label: "Basic", value: "Basic" }, { label: "Good", value: "Conversational" }, { label: "Very good", value: "Fluent" }, { label: "Native", value: "Native" }];
 const CITIES = ["Dubai, UAE", "Abu Dhabi, UAE", "Doha, Qatar", "Riyadh, Saudi Arabia", "Muscat, Oman", "Manama, Bahrain", "Kuwait City, Kuwait"];
 const SCHOOLS = ["No formal school", "Primary school", "Secondary school", "High school", "Diploma or certificate", "University", "Other"];
 
 const SKILLS = ["Teamwork", "Time keeping", "Safety checks", "Customer service"];
 const firstWorkTypes = ["housekeeping", "kitchen-steward", "food-service", "driver", "security", "cleaning", "front-office", "reservations", "general"];
-const ERROR = "We could not write this right now. Your answers are saved. Tap the sentences instead.";
 
 export default function TalkMode() {
   const { state, setState, updateField, updatePersonal, hydrated, restoredAt, dismissRestoreBanner } = useCVState();
-  const { locale, setLocale, dir } = useLocale();
+  const { locale, setLocale, dir, t } = useLocale();
   const talk = state.talk ?? defaultTalkProgress;
   const questions = getTalkQuestions(state);
   const questionIndex = Math.max(0, questions.findIndex((item) => item.id === talk.questionId));
@@ -60,10 +59,6 @@ export default function TalkMode() {
   const [ownLanguage, setOwnLanguage] = useState("");
   const [editingBullet, setEditingBullet] = useState<number | null>(null);
 
-  useEffect(() => {
-    document.documentElement.dir = dir;
-    document.documentElement.lang = locale;
-  }, [dir, locale]);
   useEffect(() => {
     if (hydrated && !started.current) {
       started.current = true;
@@ -103,18 +98,17 @@ export default function TalkMode() {
     patchTalk({ questionId: id });
   }
   function next(skip = false) {
-    if (!skip && current.kind === "family" && !talk.families[job.id]) { setError("Choose your work, or choose Other work."); return; }
-    if (!skip && current.kind === "title" && !job.role.trim()) { setError("Add your job title."); return; }
-    if (!skip && current.kind === "design" && !state.templateConfirmed) { setError("Choose a design before you continue."); return; }
-    if (!skip && current.kind === "summary" && talk.summarySuggestion !== undefined) { setError("Keep the suggested words, or remove them first."); return; }
+    if (!skip && current.kind === "family" && !talk.families[job.id]) { setError(t("talk.chooseFamily")); return; }
+    if (!skip && current.kind === "title" && !job.role.trim()) { setError(t("talk.addTitle")); return; }
+    if (!skip && current.kind === "design" && !state.templateConfirmed) { setError(t("talk.chooseDesign")); return; }
     if (!skip && (current.kind === "start" || current.kind === "end")) {
       const start = current.kind === "start";
       const month = start ? job.startMonth : job.endMonth;
       const year = start ? job.startYear : job.endYear;
-      if (Boolean(month) !== Boolean(year)) { setError("Choose both a month and a year."); return; }
-      if (!start && month && year && job.startMonth && job.startYear && Number(year) * 12 + Number(month) < Number(job.startYear) * 12 + Number(job.startMonth)) { setError("Your end date comes before your start date."); return; }
+      if (Boolean(month) !== Boolean(year)) { setError(t("talk.bothDates")); return; }
+      if (!start && month && year && job.startMonth && job.startYear && Number(year) * 12 + Number(month) < Number(job.startYear) * 12 + Number(job.startMonth)) { setError(t("talk.dateOrder")); return; }
     }
-    if (!skip && current.kind === "contact" && state.personal.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.personal.email.trim())) { setError("Check the email address, or leave it blank."); return; }
+    if (!skip && current.kind === "contact" && state.personal.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.personal.email.trim())) { setError(t("talk.checkEmail")); return; }
     trackToolEvent(skip ? "talk_question_skipped" : "talk_question_answered", { questionId: current.kind, lang: locale });
     const nextQuestion = questions[questionIndex + 1];
     if (nextQuestion) go(nextQuestion.id);
@@ -153,7 +147,7 @@ export default function TalkMode() {
         });
       } else throw new Error("invalid");
     } catch {
-      if (abort.current === controller) setError(ERROR);
+      if (abort.current === controller) setError(t("talk.aiUnavailable"));
     } finally {
       window.clearTimeout(timer);
       if (abort.current === controller) setBusy(false);
@@ -201,16 +195,16 @@ export default function TalkMode() {
       </div>
     </header>
     <main className="mx-auto max-w-2xl px-4 pb-8 pt-6 sm:pt-8">
-      {restoredAt && <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4"><p>Your CV is saved on this device.</p><button className={`${control} mt-3`} onClick={dismissRestoreBanner}>Continue</button></div>}
-      {locale !== "en" && <p className="mb-4 text-sm text-ink-muted" lang="en" dir="ltr">This test version uses English questions. Full translations come next.</p>}
+      {restoredAt && <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4"><p>{t("talk.savedCV")}</p><button className={`${control} mt-3`} onClick={dismissRestoreBanner}>{t("talk.continue")}</button></div>}
+      {locale !== "en" && <p className="mb-4 text-sm text-ink-muted">{t("talk.draft")}</p>}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-ink-muted" data-testid="talk-progress">Question {questionIndex + 1} of about {questions.length}</p>
-        <button className={control} onClick={() => setPreview(!preview)}><Eye className="me-2 inline h-4 w-4" aria-hidden="true" />{preview ? "Close my CV" : "See my CV"}</button>
+        <p className="text-sm text-ink-muted" data-testid="talk-progress">{t("talk.progress", { current: questionIndex + 1, total: questions.length })}</p>
+        <button className={control} onClick={() => setPreview(!preview)}><Eye className="me-2 inline h-4 w-4" aria-hidden="true" />{t(preview ? "talk.closeCV" : "talk.seeCV")}</button>
       </div>
-      {preview && <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white p-3" aria-label="Your CV preview"><div className="origin-top-left" style={{ zoom: "0.36" }}>{state.template === "ats-clean" ? <ATSCleanTemplate state={state} /> : <SectorTemplate state={state} />}</div></div>}
-      <div className="mb-5 flex items-start gap-3"><BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-accent" aria-hidden="true" /><h1 ref={heading} tabIndex={-1} className="text-balance text-2xl font-bold text-ink focus:outline-none" lang="en" dir="ltr">{current.question}</h1></div>
+      {preview && <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white p-3" aria-label={t("talk.preview")}><div className="origin-top-left" style={{ zoom: "0.36" }}>{state.template === "ats-clean" ? <ATSCleanTemplate state={state} /> : <SectorTemplate state={state} />}</div></div>}
+      <div className="mb-5 flex items-start gap-3"><BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-accent" aria-hidden="true" /><h1 ref={heading} tabIndex={-1} className="text-balance text-2xl font-bold text-ink focus:outline-none" lang={locale}>{t(`talk.question.${current.kind}`)}</h1></div>
       <div className="space-y-4" lang="en">
-        {current.kind === "language" && <div className="grid gap-3">{LANGUAGES.map((item) => <button key={item.code} className={control} aria-pressed={locale === item.code} onClick={() => setLocale(item.code as Locale)}>{item.label}</button>)}</div>}
+        {current.kind === "language" && <div className="grid gap-3">{visibleLanguageOptions.map((item) => <button key={item.value} className={control} lang={item.value} aria-pressed={locale === item.value} onClick={() => setLocale(item.value as Locale)}>{item.label}</button>)}</div>}
         {current.kind === "family" && <><div className="grid gap-3 sm:grid-cols-2">{workTypes.map((item) => <button key={item.key} className={control} aria-pressed={talk.families[job.id] === item.key} onClick={() => { patchJob({ roleFamily: item.key === "general" ? undefined : item.key });
           patchTalk({ families: { ...talk.families, [job.id]: item.key } }); }}>{item.key === "general" ? "Other work" : item.label}</button>)}</div>
           <button type="button" className={control} aria-expanded={allWorkTypes} onClick={() => setAllWorkTypes(!allWorkTypes)}>{allWorkTypes ? "Show fewer work types" : "Show more types of work"}</button>
@@ -232,15 +226,15 @@ export default function TalkMode() {
         {current.kind === "letter" && <><p>Letter from your sponsor allowing you to change job (NOC).</p><div className="grid gap-3">{(["Yes", "No", "Not applicable"] as const).map((value) => <button key={value} className={control} aria-pressed={state.personal.noc_available === value} onClick={() => updatePersonal({ noc_available: value })}>{value}</button>)}</div></>}
         {current.kind === "contact" && <><label className="block">Your name<input className={field} autoComplete="name" value={state.personal.name} onChange={(event) => updatePersonal({ name: event.target.value })} /></label><PhoneField phone={state.personal.phone} onChange={(phone) => updatePersonal({ phone })} placeholder={state.geo === "gulf" ? "+971" : "+44"} /><label className="block">Email (optional)<input className={field} dir="ltr" type="email" autoComplete="email" value={state.personal.email} onChange={(event) => { updatePersonal({ email: event.target.value }); patchTalk({ noEmail: false }); }} /></label><button className={control} aria-pressed={talk.noEmail} onClick={() => { updatePersonal({ email: "" }); patchTalk({ noEmail: true }); }}>I do not use email</button>{talk.noEmail && <p>The free picture download needs no email.</p>}<LocationFields value={state.personal.location} onChange={(location) => updatePersonal({ location })} /></>}
         {current.kind === "photo" && <PhotoEditor compact />}
-        {current.kind === "summary" && <section className="space-y-4" dir="ltr">
-          <p>Your CV profile comes from the details you entered.</p>
-          <div role="region" aria-label="About you">
-            <h2 className="text-sm font-semibold">About you</h2>
+        {current.kind === "summary" && <section className="space-y-4" dir={dir} lang={locale}>
+          <p>{t("talk.profileFacts")}</p>
+          <div role="region" aria-label={t("talk.profileAbout")}>
+            <h2 className="text-sm font-semibold">{t("talk.profileAbout")}</h2>
             <p className="mt-2 whitespace-pre-line rounded-lg border border-gray-300 bg-white p-4 text-base text-ink"
               dir={state.cvLanguage === "ar" ? "rtl" : "ltr"} lang={state.cvLanguage}>{summaries}</p>
           </div>
-          <p className="text-sm text-ink-muted">To update it, change your work, skills or languages.</p>
-          <button className={control} onClick={() => next()}>Keep these words</button>
+          <p className="text-sm text-ink-muted">{t("talk.profileUpdate")}</p>
+          <button className={control} onClick={() => next()}>{t("talk.profileKeep")}</button>
         </section>}
         {current.kind === "design" && <><div className="grid gap-3">{TEMPLATE_INFO.filter((item) => allDesigns || recommended.includes(item.key)).map((item) => <button key={item.key} className={control} aria-pressed={state.template === item.key && state.templateConfirmed} onClick={() => updateField({ template: item.key, templateConfirmed: true })}><strong>{item.name}</strong><span className="mt-1 block text-sm text-ink-muted">{item.key === recommended[0] ? "Suggested for your work" : "Choose this CV layout"}</span></button>)}</div><button className={control} onClick={() => setAllDesigns(!allDesigns)}>{allDesigns ? "Show three designs" : "See all designs"}</button></>}
         {isDone && <><div className="rounded-xl border border-gray-200 bg-white p-5"><h2 className="text-xl font-bold">{missing.length ? `Recruiter check: ${missing.length} ${missing.length === 1 ? "thing" : "things"} to fix` : "Recruiter check: ready to download"}</h2>{missing.map((item) => <button key={item.id} className={`${control} mt-3 block w-full`} onClick={() => fix(item)}>{item.label}</button>)}<p className="mt-3">Check your details, then choose a file to download.</p><button className="mt-4 min-h-12 w-full rounded-lg bg-accent px-4 py-3 font-bold text-white" onClick={finish}>Download my CV</button></div>{talk.noEmail && <p>The free picture download needs no email.</p>}</>}
@@ -248,10 +242,10 @@ export default function TalkMode() {
         {error && <p className="rounded-lg border border-gray-300 bg-white p-4" role="alert">{error}</p>}
       </div>
       <div className="mt-8 border-t border-gray-200 pt-4">
-        <p className="mb-3 text-sm text-ink-muted" data-testid="talk-save">Changes save on this device.</p>
-        <div className="grid grid-cols-2 gap-3"><button className={control} disabled={questionIndex === 0} onClick={() => go(questions[questionIndex - 1].id)}><ArrowLeft className={`me-2 inline h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} aria-hidden="true" />Back</button>{!isDone && current.kind !== "another" && <button className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white disabled:opacity-60" disabled={!hydrated} onClick={() => next()}>Save and continue<ArrowRight className={`ms-2 inline h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} aria-hidden="true" /></button>}</div>
-        {current.optional && <button className={`${control} mt-3 w-full text-center`} onClick={() => next(true)}>Skip for now</button>}
-        <button className={`${control} mt-3 w-full text-center`} onClick={() => { abort.current?.abort(); updateField({ builderMode: "full", step: 1 }); }}>Full form</button>
+        <p className="mb-3 text-sm text-ink-muted" data-testid="talk-save">{t("talk.saved")}</p>
+        <div className="grid grid-cols-2 gap-3"><button className={control} disabled={questionIndex === 0} onClick={() => go(questions[questionIndex - 1].id)}><ArrowLeft className={`me-2 inline h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} aria-hidden="true" />{t("talk.back")}</button>{!isDone && current.kind !== "another" && <button className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white disabled:opacity-60" disabled={!hydrated} onClick={() => next()}>{t("talk.saveContinue")}<ArrowRight className={`ms-2 inline h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} aria-hidden="true" /></button>}</div>
+        {current.optional && <button className={`${control} mt-3 w-full text-center`} onClick={() => next(true)}>{t("talk.skip")}</button>}
+        <button className={`${control} mt-3 w-full text-center`} onClick={() => { abort.current?.abort(); updateField({ builderMode: "full", step: 1 }); }}>{t("talk.fullForm")}</button>
       </div>
     </main>
     {isDone && !preview && <div hidden aria-hidden="true">{state.template === "ats-clean" ? <ATSCleanTemplate state={state} /> : <SectorTemplate state={state} />}</div>}

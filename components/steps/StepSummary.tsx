@@ -2,27 +2,30 @@
 
 import { useCVState } from "@/lib/state";
 import { finishCV } from "@/lib/cv-finish";
+import { useLocale } from "@/lib/locale";
 
 export default function StepSummary() {
   const { state } = useCVState();
+  const { t } = useLocale();
   const { cv } = finishCV(state);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="summary-step">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">About you (2 to 3 lines)</h2>
-        <p className="mt-1 text-sm text-gray-600">Your CV uses your work history, skills and languages to write this section.</p>
+        <h2 className="text-lg font-semibold text-gray-900">{t("summary.title")}</h2>
+        <p className="mt-1 text-sm text-gray-600">{t("summary.description")}</p>
       </div>
-      <section aria-label="Profile on your CV" className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-900">
-        <h3 className="font-semibold">Profile on your CV</h3>
+      <section aria-label={t("summary.builtProfile")} className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-900">
+        <h3 className="font-semibold">{t("summary.builtProfile")}</h3>
         <p data-testid="built-profile" dir={cv.cvLanguage === "ar" ? "rtl" : "ltr"} lang={cv.cvLanguage} className="mt-2 break-words leading-relaxed">
-          {cv.summary || "Add a role or a skill to build your profile."}
+          {cv.summary}
         </p>
+        {!cv.summary && <p className="mt-2 text-ink-muted">{t("summary.profileMissing")}</p>}
       </section>
       {state.summary && <div>
-        <label htmlFor="cv-profile-notes" className="block text-sm font-medium text-gray-900">Saved profile notes</label>
+        <label htmlFor="cv-profile-notes" className="block text-sm font-medium text-gray-900">{t("summary.savedNotes")}</label>
         <p id="cv-profile-notes-help" className="mt-1 text-sm text-gray-600">
-          These notes stay in your draft. To add facts to your CV, use the work, skills or language fields.
+          {t("summary.savedNotesHelp")}
         </p>
         <textarea
           id="cv-profile-notes"

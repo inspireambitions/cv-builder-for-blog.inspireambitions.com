@@ -12,6 +12,8 @@
     "check:free": "node scripts/check-free-product.mjs",
     "check:plain": "node --test scripts/check-plain-language.test.mjs && node scripts/check-plain-language.mjs",
     "check:cv-language": "node scripts/check-cv-language.mjs",
+    "check:translations": "node --test scripts/locale-coverage.test.mjs scripts/check-translations.test.mjs && node scripts/check-translations.mjs",
+    "audit:translations": "node scripts/check-translations.mjs --audit",
     "test:e2e": "playwright test",
     "test:email": "node scripts/test-email-migration.cjs",
     "test:lighthouse": "node scripts/run-lighthouse.mjs",

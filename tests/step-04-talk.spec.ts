@@ -8,6 +8,7 @@ import { sampleServiceCVState } from "../lib/sample-data";
 import { defaultTalkProgress, getTalkQuestions, normalizeTalk } from "../lib/talk-flow";
 import { getRoleFamilies, getTalkSentences } from "../lib/role-suggestions";
 import { isTalkTextGrounded } from "../lib/evidence";
+import { translations, type Locale } from "../lib/i18n";
 
 test("sentence library supports every family without auto-selected facts", () => {
   for (const family of getRoleFamilies().filter((entry) => entry.key !== "general")) expect(getTalkSentences(family.key).length).toBeGreaterThanOrEqual(8);
@@ -205,9 +206,10 @@ test("AI suggestions need approval and adding another job preserves the first", 
   expect(saved.experience[1].description).toBe("");
 });
 
-for (const locale of ["en", "ar", "ur"]) {
+for (const locale of ["en", "ar", "ur"] as const satisfies readonly Locale[]) {
   test(`every Talk screen fits 360px with usable targets: ${locale}`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-360", "360px screenshot matrix.");
+    test.skip(locale !== "en" && process.env.NEXT_PUBLIC_PREVIEW_DRAFT_LOCALES !== "true", "Draft locales are not publicly selectable.");
     test.setTimeout(180000);
     await page.goto("/");
     test.skip(await page.getByRole("button", { name: /Answer simple questions/ }).count() === 0, "Feature is off.");
@@ -221,8 +223,8 @@ for (const locale of ["en", "ar", "ur"]) {
         localStorage.removeItem("inspireambitions-cv-active-draft-id"); localStorage.removeItem("inspireambitions-cv-drafts");
         localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 8, savedAt: new Date().toISOString(), state: { ...state, talk: { ...state.talk, questionId: id } } }));
       }, { state, id: question.id, locale });
-      await screen.goto("/"); await screen.getByRole("button", { name: "Continue", exact: true }).click();
-      await expect(screen.getByRole("heading", { name: question.kind === "done" ? /^Recruiter check:/ : question.question, exact: true })).toBeVisible();
+      await screen.goto("/"); await screen.getByRole("button", { name: translations[locale]["talk.continue"], exact: true }).click();
+      await expect(screen.getByRole("heading", { name: translations[locale][`talk.question.${question.kind}`], exact: true })).toBeVisible();
       expect(await screen.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
       const checks = await screen.locator(".talk-mode button, .talk-mode input, .talk-mode select, .talk-mode textarea").evaluateAll((nodes) => nodes.filter((node) => (node as HTMLElement).offsetParent !== null).map((node) => ({ height: node.getBoundingClientRect().height, label: node.textContent })));
       expect(checks.filter((item) => item.height < 48), question.id).toEqual([]);

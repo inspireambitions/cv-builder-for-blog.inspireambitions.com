@@ -1,7 +1,7 @@
 "use client";
 
 import { useCVState } from "@/lib/state";
-import { getRoleExamples } from "@/lib/role-examples";
+import { useLocale } from "@/lib/locale";
 import type { EduEntry, CertEntry } from "@/lib/types";
 
 function generateEduId() {
@@ -28,6 +28,7 @@ const EMPTY_CERT: Omit<CertEntry, "id"> = {
 
 export default function StepEducation() {
   const { state, updateField } = useCVState();
+  const { t } = useLocale();
   const eduEntries = state.education;
   const certEntries = state.certifications;
 
@@ -74,13 +75,13 @@ export default function StepEducation() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10" data-testid="education-step">
       {/* ── Education Section ── */}
       <div className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Education</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t("education.title")}</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Add your qualifications starting with the most recent
+            {t("education.description")}
           </p>
         </div>
 
@@ -93,7 +94,7 @@ export default function StepEducation() {
               {/* Card header */}
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  Qualification {index + 1}
+                  {t("education.card", { number: index + 1 })}
                 </h3>
                 {eduEntries.length > 1 && (
                   <button
@@ -101,7 +102,7 @@ export default function StepEducation() {
                     onClick={() => removeEdu(entry.id)}
                     className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
                   >
-                    Remove
+                    {t("form.remove")}
                   </button>
                 )}
               </div>
@@ -110,7 +111,7 @@ export default function StepEducation() {
                 {/* Degree / Qualification */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Degree / Qualification <span className="text-red-500">*</span>
+                    {t("education.degree")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -118,7 +119,8 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "degree", e.target.value)
                     }
-                  placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").education}
+                    placeholder={t("education.courseExample")}
+                    aria-label={t("education.degree")}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -126,7 +128,7 @@ export default function StepEducation() {
                 {/* Institution */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Institution
+                    {t("education.institution")}
                   </label>
                   <input
                     type="text"
@@ -134,7 +136,8 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "institution", e.target.value)
                     }
-                    placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").institution}
+                    placeholder={t("education.schoolExample")}
+                    aria-label={t("education.institution")}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -142,7 +145,7 @@ export default function StepEducation() {
                 {/* Year Completed */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Year Completed
+                    {t("education.year")}
                   </label>
                   <input
                     type="text"
@@ -150,7 +153,10 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "year", e.target.value)
                     }
-                    placeholder="e.g. 2018"
+                    placeholder={t("education.yearExample")}
+                    aria-label={t("education.year")}
+                    inputMode="numeric"
+                    dir="ltr"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -158,8 +164,8 @@ export default function StepEducation() {
                 {/* Grade / GPA */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Grade / GPA{" "}
-                    <span className="text-gray-400 font-normal">(optional)</span>
+                    {t("education.grade")}{" "}
+                    <span className="text-gray-400 font-normal">{t("form.optional")}</span>
                   </label>
                   <input
                     type="text"
@@ -167,7 +173,8 @@ export default function StepEducation() {
                     onChange={(e) =>
                       updateEdu(entry.id, "grade", e.target.value)
                     }
-                    placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").grade}
+                    placeholder={t("education.gradeExample")}
+                    aria-label={t("education.grade")}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                 </div>
@@ -195,7 +202,7 @@ export default function StepEducation() {
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-          Add Education
+          {t("education.addEdu")}
         </button>
       </div>
 
@@ -203,10 +210,10 @@ export default function StepEducation() {
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            Professional Certifications
+            {t("education.certsTitle")}
           </h2>
           <p className="mt-1 text-sm text-gray-600">
-            Industry certifications, licences, and professional qualifications
+            {t("education.certDescription")}
           </p>
         </div>
 
@@ -220,14 +227,14 @@ export default function StepEducation() {
                 {/* Card header */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-700">
-                    Certification {index + 1}
+                    {t("education.certCard", { number: index + 1 })}
                   </h3>
                   <button
                     type="button"
                     onClick={() => removeCert(entry.id)}
                     className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
                   >
-                    Remove
+                    {t("form.remove")}
                   </button>
                 </div>
 
@@ -235,7 +242,7 @@ export default function StepEducation() {
                   {/* Certification Name */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Certification Name
+                      {t("education.certName")}
                     </label>
                     <input
                       type="text"
@@ -243,7 +250,8 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "name", e.target.value)
                       }
-                      placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").education}
+                      placeholder={t("education.courseExample")}
+                      aria-label={t("education.certName")}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
@@ -251,7 +259,7 @@ export default function StepEducation() {
                   {/* Issuing Body */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Issuing Body
+                      {t("education.certIssuer")}
                     </label>
                     <input
                       type="text"
@@ -259,7 +267,8 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "issuer", e.target.value)
                       }
-                      placeholder="Your training provider"
+                      placeholder={t("education.providerExample")}
+                      aria-label={t("education.certIssuer")}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
@@ -267,7 +276,7 @@ export default function StepEducation() {
                   {/* Date Obtained */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Date Obtained
+                      {t("education.certDate")}
                     </label>
                     <input
                       type="text"
@@ -275,7 +284,8 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "date", e.target.value)
                       }
-                      placeholder="e.g. March 2022"
+                      placeholder={t("education.dateExample")}
+                      aria-label={t("education.certDate")}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
@@ -283,9 +293,9 @@ export default function StepEducation() {
                   {/* Expiry Date */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Expiry Date{" "}
+                      {t("education.certExpiry")}{" "}
                       <span className="text-gray-400 font-normal">
-                        (optional)
+                        {t("form.optional")}
                       </span>
                     </label>
                     <input
@@ -294,7 +304,8 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateCert(entry.id, "expiry", e.target.value)
                       }
-                      placeholder="e.g. March 2025 or N/A"
+                      placeholder={t("education.expiryExample")}
+                      aria-label={t("education.certExpiry")}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                     />
                   </div>
@@ -323,19 +334,17 @@ export default function StepEducation() {
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-          Add Certification
+          {t("education.addCert")}
         </button>
       </div>
 
       {/* HR Tip */}
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+      <div className="bg-amber-50 border-s-4 border-amber-400 p-4 rounded-e-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Career Specialist Tip
+          {t("tip.label")}
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          Professional certifications like CIPD, PMP, SHRM, and CFA often carry
-          more weight than your university name in hiring decisions. Always list
-          them prominently.
+          {t("education.tip")}
         </p>
       </div>
     </div>

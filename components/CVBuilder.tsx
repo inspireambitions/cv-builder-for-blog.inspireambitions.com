@@ -110,12 +110,6 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
     if (state.step === 8) trackToolEvent("full_form_completed", { lang: locale });
   }, [hydrated, locale, state.step]);
 
-  // Sync html dir/lang on mount & locale change
-  useEffect(() => {
-    document.documentElement.dir = dir;
-    document.documentElement.lang = locale;
-  }, [dir, locale]);
-
   const calculateScale = useCallback(() => {
     if (previewContainerRef.current) {
       const containerWidth = previewContainerRef.current.clientWidth;
@@ -244,7 +238,7 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
               </button>
             )}
             <span className={state.step > 0 ? "hidden md:inline-flex" : "inline-flex"}><ThemeToggle /></span>
-            {TALK_MODE_ENABLED && <button className="min-h-12 rounded-lg border border-gray-300 px-3 text-sm" onClick={() => updateField({ builderMode: "talk", talk: state.talk ?? defaultTalkProgress })}>Simple questions</button>}
+            {TALK_MODE_ENABLED && <button className="min-h-12 rounded-lg border border-gray-300 px-3 text-sm" onClick={() => updateField({ builderMode: "talk", talk: state.talk ?? defaultTalkProgress })}>{t("builder.simpleQuestions")}</button>}
             <LanguageToggle />
           </div>
         </div>
@@ -289,16 +283,18 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="text-sm font-bold text-[#1a2744]">
-                    {state.step === 1
-                      ? `Personal details • ${state.mobilePersonalPage + 1} of 3`
-                      : `${currentStep?.label} • ${state.step} of 8`}
+                    {t("builder.progress", {
+                      step: t(STEP_I18N_KEY[currentStep.key]),
+                      number: state.step === 1 ? state.mobilePersonalPage + 1 : state.step,
+                      total: state.step === 1 ? 3 : 8,
+                    })}
                   </p>
                   <p className="mt-0.5 text-xs text-[#697184]">
-                    {state.step < 3 ? "About 6 minutes left" : state.step < 6 ? "You are making good progress" : "Nearly finished"}
+                    {t(state.step < 3 ? "builder.timeLeft" : state.step < 6 ? "builder.goodProgress" : "builder.nearlyFinished")}
                   </p>
                 </div>
                 <button type="button" onClick={() => setMobileMode(mobileMode === "preview" ? "edit" : "preview")} className="min-h-10 rounded-lg border border-[#d5c58d] bg-white px-3 text-xs font-bold text-[#806017]">
-                  {mobileMode === "preview" ? "Back to editing" : "Preview CV"}
+                  {t(mobileMode === "preview" ? "builder.backToEditing" : "builder.preview")}
                 </button>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#ece8dc]">
@@ -486,28 +482,28 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
 
       {state.step > 0 && mobileMode === "edit" && !isLastStep && (
         <div className="mobile-action-bar fixed inset-x-0 bottom-0 z-30 px-4 pt-3 sm:hidden">
-          <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-[#2f6b5e]"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />Saved on this device</p>
+          <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-xs font-medium text-[#2f6b5e]"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />{t("builder.saved")}</p>
           <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={handleMobileBack}
-            className="min-h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700"
+            className="min-h-12 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700"
           >
             <span className="flex items-center gap-1.5"><ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />{t("nav.back")}</span>
           </button>
           <button
             type="button"
             onClick={handleMobileNext}
-            className="min-h-11 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
+            className="min-h-12 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
           >
-            <span className="flex items-center justify-center gap-2">Save and continue<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" /></span>
+            <span className="flex items-center justify-center gap-2">{t("builder.saveContinue")}<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" /></span>
           </button>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      {state.step > 0 ? <footer className="py-8 text-center text-sm text-ink-muted"><a href="https://inspireambitions.com/career-tools/" className="underline">More free career tools</a></footer> : <footer className="bg-gray-900 text-gray-200 mt-12">
+      {state.step > 0 ? <footer className="py-8 text-center text-sm text-ink-muted"><a href="https://inspireambitions.com/career-tools/" className="underline">{t("builder.moreTools")}</a></footer> : <footer className="bg-gray-900 text-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Brand */}

@@ -1,3 +1,10 @@
+import { talkQuestionTranslations } from "./locales/talk-questions";
+import { formTranslations } from "./locales/form";
+import { skillExampleTranslations } from "./locales/skill-examples";
+import { experienceTranslations } from "./locales/experience";
+import { talkControlTranslations } from "./locales/talk-controls";
+import { roleLibraryTranslations } from "./locales/role-library";
+
 export type Locale = "en" | "ar" | "hi" | "ur" | "tl";
 
 const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
@@ -443,10 +450,20 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
   },
 };
 
+// These maps contain authored translations only. Do not merge English into them:
+// the release check and language switcher must be able to see missing keys.
+export const authoredTranslations: Record<Locale, Record<string, string>> = {
+  en: { ...baseTranslations.en, ...talkQuestionTranslations.en, ...formTranslations.en, ...skillExampleTranslations.en, ...experienceTranslations.en, ...roleLibraryTranslations.en, ...talkControlTranslations.en },
+  ar: { ...baseTranslations.ar, ...talkQuestionTranslations.ar, ...formTranslations.ar, ...skillExampleTranslations.ar, ...experienceTranslations.ar, ...roleLibraryTranslations.ar, ...talkControlTranslations.ar },
+  hi: { ...languageOverrides.hi, ...talkQuestionTranslations.hi, ...formTranslations.hi, ...skillExampleTranslations.hi, ...experienceTranslations.hi, ...roleLibraryTranslations.hi, ...talkControlTranslations.hi },
+  ur: { ...languageOverrides.ur, ...talkQuestionTranslations.ur, ...formTranslations.ur, ...skillExampleTranslations.ur, ...experienceTranslations.ur, ...roleLibraryTranslations.ur, ...talkControlTranslations.ur },
+  tl: { ...languageOverrides.tl, ...talkQuestionTranslations.tl, ...formTranslations.tl, ...skillExampleTranslations.tl, ...experienceTranslations.tl, ...roleLibraryTranslations.tl, ...talkControlTranslations.tl },
+};
+
 export const translations: Record<Locale, Record<string, string>> = {
-  en: baseTranslations.en,
-  ar: baseTranslations.ar,
-  hi: { ...baseTranslations.en, ...languageOverrides.hi },
-  ur: { ...baseTranslations.en, ...languageOverrides.ur },
-  tl: { ...baseTranslations.en, ...languageOverrides.tl },
+  en: authoredTranslations.en,
+  ar: authoredTranslations.ar,
+  hi: { ...authoredTranslations.en, ...authoredTranslations.hi },
+  ur: { ...authoredTranslations.en, ...authoredTranslations.ur },
+  tl: { ...authoredTranslations.en, ...authoredTranslations.tl },
 };
