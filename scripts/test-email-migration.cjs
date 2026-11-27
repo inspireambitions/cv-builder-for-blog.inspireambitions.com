@@ -22,9 +22,10 @@ function load(file, dependencies, env, fetch) {
   return compiled.exports;
 }
 
-async function scenario(mode, payload = { email: 'migration-test@example.com', firstName: 'Test', format: 'pdf' }) {
+async function scenario(mode, payload = { email: 'migration-test@example.com', firstName: 'Test', format: 'pdf' }, linkEnabled = false) {
   const calls = [];
   const env = { RESEND_API_KEY: 'test-only', IA_CV_EMAIL_BRIDGE_SECRET: 'test-only' };
+  if (linkEnabled) env.NEXT_PUBLIC_MUQABALA_PRACTICE_LINK = 'true';
   if (mode === 'missing-config') delete env.IA_CV_EMAIL_BRIDGE_SECRET;
   const fetch = async (url, options) => {
     calls.push({ url, options });
@@ -33,7 +34,10 @@ async function scenario(mode, payload = { email: 'migration-test@example.com', f
     if (mode === 'timeout') throw new Error('Controlled timeout');
     if (mode === 'rate-limit') return new Response('{}', { status: 429 });
     if (mode === 'pending') return new Response('{}', { status: 503 });
-    return Response.json({ sent: mode !== 'rejected', deduped: false });
+    const request = JSON.parse(options.body);
+    return Response.json({ sent: mode !== 'rejected', deduped: false,
+      ...(mode === 'older-bridge' ? {} : { practiceLinkIncluded: request.requestPracticeLink === true }),
+    });
   };
   const helper = load('lib/transactional-email.ts', {}, env, fetch);
   const route = load('app/api/subscribe/route.ts', {
@@ -71,5 +75,27 @@ async function scenario(mode, payload = { email: 'migration-test@example.com', f
   const invalid = await scenario('success', { email: 'invalid' });
   assert.equal(invalid.status, 400);
   assert.equal(invalid.calls.length, 0);
-  console.log('8 migration scenarios passed: authenticated bridge, subscriber preservation, four send failures, missing configuration, contact outage and invalid input.');
+  const nullBody = await scenario('success', null);
+  assert.equal(nullBody.status, 400);
+  assert.equal(nullBody.calls.length, 0);
+
+  for (const [linkEnabled, requested, mode, expected] of [
+    [true, true, 'success', true],
+    [true, false, 'success', false],
+    [true, 'true', 'success', false],
+    [false, true, 'success', false],
+    [true, true, 'older-bridge', false],
+    [true, true, 'timeout', false],
+  ]) {
+    const result = await scenario(mode, { email: 'practice-test@example.com', requestPracticeLink: requested }, linkEnabled);
+    assert.equal(result.status, 200);
+    assert.equal(result.body.success, true);
+    assert.equal(result.body.practiceLinkIncluded, expected);
+    const messages = result.calls.filter(c => c.url.endsWith('/cv-welcome'));
+    assert.equal(messages.length, 1);
+    const sent = JSON.parse(messages[0].options.body);
+    assert.equal(sent.requestPracticeLink, linkEnabled && requested === true ? true : undefined);
+    assert.equal(result.calls.some(c => new URL(c.url).hostname === 'trymuqabala.com'), false);
+  }
+  console.log('15 email scenarios passed, including optional one-time practice link, older bridge and provider outages.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

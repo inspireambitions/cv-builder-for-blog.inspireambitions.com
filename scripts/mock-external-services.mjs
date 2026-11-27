@@ -52,7 +52,7 @@ const server = createServer(async (request, response) => {
     if (request.headers.authorization !== "Bearer test-bridge-key") {
       return send(response, 401, { message: "Authentication required" });
     }
-    if (request.method === "GET") return send(response, 200, { ready: true });
+    if (request.method === "GET") return send(response, 200, { ready: true, practiceLinkSupported: true });
     const body = await readJson(request);
     if (String(body.email || "").startsWith("idempotency-")) {
       const key = JSON.stringify([body.email, body.firstName, body.format]);
