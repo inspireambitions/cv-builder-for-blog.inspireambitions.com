@@ -202,13 +202,13 @@ export default function TalkMode() {
     </header>
     <main className="mx-auto max-w-2xl px-4 pb-8 pt-6 sm:pt-8">
       {restoredAt && <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4"><p>Your CV is saved on this device.</p><button className={`${control} mt-3`} onClick={dismissRestoreBanner}>Continue</button></div>}
-      {locale !== "en" && <p className="mb-4 text-sm text-ink-muted" lang="en">This test version uses English questions. Full translations come next.</p>}
+      {locale !== "en" && <p className="mb-4 text-sm text-ink-muted" lang="en" dir="ltr">This test version uses English questions. Full translations come next.</p>}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-ink-muted" data-testid="talk-progress">Question {questionIndex + 1} of about {questions.length}</p>
         <button className={control} onClick={() => setPreview(!preview)}><Eye className="me-2 inline h-4 w-4" aria-hidden="true" />{preview ? "Close my CV" : "See my CV"}</button>
       </div>
       {preview && <div className="mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-white p-3" aria-label="Your CV preview"><div className="origin-top-left" style={{ zoom: "0.36" }}>{state.template === "ats-clean" ? <ATSCleanTemplate state={state} /> : <SectorTemplate state={state} />}</div></div>}
-      <div className="mb-5 flex items-start gap-3"><BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-accent" aria-hidden="true" /><h1 ref={heading} tabIndex={-1} className="text-balance text-2xl font-bold text-ink focus:outline-none" lang="en">{current.question}</h1></div>
+      <div className="mb-5 flex items-start gap-3"><BriefcaseBusiness className="mt-1 h-6 w-6 shrink-0 text-accent" aria-hidden="true" /><h1 ref={heading} tabIndex={-1} className="text-balance text-2xl font-bold text-ink focus:outline-none" lang="en" dir="ltr">{current.question}</h1></div>
       <div className="space-y-4" lang="en">
         {current.kind === "language" && <div className="grid gap-3">{LANGUAGES.map((item) => <button key={item.code} className={control} aria-pressed={locale === item.code} onClick={() => setLocale(item.code as Locale)}>{item.label}</button>)}</div>}
         {current.kind === "family" && <><div className="grid gap-3 sm:grid-cols-2">{workTypes.map((item) => <button key={item.key} className={control} aria-pressed={talk.families[job.id] === item.key} onClick={() => { patchJob({ roleFamily: item.key === "general" ? undefined : item.key });
@@ -232,12 +232,16 @@ export default function TalkMode() {
         {current.kind === "letter" && <><p>Letter from your sponsor allowing you to change job (NOC).</p><div className="grid gap-3">{(["Yes", "No", "Not applicable"] as const).map((value) => <button key={value} className={control} aria-pressed={state.personal.noc_available === value} onClick={() => updatePersonal({ noc_available: value })}>{value}</button>)}</div></>}
         {current.kind === "contact" && <><label className="block">Your name<input className={field} autoComplete="name" value={state.personal.name} onChange={(event) => updatePersonal({ name: event.target.value })} /></label><PhoneField phone={state.personal.phone} onChange={(phone) => updatePersonal({ phone })} placeholder={state.geo === "gulf" ? "+971" : "+44"} /><label className="block">Email (optional)<input className={field} dir="ltr" type="email" autoComplete="email" value={state.personal.email} onChange={(event) => { updatePersonal({ email: event.target.value }); patchTalk({ noEmail: false }); }} /></label><button className={control} aria-pressed={talk.noEmail} onClick={() => { updatePersonal({ email: "" }); patchTalk({ noEmail: true }); }}>I do not use email</button>{talk.noEmail && <p>The free picture download needs no email.</p>}<LocationFields value={state.personal.location} onChange={(location) => updatePersonal({ location })} /></>}
         {current.kind === "photo" && <PhotoEditor compact />}
-        {current.kind === "summary" && <>
+        {current.kind === "summary" && <section className="space-y-4" dir="ltr">
           <p>Your CV profile comes from the details you entered.</p>
-          <label className="block">About you<textarea aria-label="About you" className={`${field} min-h-32`} value={summaries} readOnly /></label>
+          <div role="region" aria-label="About you">
+            <h2 className="text-sm font-semibold">About you</h2>
+            <p className="mt-2 whitespace-pre-line rounded-lg border border-gray-300 bg-white p-4 text-base text-ink"
+              dir={state.cvLanguage === "ar" ? "rtl" : "ltr"} lang={state.cvLanguage}>{summaries}</p>
+          </div>
           <p className="text-sm text-ink-muted">To update it, change your work, skills or languages.</p>
           <button className={control} onClick={() => next()}>Keep these words</button>
-        </>}
+        </section>}
         {current.kind === "design" && <><div className="grid gap-3">{TEMPLATE_INFO.filter((item) => allDesigns || recommended.includes(item.key)).map((item) => <button key={item.key} className={control} aria-pressed={state.template === item.key && state.templateConfirmed} onClick={() => updateField({ template: item.key, templateConfirmed: true })}><strong>{item.name}</strong><span className="mt-1 block text-sm text-ink-muted">{item.key === recommended[0] ? "Suggested for your work" : "Choose this CV layout"}</span></button>)}</div><button className={control} onClick={() => setAllDesigns(!allDesigns)}>{allDesigns ? "Show three designs" : "See all designs"}</button></>}
         {isDone && <><div className="rounded-xl border border-gray-200 bg-white p-5"><h2 className="text-xl font-bold">{missing.length ? `Recruiter check: ${missing.length} ${missing.length === 1 ? "thing" : "things"} to fix` : "Recruiter check: ready to download"}</h2>{missing.map((item) => <button key={item.id} className={`${control} mt-3 block w-full`} onClick={() => fix(item)}>{item.label}</button>)}<p className="mt-3">Check your details, then choose a file to download.</p><button className="mt-4 min-h-12 w-full rounded-lg bg-accent px-4 py-3 font-bold text-white" onClick={finish}>Download my CV</button></div>{talk.noEmail && <p>The free picture download needs no email.</p>}</>}
         {busy && <div role="status" className="space-y-2"><p>Writing suggestions. You can keep using your own words.</p><div className="h-4 rounded-lg bg-gray-200 motion-safe:animate-pulse" /><div className="h-4 w-3/4 rounded-lg bg-gray-200 motion-safe:animate-pulse" /></div>}

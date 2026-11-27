@@ -135,7 +135,9 @@ test("Talk Mode completes with AI down and produces valid picture, PDF and Word"
   await page.getByLabel("Country", { exact: true }).fill("UAE");
   await page.getByRole("button", { name: "I do not use email" }).click(); await next(page);
   await skip(page);
-  await expect(page.getByLabel("About you", { exact: true })).toHaveValue(/Room Attendant with .*hotel experience at Example Hotel, Dubai, UAE\. Skilled in Teamwork\. Speaks English\./);
+  const profile = page.getByRole("region", { name: "About you", exact: true }).locator("p");
+  await expect(profile).toHaveText(/Room Attendant with .*hotel experience at Example Hotel, Dubai, UAE\. Skilled in Teamwork\. Speaks English\./);
+  await expect(profile).toHaveAttribute("dir", "ltr");
   await page.getByRole("button", { name: "Keep these words" }).click();
   await page.getByRole("button", { name: /^Service/ }).click(); await next(page);
   await expect(page.getByRole("heading", { name: /^Recruiter check:/ })).toBeVisible();
