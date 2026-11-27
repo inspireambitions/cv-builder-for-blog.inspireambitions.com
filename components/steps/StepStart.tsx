@@ -562,9 +562,9 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
 
         {/* CTAs */}
         {mode === "hero" && TALK_MODE_ENABLED && <div className="mx-auto mt-8 grid max-w-md gap-3">
-          <button className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white" onClick={() => updateField({ builderMode: "talk", talk: defaultTalkProgress, step: 1 })}>Answer simple questions <span className="block text-sm">Recommended</span></button>
-          <button className="min-h-12 rounded-lg border border-gray-300 px-4 py-3" onClick={handleUploadMode}>I already have a CV</button>
-          <button className="min-h-12 rounded-lg border border-gray-300 px-4 py-3" onClick={handleBuildManually}>Fill in the full form</button>
+          <button disabled={!hydrated} className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white disabled:cursor-wait disabled:opacity-60" onClick={() => updateField({ builderMode: "talk", talk: defaultTalkProgress, step: 1 })}>Answer simple questions <span className="block text-sm">Recommended</span></button>
+          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleUploadMode}>I already have a CV</button>
+          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleBuildManually}>Fill in the full form</button>
         </div>}
         {mode === "hero" && !TALK_MODE_ENABLED && (
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">

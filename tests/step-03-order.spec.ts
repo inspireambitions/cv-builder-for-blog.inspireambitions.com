@@ -28,12 +28,15 @@ test("entry buttons wait for interactive handlers", async ({ browser, page, base
   const context = await browser.newContext({ javaScriptEnabled: false });
   const initial = await context.newPage();
   const response = await initial.goto(baseURL!);
-  await expect(initial.getByRole("button", { name: "Build My CV", exact: true })).toBeDisabled();
+  const talk = process.env.NEXT_PUBLIC_TALK_MODE === "true";
+  const entry = { name: talk ? /Fill in the full form/ : /^Build My CV$/ };
+  await expect(initial.getByRole("button", entry)).toBeDisabled();
+  if (talk) await expect(initial.getByRole("button", { name: /Answer simple questions/ })).toBeDisabled();
   expect(await response!.text()).toContain("Turn on JavaScript to build your CV.");
   await context.close();
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Build My CV", exact: true })).toBeEnabled();
-  await page.getByRole("button", { name: "Build My CV", exact: true }).click();
+  await expect(page.getByRole("button", entry)).toBeEnabled();
+  await page.getByRole("button", entry).click();
   const nameField = (page.viewportSize()?.width ?? 1440) < 640
     ? page.getByPlaceholder("For example, Amina Yusuf")
     : page.getByPlaceholder("e.g. Sarah Al-Mansoori");
