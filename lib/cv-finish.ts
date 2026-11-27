@@ -95,7 +95,7 @@ function educationYear(year: string) {
 }
 
 function hasText(...fields: string[]) {
-  return fields.some((field) => field.trim());
+  return fields.some((field) => typeof field === "string" && field.trim());
 }
 
 /** Build a document view. Never use the result to overwrite the saved draft. */
