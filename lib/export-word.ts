@@ -62,6 +62,9 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
   const { cv } = finishCV(draft, options.asOf);
   const layout = documentBodyLayout(cv);
   const body = Math.round(layout.size * 2);
+  // Word adds its own font leading. Tone down only the extra gap on sparse
+  // documents so the final section does not slip onto a mostly blank page.
+  const sectionGap = layout.sectionGap > 13 ? Math.min(65, 13 + (layout.sectionGap - 13) * 0.66) : layout.sectionGap;
   const labels = SECTION_LABELS[cv.cvLanguage];
   const children: Paragraph[] = [];
   const recruiterReady = isRecruiterReady(options);
@@ -137,7 +140,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Professional Summary
   if (cv.summary) {
-    children.push(sectionHeading(labels.summary, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.summary, sectionColour, sectionGap));
     children.push(
       new Paragraph({
         children: [new TextRun({ text: cv.summary, size: body })],
@@ -149,7 +152,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
   // Work Experience
   const filledExp = cv.experience.filter((e) => e.role.trim() || e.company.trim());
   if (filledExp.length > 0) {
-    children.push(sectionHeading(labels.experience, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.experience, sectionColour, sectionGap));
     for (const [index, exp] of filledExp.entries()) {
       children.push(
         new Paragraph({
@@ -210,7 +213,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
   // Education
   const filledEdu = cv.education.filter((e) => e.degree.trim() || e.institution.trim());
   if (filledEdu.length > 0) {
-    children.push(sectionHeading(labels.education, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.education, sectionColour, sectionGap));
     for (const edu of filledEdu) {
       children.push(
         new Paragraph({
@@ -235,7 +238,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Skills
   if (cv.skills.length > 0) {
-    children.push(sectionHeading(labels.skills, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.skills, sectionColour, sectionGap));
     children.push(
       new Paragraph({
         children: [new TextRun({ text: cv.skills.join(" | "), size: body })],
@@ -247,7 +250,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
   // Languages
   const filledLangs = cv.languages.filter((l) => l.language.trim());
   if (filledLangs.length > 0) {
-    children.push(sectionHeading(labels.languages, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.languages, sectionColour, sectionGap));
     for (const lang of filledLangs) {
       children.push(
         new Paragraph({
@@ -264,7 +267,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
   const sectorCredentials = getSelectedSectorCredentials(cv);
   const certificates = cv.certifications.filter((item) => item.name.trim() || item.issuer.trim());
   if (certificates.length > 0 || sectorCredentials.length > 0) {
-    children.push(sectionHeading(labels.credentials, sectionColour, layout.sectionGap));
+    children.push(sectionHeading(labels.credentials, sectionColour, sectionGap));
     for (const credential of sectorCredentials) {
       children.push(
         new Paragraph({
@@ -295,7 +298,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Achievements
   if (cv.achievements.length > 0) {
-    children.push(sectionHeading("Achievements & Awards", sectionColour, layout.sectionGap));
+    children.push(sectionHeading("Achievements & Awards", sectionColour, sectionGap));
     for (const a of cv.achievements) {
       children.push(
         new Paragraph({
@@ -315,7 +318,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Volunteer
   if (cv.volunteer.length > 0) {
-    children.push(sectionHeading("Volunteer Work", sectionColour, layout.sectionGap));
+    children.push(sectionHeading("Volunteer Work", sectionColour, sectionGap));
     for (const v of cv.volunteer) {
       children.push(
         new Paragraph({
@@ -334,7 +337,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Projects
   if (cv.projects.length > 0) {
-    children.push(sectionHeading("Personal Projects", sectionColour, layout.sectionGap));
+    children.push(sectionHeading("Personal Projects", sectionColour, sectionGap));
     for (const p of cv.projects) {
       children.push(
         new Paragraph({
@@ -353,7 +356,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Publications
   if (cv.publications.length > 0) {
-    children.push(sectionHeading("Publications & Media", sectionColour, layout.sectionGap));
+    children.push(sectionHeading("Publications & Media", sectionColour, sectionGap));
     for (const pub of cv.publications) {
       children.push(
         new Paragraph({
@@ -370,7 +373,7 @@ export async function buildWord(draft: CVState, options: ExportOptions = {}) {
 
   // Memberships
   if (cv.memberships.length > 0) {
-    children.push(sectionHeading("Professional Memberships", sectionColour, layout.sectionGap));
+    children.push(sectionHeading("Professional Memberships", sectionColour, sectionGap));
     for (const m of cv.memberships) {
       children.push(
         new Paragraph({
