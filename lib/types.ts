@@ -10,6 +10,7 @@ export interface ExpEntry {
   endMonth?: string;
   endYear?: string;
   current?: boolean;
+  promotionConfirmation?: string;
   description: string;
   gap: string;
 }

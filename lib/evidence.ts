@@ -80,6 +80,12 @@ function numberTokens(value: string) {
   return value.match(/\b\d+(?:[.,]\d+)?(?:%|\b)/g) ?? [];
 }
 
+/** Profile polish may change spacing, but must preserve every word and claim. */
+export function isGroundedProfilePolish(profile: string, proposed: string) {
+  const collapse = (value: string) => value.trim().replace(/[ \t\r\n]+/g, " ");
+  return Boolean(profile.trim()) && collapse(profile) === collapse(proposed);
+}
+
 export function validateTailoringDraft(
   draft: TailoringDraft,
   evidence: EvidenceItem[]

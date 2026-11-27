@@ -1,14 +1,20 @@
 import type { ExpEntry } from "./types";
 
 export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fullMonths = "January February March April May June July August September October November December".split(" ");
+
+function parseMonth(name: string) {
+  const lower = name.toLowerCase();
+  return MONTHS.findIndex((short, index) => lower === short.toLowerCase() || lower === fullMonths[index].toLowerCase());
+}
 
 // Preserve unrecognised legacy dates until the candidate chooses new dates.
 export function migrateExperienceDates(entry: ExpEntry): ExpEntry {
   if (entry.startYear !== undefined || !entry.dates.trim()) return entry;
   const match = entry.dates.trim().match(/^([A-Za-z]+)\s+(\d{4})\s*(?:to|[-–—])\s*(present|current|now|([A-Za-z]+)\s+(\d{4}))$/i);
   if (!match) return entry;
-  const start = MONTHS.findIndex((month) => month.toLowerCase() === match[1].slice(0, 3).toLowerCase());
-  const end = match[4] ? MONTHS.findIndex((month) => month.toLowerCase() === match[4].slice(0, 3).toLowerCase()) : -1;
+  const start = parseMonth(match[1]);
+  const end = match[4] ? parseMonth(match[4]) : -1;
   if (start < 0 || (match[4] && end < 0)) return entry;
   return { ...entry, startMonth: String(start + 1), startYear: match[2], endMonth: end >= 0 ? String(end + 1) : "", endYear: match[5] ?? "", current: !match[4] };
 }

@@ -90,7 +90,7 @@ function scoreSummary(state: CVState): ScoreCriterion {
   if (len > 200) s = 8;
   else if (len > 100) s = 5;
   else if (len > 30) s = 2;
-  return { score: s, max: 8, level: level(s, 8), label: "About you (2 to 3 lines)", tip: s < 8 ? "Write a 3-4 sentence summary highlighting your top achievements and what you bring to a Gulf employer." : undefined };
+  return { score: s, max: 8, level: level(s, 8), label: "About you (2 to 3 lines)", tip: s < 8 ? "Add work details, skills or languages to build a fuller profile." : undefined };
 }
 
 function scoreExperience(state: CVState): ScoreCriterion {
@@ -249,7 +249,7 @@ function scoreSummaryKeywords(state: CVState): ScoreCriterion {
   if (words.length >= 40) s = 5;
   else if (words.length >= 20) s = 3;
   else if (words.length >= 5) s = 1;
-  return { score: s, max: 5, level: level(s, 5), label: "Summary Depth", tip: s < 5 ? "Expand your summary to 40+ words. Company computers extract keywords from this section first." : undefined };
+  return { score: s, max: 5, level: level(s, 5), label: "Profile length", tip: s < 5 ? "Check that your work history and skills cover the role you want." : undefined };
 }
 
 function atsFormattingLayer(state: CVState): ScoreLayer {

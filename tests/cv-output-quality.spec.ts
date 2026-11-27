@@ -1,8 +1,11 @@
 import { readFileSync, readdirSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { finishCV } from "../lib/cv-finish";
+import { buildProfile, getRoleMove } from "../lib/profile-builder";
+import { findBannedCVPhrase } from "../lib/banned-phrases";
 import { buildPDF } from "../lib/export-pdf";
 import { buildWord } from "../lib/export-word";
 import { TEMPLATE_CONFIG } from "../lib/template-config";
@@ -160,7 +163,7 @@ test("keeps empty draft entries out of the text exports", async () => {
   const pdf = await buildPDF(draft);
   const wordContent = (await mammoth.extractRawText({ buffer: Buffer.from(await word.blob.arrayBuffer()) })).value;
   for (const output of [wordContent, await pdfText(pdf.blob)]) {
-    expect(output).not.toMatch(/Profile|Volunteer Work|Projects/i);
+    expect(output).not.toMatch(/Volunteer Work|Projects/i);
   }
   expect(draft.volunteer).toHaveLength(1);
   expect(draft.projects).toHaveLength(1);
@@ -194,6 +197,7 @@ for (const person of [person1, person3, person5, person8]) {
       const wordContent = flat((await mammoth.extractRawText({ buffer: Buffer.from(await word.blob.arrayBuffer()) })).value);
       for (const output of [previewContent, pdfContent, wordContent]) {
         expect(output, key).toContain(cv.personal.title);
+        expect(output, key).toContain(cv.summary);
         expect(output, key).toContain(cv.personal.phone);
         let previousJob = 0;
         for (const job of cv.experience) {
@@ -230,4 +234,84 @@ test("saved drafts show the finishing details while keeping typed answers", asyn
   expect(saved.experience.map((job: CVState["experience"][number]) => job.description))
     .toEqual(draft.experience.map((job) => job.description));
   expect(saved.personal.title).toBe("Finance clerk");
+});
+
+const reference = new Date("2026-11-27T12:00:00Z");
+
+test("person one profile is grounded in dates, work, skills and target", async ({}, testInfo) => {
+  const draft = draftFor(person1);
+  const expected = "Reservation Agent with more than 2 years of hotel experience at City Hotel Barsha, Dubai. Moved from Waitress to Reservation Agent in 2025. Skilled in guest calls, email handling and Microsoft Office. Now seeking a finance clerk role.";
+  expect(finishCV(draft, reference).cv.summary).toBe(expected);
+  expect(buildProfile(finishCV(draft, reference).cv, draft.personal.title, reference, expected.replace("hotel experience", "award-winning hotel experience"))).toBe(expected);
+  expect(buildProfile(finishCV(draft, reference).cv, draft.personal.title, reference, expected.replace("Moved", "Promoted"))).toBe(expected);
+  expect(buildProfile(finishCV(draft, reference).cv, draft.personal.title, reference, expected + " Dynamic team player.")).toBe(expected);
+  expect(buildProfile(finishCV(draft, reference).cv, draft.personal.title, reference, expected.replace("with more", "with  more"))).toBe(expected.replace("with more", "with  more"));
+  const dir = process.env.CV_PROFILE_COMPARISON_DIR;
+  if (dir && testInfo.project.name === "desktop-1440") {
+    const { blob } = await buildPDF(draft);
+    await mkdir(dir, { recursive: true });
+    await writeFile(`${dir}/after.pdf`, Buffer.from(await blob.arrayBuffer()));
+    await writeFile(`${dir}/after.txt`, await pdfText(blob));
+  }
+});
+
+test("only an explicit confirmation for the same dated move says promoted", () => {
+  const draft = draftFor(person1);
+  const job = draft.experience[1];
+  job.promotionConfirmation = getRoleMove(job, draft.experience, reference)?.confirmation;
+  expect(finishCV(draft, reference).cv.summary).toContain("Promoted from Waitress to Reservation Agent in 2025.");
+  job.role = "Front Desk Agent";
+  expect(finishCV(draft, reference).cv.summary).toContain("Moved from Waitress to Front Desk Agent in 2025.");
+  job.dates = "Feb 2026 to Present";
+  expect(finishCV(draft, reference).cv.summary).not.toMatch(/Moved|Promoted/);
+});
+
+test("tenure avoids overlaps, future dates, partial months, different sites and unknown dates", () => {
+  const draft = draftFor(person1);
+  const job = draft.experience[1];
+  job.dates = "Nov 2025 to Present";
+  draft.experience = [job, { ...job, id: "overlap", dates: "Dec 2025 to Present" },
+    { ...job, id: "future", role: "Future Role", dates: "Nov 2027 to Dec 2027" },
+    { ...job, id: "old", company: "Example Other Hotel", dates: "Jan 2015 to Dec 2024" },
+    { ...job, id: "branch", location: "Abu Dhabi", dates: "Jan 2008 to Dec 2014" },
+    { ...job, id: "bad-month", dates: "Octopus 1999 to Nov 2005" },
+  ];
+  expect(finishCV(draft, reference).cv.summary).not.toMatch(/years? of|Moved|Promoted/);
+  expect(finishCV(draft, reference).cv.personal.title).toBe("Reservation Agent");
+  draft.experience[1].dates = "Oct 2025 to Present";
+  expect(finishCV(draft, reference).cv.summary).toContain("with 1 year of hotel experience");
+});
+
+test("the CV language check uses word boundaries and protects the saved draft", () => {
+  expect(findBannedCVPhrase("RESULTS‑DRIVEN")).toBe("results-driven");
+  expect(findBannedCVPhrase("hard working team member")).toBe("hardworking");
+  expect(findBannedCVPhrase("Academy, MySQL and Dynamics")).toBeUndefined();
+  const draft = draftFor(person1);
+  draft.experience[1].description = "Responsible for handling guest calls\nI am a passionate team player.";
+  draft.skills = ["Detail oriented", "MySQL"];
+  draft.languages = [{ id: "en", language: "English", level: "" }, { id: "lg", language: "Luganda", level: "" }];
+  const { cv } = finishCV(draft, reference);
+  expect(cv.experience[0].description).toBe("Handle guest calls.");
+  expect(cv.skills).toEqual(["MySQL"]);
+  expect(cv.summary).toContain("Speaks English and Luganda.");
+  expect(draft.experience[1].description).toContain("passionate");
+  expect(draft.skills).toContain("Detail oriented");
+  draft.personal.title = "WAITRESS";
+  expect(finishCV(draft, reference).cv.summary).not.toContain("Now seeking");
+  draft.cvLanguage = "ar";
+  expect(finishCV(draft, reference).cv.summary).toContain("اللغات English وLuganda.");
+});
+
+test("an unchecked promotion becomes a claim only after the candidate selects it", async ({ page }) => {
+  await page.addInitScript((state) => {
+    localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 8, savedAt: new Date().toISOString(), state }));
+  }, { ...draftFor(person1), step: 2 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const promotion = page.getByRole("checkbox", { name: "This was a promotion from Waitress" });
+  await expect(promotion).not.toBeChecked();
+  await promotion.focus();
+  await page.keyboard.press("Space");
+  await expect(promotion).toBeChecked();
+  await expect(await openPreview(page)).toContainText("Promoted from Waitress to Reservation Agent in 2025.");
 });

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { migrateStep } from "../lib/step-layout";
-import { buildPlainSummary } from "../lib/plain-summary";
+import { finishCV } from "../lib/cv-finish";
 import { sampleServiceCVState } from "../lib/sample-data";
 import { defaultCVState } from "../lib/types";
 import { webcrypto } from "node:crypto";
@@ -16,9 +16,9 @@ test("draft migration preserves every section across old layouts", () => {
 });
 
 test("summary uses entered facts without invented years or achievements", () => {
-  expect(buildPlainSummary(defaultCVState)).toBe("");
-  const summary = buildPlainSummary({ ...defaultCVState, personal: { ...defaultCVState.personal, title: "Room Attendant" }, skills: ["Room cleaning", "Room cleaning", "Linen care"] });
-  expect(summary).toBe("Room Attendant. Skills include Room cleaning, Linen care.");
+  expect(finishCV(defaultCVState).cv.summary).toBe("");
+  const { cv: { summary } } = finishCV({ ...defaultCVState, personal: { ...defaultCVState.personal, title: "Room Attendant" }, skills: ["Room cleaning", "Room cleaning", "Linen care"] });
+  expect(summary).toBe("Skilled in room cleaning and linen care. Now seeking a Room Attendant role.");
   expect(summary).not.toMatch(/years|certified|increased|\d/);
 });
 
@@ -70,7 +70,8 @@ test("old private continue link restores summary rather than work history", asyn
   const fragment = [Buffer.from(encrypted), Buffer.from(iv), Buffer.from(key)].map((bytes) => bytes.toString("base64url")).join(".");
   await page.goto(`/#resume=${fragment}`);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(page.getByPlaceholder("Write 2 to 3 lines about your work.")).toHaveValue("My saved words.");
+  await expect(page.getByLabel("Saved profile notes")).toHaveValue("My saved words.");
+  await expect(page.getByTestId("built-profile")).not.toContainText("My saved words.");
   await expect.poll(() => page.evaluate(() => location.hash)).toBe("");
 });
 
@@ -87,14 +88,11 @@ for (const locale of ["en", "ar", "ur"]) {
     await page.getByLabel("Interface language").selectOption(locale);
     await page.getByRole("button", { name: "Continue", exact: true }).click();
     await expect(page.getByRole("heading", { name: "About you (2 to 3 lines)" })).toBeVisible();
-    const summary = page.getByPlaceholder("Write 2 to 3 lines about your work.");
-    await expect(summary).not.toHaveValue("");
+    const summary = page.getByTestId("built-profile");
+    await expect(summary).toContainText(/with .*experience/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await mkdir("outputs/step-03", { recursive: true });
     await page.screenshot({ path: `outputs/step-03/profile-${locale}-360.png`, fullPage: true });
-    await summary.fill("My own words.");
-    await expect(summary).toHaveValue("My own words.");
-    await summary.fill("");
-    await expect(summary).toHaveValue("");
+    await expect(page.getByLabel("Saved profile notes")).toHaveCount(0);
   });
 }
