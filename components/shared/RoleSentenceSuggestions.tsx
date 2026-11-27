@@ -55,7 +55,7 @@ export default function RoleSentenceSuggestions({
       >
         <span>
           <span className="block text-sm font-semibold text-gray-900">Need help describing this job?</span>
-          <span className="block text-xs text-gray-600">{group.key === "general" ? "Find ideas for your kind of work" : group.label}</span>
+          <span className="block text-xs text-gray-600">{group.key === "general" ? "Find ideas for your kind of work" : `Suggested wording for ${group.label}`}</span>
         </span>
         <span aria-hidden="true" className="text-lg font-semibold text-[#8a6b00]">{open ? "−" : "+"}</span>
       </button>
