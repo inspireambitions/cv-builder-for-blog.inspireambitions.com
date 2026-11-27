@@ -7,6 +7,7 @@ import { validateFileUpload } from "@/lib/validators";
 import type { CVState } from "@/lib/types";
 import { trackToolEvent } from "@/lib/analytics";
 import TemplatePreview from "@/components/templates/TemplatePreview";
+import { defaultTalkProgress, TALK_MODE_ENABLED } from "@/lib/talk-flow";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
@@ -318,9 +319,9 @@ function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): C
   };
 }
 
-export default function StepStart() {
+export default function StepStart({ initialUpload = false }: { initialUpload?: boolean }) {
   const { nextStep, updateField, setState, hydrated } = useCVState();
-  const [mode, setMode] = useState<Mode>("hero");
+  const [mode, setMode] = useState<Mode>(initialUpload ? "upload" : "hero");
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackItem[]>(DEFAULT_FEEDBACK);
@@ -560,7 +561,12 @@ export default function StepStart() {
         </p>
 
         {/* CTAs */}
-        {mode === "hero" && (
+        {mode === "hero" && TALK_MODE_ENABLED && <div className="mx-auto mt-8 grid max-w-md gap-3">
+          <button className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white" onClick={() => updateField({ builderMode: "talk", talk: defaultTalkProgress, step: 1 })}>Answer simple questions <span className="block text-sm">Recommended</span></button>
+          <button className="min-h-12 rounded-lg border border-gray-300 px-4 py-3" onClick={handleUploadMode}>I already have a CV</button>
+          <button className="min-h-12 rounded-lg border border-gray-300 px-4 py-3" onClick={handleBuildManually}>Fill in the full form</button>
+        </div>}
+        {mode === "hero" && !TALK_MODE_ENABLED && (
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={handleBuildManually}

@@ -40,11 +40,6 @@ export default function RoleSentenceSuggestions({
     trackToolEvent("cv_role_suggestion_added", { roleGroup: group.key });
   }
 
-  function addDetail(question: RoleDetailQuestion, bullet: string) {
-    onChange(applyRoleDetail(currentText, question, bullet));
-    setMessage(bullet ? "Added to your job description." : "Removed that answer.");
-  }
-
   return (
     <section className="mt-3 overflow-hidden rounded-xl border border-[#d8c98e] bg-[#fffdf5]">
       <button
@@ -120,14 +115,7 @@ export default function RoleSentenceSuggestions({
               {showAll ? "Show fewer suggestions" : `Show ${group.sentences.length - 4} more suggestions`}
             </button>
           )}
-          <details className="mt-4 border-t border-[#e8ddb4] pt-1">
-            <summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-[#745900]">Add real details (optional)</summary>
-            <p className="pb-3 text-xs leading-5 text-gray-700">Skip any question. Add only what you did in this job.</p>
-            <div className="space-y-3">
-              {getRoleDetails(group.key).map((question) => <DetailAnswer key={`${group.key}-${question.id}`}
-                question={question} used={used} onAdd={(bullet) => addDetail(question, bullet)} />)}
-            </div>
-          </details>
+          <JobDetailQuestions familyKey={group.key} value={currentText} onChange={onChange} />
           <p aria-live="polite" className="mt-3 min-h-5 text-xs font-medium text-emerald-700">
             {message}
           </p>
@@ -145,6 +133,27 @@ const workAreas = [
   { label: "Trades and safety", Icon: HardHat, keys: ["construction", "labourer", "mason", "electrician", "plumber", "ac-technician", "security"] },
   { label: "Care and fitness", Icon: HeartPulse, keys: ["domestic", "nurse-assistant", "healthcare", "gym-lifeguard"] },
 ];
+
+export function JobDetailQuestions({ familyKey, value, onChange }: {
+  familyKey: string; value: string; onChange: (description: string) => void;
+}) {
+  const [notice, setNotice] = useState("");
+  const questions = getRoleDetails(familyKey);
+  if (!questions.length) return null;
+  const used = new Set(value.split("\n").map((line) => line.trim().toLowerCase()));
+  return <details className="mt-4 rounded-lg border border-gray-200 p-3">
+    <summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-accent">Add real details (optional)</summary>
+    <p className="pb-3 text-xs leading-5 text-ink-muted">Skip any question. Add only what you did in this job.</p>
+    <div className="space-y-3">
+      {questions.map((question) => <DetailAnswer key={`${familyKey}-${question.id}`} question={question}
+        used={used} onAdd={(bullet) => {
+          onChange(applyRoleDetail(value, question, bullet));
+          setNotice(bullet ? "Added to your job description." : "Removed that answer.");
+        }} />)}
+    </div>
+    <p aria-live="polite" className="min-h-5 text-xs text-ink-muted">{notice}</p>
+  </details>;
+}
 
 function DetailAnswer({ question, used, onAdd }: { question: RoleDetailQuestion; used: Set<string>; onAdd: (text: string) => void }) {
   const [custom, setCustom] = useState("");
@@ -165,7 +174,7 @@ function DetailAnswer({ question, used, onAdd }: { question: RoleDetailQuestion;
           maxLength={220} onChange={(event) => setCustom(event.target.value)} />
       </label>
       <button type="button" disabled={!custom.trim()} onClick={() => { onAdd(custom.trim()); setCustom(""); }}
-        className="mt-1 min-h-11 text-sm font-semibold text-[#745900] underline disabled:no-underline disabled:text-gray-500">
+        className="mt-1 min-h-12 text-sm font-semibold text-[#745900] underline disabled:no-underline disabled:text-gray-500">
         Add my line
       </button>
     </fieldset>
