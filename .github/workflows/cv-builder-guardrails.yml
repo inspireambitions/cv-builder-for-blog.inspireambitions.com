@@ -43,7 +43,7 @@ jobs:
             test-results/
             .lighthouseci/latest-report.json
   talk-mode:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_POSTHOG_ENABLED: "true"
       NEXT_PUBLIC_TALK_MODE: "true"
