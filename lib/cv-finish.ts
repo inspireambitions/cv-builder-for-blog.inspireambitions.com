@@ -5,7 +5,7 @@ import type { CVState, ExpEntry } from "./types";
 import { getVerbForms } from "./verb-forms";
 
 export type FinishChange = {
-  kind: "job-order" | "education-order" | "headline" | "dates" | "bullet" | "skills";
+  kind: "job-order" | "education-order" | "headline" | "dates" | "bullet" | "skills" | "empty-sections";
   jobId?: string;
 };
 
@@ -94,6 +94,10 @@ function educationYear(year: string) {
   return Number(year.match(/\b[1-9]\d{3}\b/g)?.at(-1) ?? 0);
 }
 
+function hasText(...fields: string[]) {
+  return fields.some((field) => field.trim());
+}
+
 /** Build a document view. Never use the result to overwrite the saved draft. */
 export function finishCV(state: CVState): { cv: CVState; changes: FinishChange[] } {
   const changes: FinishChange[] = [];
@@ -116,8 +120,19 @@ export function finishCV(state: CVState): { cv: CVState; changes: FinishChange[]
   const skills = finishSkills(state.skills);
   if (skills.length !== state.skills.length || skills.some((skill, index) => skill !== state.skills[index])) changes.push({ kind: "skills" });
 
+  const extras = {
+    certifications: state.certifications.filter((item) => hasText(item.name, item.issuer, item.date, item.expiry)),
+    achievements: state.achievements.filter((item) => hasText(item.title, item.body, item.awardingBody, item.year)),
+    volunteer: state.volunteer.filter((item) => hasText(item.role, item.org, item.dates, item.impact)),
+    projects: state.projects.filter((item) => hasText(item.name, item.description, item.url, item.outcomes)),
+    publications: state.publications.filter((item) => hasText(item.title, item.outlet, item.date, item.url)),
+    memberships: state.memberships.filter((item) => hasText(item.org, item.level, item.year)),
+  };
+  const extraKeys = Object.keys(extras) as (keyof typeof extras)[];
+  if (extraKeys.some((key) => extras[key].length < state[key].length)) changes.push({ kind: "empty-sections" });
+
   return {
-    cv: { ...state, personal: { ...state.personal, title }, experience, education, skills },
+    cv: { ...state, ...extras, summary: state.summary.trim(), personal: { ...state.personal, title }, experience, education, skills },
     changes,
   };
 }

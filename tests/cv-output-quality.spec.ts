@@ -151,6 +151,21 @@ test("sorts multiple current roles by start date and skips placeholders for the 
   expect(cv.personal.title).toBe("Driver");
 });
 
+test("keeps empty draft entries out of the text exports", async () => {
+  const draft = draftFor(person3);
+  draft.summary = "  ";
+  draft.volunteer = [{ id: "blank", role: "", org: " ", dates: "", impact: "" }];
+  draft.projects = [{ id: "blank", name: "", description: "", outcomes: "", url: "" }];
+  const word = await buildWord(draft);
+  const pdf = await buildPDF(draft);
+  const wordContent = (await mammoth.extractRawText({ buffer: Buffer.from(await word.blob.arrayBuffer()) })).value;
+  for (const output of [wordContent, await pdfText(pdf.blob)]) {
+    expect(output).not.toMatch(/Profile|Volunteer Work|Projects/i);
+  }
+  expect(draft.volunteer).toHaveLength(1);
+  expect(draft.projects).toHaveLength(1);
+});
+
 async function openPreview(page: Page) {
   const button = page.getByRole("button", { name: "Preview CV", exact: true });
   if (await button.isVisible()) await button.click();
