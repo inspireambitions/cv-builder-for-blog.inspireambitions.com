@@ -9,24 +9,27 @@ import {
   AlignmentType,
   BorderStyle,
   ImageRun,
+  LineRuleType,
 } from "docx";
 import { saveAs } from "file-saver";
 import type { CVState } from "./types";
 import type { ExportOptions } from "./export-options";
 import { isRecruiterReady } from "./export-options";
-import { normaliseUAEPhoneForDisplay } from "./format";
+import { cvContactParts, finishCV } from "./cv-finish";
 import {
   formatSectorCredential,
   getSelectedSectorCredentials,
   getUAEHeaderParts,
 } from "./uae";
-import { TEMPLATE_CONFIG } from "./template-config";
+import { BULLET_GAP_PT, JOB_GAP_PT, documentBodyLayout, contactLines } from "./cv-page-layout";
+import { SECTION_LABELS, TEMPLATE_CONFIG } from "./template-config";
 
-function sectionHeading(text: string, colour = "1a2744"): Paragraph {
+function sectionHeading(text: string, colour: string, gap: number): Paragraph {
   return new Paragraph({
     text,
     heading: HeadingLevel.HEADING_2,
-    spacing: { before: 300, after: 100 },
+    spacing: { before: Math.round(gap * 20), after: 100 },
+    keepNext: true,
     border: {
       bottom: { color: colour, space: 1, style: BorderStyle.SINGLE, size: 6 },
     },
@@ -55,15 +58,22 @@ function photoRunFromDataUrl(value: string, size: number) {
   });
 }
 
-export async function exportWord(state: CVState, options: ExportOptions = {}) {
+export async function buildWord(draft: CVState, options: ExportOptions = {}) {
+  const { cv } = finishCV(draft, options.asOf);
+  const layout = documentBodyLayout(cv);
+  const body = Math.round(layout.size * 2);
+  // Word adds its own font leading. Tone down only the extra gap on sparse
+  // documents so the final section does not slip onto a mostly blank page.
+  const sectionGap = layout.sectionGap > 13 ? Math.min(65, 13 + (layout.sectionGap - 13) * 0.66) : layout.sectionGap;
+  const labels = SECTION_LABELS[cv.cvLanguage];
   const children: Paragraph[] = [];
   const recruiterReady = isRecruiterReady(options);
-  const templateConfig = TEMPLATE_CONFIG[state.template];
-  const sectionColour = state.template === "ats-clean" ? "1155CC" : "1A2744";
+  const templateConfig = TEMPLATE_CONFIG[cv.template];
+  const sectionColour = cv.template === "ats-clean" ? "1155CC" : "1A2744";
 
-  if (recruiterReady && templateConfig.photo !== "hidden" && state.photoPreference === "photo" && state.photo) {
+  if (recruiterReady && templateConfig.photo !== "hidden" && cv.photoPreference === "photo" && cv.photo) {
     const photo = photoRunFromDataUrl(
-      state.photo,
+      cv.photo,
       templateConfig.photo === "prominent" ? 104 : 78
     );
     if (photo) {
@@ -81,18 +91,18 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   children.push(
     new Paragraph({
       children: [
-        new TextRun({ text: state.personal.name, bold: true, size: 36, font: "Calibri" }),
+        new TextRun({ text: cv.personal.name, bold: true, size: 36, font: "Calibri" }),
       ],
       alignment: AlignmentType.CENTER,
       spacing: { after: 60 },
     })
   );
 
-  if (state.personal.title) {
+  if (cv.personal.title) {
     children.push(
       new Paragraph({
         children: [
-          new TextRun({ text: state.personal.title, size: 24, color: "666666", font: "Calibri" }),
+          new TextRun({ text: cv.personal.title, size: 24, color: "666666", font: "Calibri" }),
         ],
         alignment: AlignmentType.CENTER,
         spacing: { after: 100 },
@@ -101,25 +111,17 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   // Contact line
-  const contactParts = [
-    state.personal.email,
-    normaliseUAEPhoneForDisplay(state.personal.phone),
-    state.personal.location,
-    state.personal.linkedin,
-  ].filter(Boolean);
-  if (contactParts.length > 0) {
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: contactParts.join("  |  "), size: 20, color: "444444" }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
-      })
-    );
+  const contactParts = cvContactParts(cv);
+  for (const line of contactLines(contactParts, (text) => text.length, 88)) {
+    children.push(new Paragraph({
+      children: [new TextRun({ text: line.split(" | ").map((item) => item.replaceAll(" ", "\u00A0")).join(" | "), size: 20, color: "444444" })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 55 },
+      keepNext: true,
+    }));
   }
 
-  const uaeHeaderParts = getUAEHeaderParts(state);
+  const uaeHeaderParts = getUAEHeaderParts(cv);
   if (uaeHeaderParts.length > 0) {
     children.push(
       new Paragraph({
@@ -137,30 +139,42 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   // Professional Summary
-  if (state.summary) {
-    children.push(sectionHeading("Professional Summary", sectionColour));
+  if (cv.summary) {
+    children.push(sectionHeading(labels.summary, sectionColour, sectionGap));
     children.push(
       new Paragraph({
-        children: [new TextRun({ text: state.summary, size: 22 })],
+        children: [new TextRun({ text: cv.summary, size: body })],
         spacing: { after: 200 },
       })
     );
   }
 
   // Work Experience
-  const filledExp = state.experience.filter((e) => e.role.trim());
+  const filledExp = cv.experience.filter((e) => e.role.trim() || e.company.trim());
   if (filledExp.length > 0) {
-    children.push(sectionHeading("Work Experience", sectionColour));
-    for (const exp of filledExp) {
+    children.push(sectionHeading(labels.experience, sectionColour, sectionGap));
+    for (const [index, exp] of filledExp.entries()) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: exp.role, bold: true, size: 24 }),
-            new TextRun({ text: exp.company ? `  |  ${exp.company}` : "", size: 22 }),
+            new TextRun({ text: exp.role, bold: true, size: body }),
+            new TextRun({ text: exp.company ? `${exp.role ? ", " : ""}${exp.company}` : "", size: body }),
           ],
-          spacing: { before: 150, after: 40 },
+          spacing: { before: index ? JOB_GAP_PT * 20 : 0, after: 36 },
+          keepNext: true,
+          keepLines: true,
         })
       );
+      const meta = [exp.location, exp.dates].filter(Boolean).join("  |  ");
+      if (meta) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: meta, size: 20, color: "888888" })],
+            spacing: { after: 60 },
+            keepNext: Boolean(exp.description || exp.companyDesc),
+          })
+        );
+      }
       if (exp.companyDesc) {
         children.push(
           new Paragraph({
@@ -169,23 +183,15 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
           })
         );
       }
-      const meta = [exp.location, exp.dates].filter(Boolean).join("  |  ");
-      if (meta) {
-        children.push(
-          new Paragraph({
-            children: [new TextRun({ text: meta, size: 20, color: "888888" })],
-            spacing: { after: 60 },
-          })
-        );
-      }
       if (exp.description) {
         const bullets = exp.description.split("\n").filter((l) => l.trim());
         for (const bullet of bullets) {
           children.push(
             new Paragraph({
-              children: [new TextRun({ text: bullet.replace(/^[-•]\s*/, ""), size: 22 })],
+              children: [new TextRun({ text: bullet, size: body })],
               bullet: { level: 0 },
-              spacing: { after: 30 },
+              keepLines: true,
+              spacing: { after: BULLET_GAP_PT * 20 },
             })
           );
         }
@@ -205,15 +211,15 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   // Education
-  const filledEdu = state.education.filter((e) => e.degree.trim());
+  const filledEdu = cv.education.filter((e) => e.degree.trim() || e.institution.trim());
   if (filledEdu.length > 0) {
-    children.push(sectionHeading("Education", sectionColour));
+    children.push(sectionHeading(labels.education, sectionColour, sectionGap));
     for (const edu of filledEdu) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 22 }),
-            new TextRun({ text: edu.institution ? `  |  ${edu.institution}` : "", size: 22 }),
+            new TextRun({ text: edu.degree, bold: true, size: body }),
+            new TextRun({ text: edu.institution ? `  |  ${edu.institution}` : "", size: body }),
             new TextRun({ text: edu.year ? `  (${edu.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 80, after: 40 },
@@ -230,58 +236,26 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  // Certifications
-  const sectorCredentials = getSelectedSectorCredentials(state);
-  if (state.certifications.length > 0 || sectorCredentials.length > 0) {
-    children.push(sectionHeading(state.template === "ats-clean" ? "Certificates & Development" : "Professional Certifications & Credentials", sectionColour));
-    for (const credential of sectorCredentials) {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: formatSectorCredential(credential),
-              bold: true,
-              size: 22,
-            }),
-          ],
-          spacing: { before: 60, after: 40 },
-        })
-      );
-    }
-    for (const cert of state.certifications) {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: cert.name, bold: true, size: 22 }),
-            new TextRun({ text: cert.issuer ? `  |  ${cert.issuer}` : "", size: 22 }),
-            new TextRun({ text: cert.date ? `  (${cert.date})` : "", size: 20, color: "888888" }),
-          ],
-          spacing: { before: 60, after: 40 },
-        })
-      );
-    }
-  }
-
   // Skills
-  if (state.skills.length > 0) {
-    children.push(sectionHeading("Skills", sectionColour));
+  if (cv.skills.length > 0) {
+    children.push(sectionHeading(labels.skills, sectionColour, sectionGap));
     children.push(
       new Paragraph({
-        children: [new TextRun({ text: state.skills.join("  •  "), size: 22 })],
+        children: [new TextRun({ text: cv.skills.join(" | "), size: body })],
         spacing: { after: 200 },
       })
     );
   }
 
   // Languages
-  const filledLangs = state.languages.filter((l) => l.language.trim());
+  const filledLangs = cv.languages.filter((l) => l.language.trim());
   if (filledLangs.length > 0) {
-    children.push(sectionHeading("Languages", sectionColour));
+    children.push(sectionHeading(labels.languages, sectionColour, sectionGap));
     for (const lang of filledLangs) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: [lang.language, lang.level].filter(Boolean).join(" | "), size: 22 }),
+            new TextRun({ text: [lang.language, lang.level].filter(Boolean).join(" | "), size: body }),
           ],
           spacing: { after: 40 },
         })
@@ -289,57 +263,90 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  // Achievements
-  if (state.achievements.length > 0) {
-    children.push(sectionHeading("Achievements & Awards", sectionColour));
-    for (const a of state.achievements) {
+  // Certifications
+  const sectorCredentials = getSelectedSectorCredentials(cv);
+  const certificates = cv.certifications.filter((item) => item.name.trim() || item.issuer.trim());
+  if (certificates.length > 0 || sectorCredentials.length > 0) {
+    children.push(sectionHeading(labels.credentials, sectionColour, sectionGap));
+    for (const credential of sectorCredentials) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: a.title, bold: true, size: 22 }),
-            new TextRun({ text: a.awardingBody ? `  |  ${a.awardingBody}` : "", size: 22 }),
+            new TextRun({
+              text: formatSectorCredential(credential),
+              bold: true,
+              size: body,
+            }),
+          ],
+          spacing: { before: 60, after: 40 },
+        })
+      );
+    }
+    for (const cert of certificates) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: cert.name, bold: true, size: body }),
+            new TextRun({ text: cert.issuer ? `  |  ${cert.issuer}` : "", size: body }),
+            new TextRun({ text: [cert.date, cert.expiry && `Expiry: ${cert.expiry}`].filter(Boolean).map((value) => ` | ${value}`).join(""), size: 20, color: "888888" }),
+          ],
+          spacing: { before: 60, after: 40 },
+        })
+      );
+    }
+  }
+
+  // Achievements
+  if (cv.achievements.length > 0) {
+    children.push(sectionHeading("Achievements & Awards", sectionColour, sectionGap));
+    for (const a of cv.achievements) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: a.title, bold: true, size: body }),
+            new TextRun({ text: a.awardingBody ? `  |  ${a.awardingBody}` : "", size: body }),
             new TextRun({ text: a.year ? `  (${a.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 30 },
         })
       );
       if (a.body) {
-        children.push(new Paragraph({ children: [new TextRun({ text: a.body, size: 22 })], spacing: { after: 60 } }));
+        children.push(new Paragraph({ children: [new TextRun({ text: a.body, size: body })], spacing: { after: 60 } }));
       }
     }
   }
 
   // Volunteer
-  if (state.volunteer.length > 0) {
-    children.push(sectionHeading("Volunteer Work", sectionColour));
-    for (const v of state.volunteer) {
+  if (cv.volunteer.length > 0) {
+    children.push(sectionHeading("Volunteer Work", sectionColour, sectionGap));
+    for (const v of cv.volunteer) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: v.role, bold: true, size: 22 }),
-            new TextRun({ text: v.org ? `  |  ${v.org}` : "", size: 22 }),
+            new TextRun({ text: v.role, bold: true, size: body }),
+            new TextRun({ text: v.org ? `  |  ${v.org}` : "", size: body }),
           ],
           spacing: { before: 60, after: 30 },
         })
       );
       if (v.impact) {
-        children.push(new Paragraph({ children: [new TextRun({ text: v.impact, size: 22 })], spacing: { after: 60 } }));
+        children.push(new Paragraph({ children: [new TextRun({ text: v.impact, size: body })], spacing: { after: 60 } }));
       }
     }
   }
 
   // Projects
-  if (state.projects.length > 0) {
-    children.push(sectionHeading("Personal Projects", sectionColour));
-    for (const p of state.projects) {
+  if (cv.projects.length > 0) {
+    children.push(sectionHeading("Personal Projects", sectionColour, sectionGap));
+    for (const p of cv.projects) {
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: p.name, bold: true, size: 22 })],
+          children: [new TextRun({ text: p.name, bold: true, size: body })],
           spacing: { before: 60, after: 30 },
         })
       );
       if (p.description) {
-        children.push(new Paragraph({ children: [new TextRun({ text: p.description, size: 22 })], spacing: { after: 40 } }));
+        children.push(new Paragraph({ children: [new TextRun({ text: p.description, size: body })], spacing: { after: 40 } }));
       }
       if (p.url) {
         children.push(new Paragraph({ children: [new TextRun({ text: p.url, size: 20, color: "0066cc" })], spacing: { after: 60 } }));
@@ -348,14 +355,14 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   // Publications
-  if (state.publications.length > 0) {
-    children.push(sectionHeading("Publications & Media", sectionColour));
-    for (const pub of state.publications) {
+  if (cv.publications.length > 0) {
+    children.push(sectionHeading("Publications & Media", sectionColour, sectionGap));
+    for (const pub of cv.publications) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: pub.title, bold: true, size: 22 }),
-            new TextRun({ text: pub.outlet ? `  |  ${pub.outlet}` : "", size: 22 }),
+            new TextRun({ text: pub.title, bold: true, size: body }),
+            new TextRun({ text: pub.outlet ? `  |  ${pub.outlet}` : "", size: body }),
             new TextRun({ text: pub.date ? `  (${pub.date})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 60 },
@@ -365,14 +372,14 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   // Memberships
-  if (state.memberships.length > 0) {
-    children.push(sectionHeading("Professional Memberships", sectionColour));
-    for (const m of state.memberships) {
+  if (cv.memberships.length > 0) {
+    children.push(sectionHeading("Professional Memberships", sectionColour, sectionGap));
+    for (const m of cv.memberships) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: m.org, bold: true, size: 22 }),
-            new TextRun({ text: m.level ? `  |  ${m.level}` : "", size: 22 }),
+            new TextRun({ text: m.org, bold: true, size: body }),
+            new TextRun({ text: m.level ? `  |  ${m.level}` : "", size: body }),
             new TextRun({ text: m.year ? `  (${m.year})` : "", size: 20, color: "888888" }),
           ],
           spacing: { before: 60, after: 40 },
@@ -382,6 +389,9 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
   }
 
   const doc = new Document({
+    styles: { default: { document: { run: { size: body }, paragraph: {
+      spacing: { line: Math.round(layout.leading * 240), lineRule: LineRuleType.AUTO },
+    } } } },
     sections: [
       {
         properties: {
@@ -397,8 +407,13 @@ export async function exportWord(state: CVState, options: ExportOptions = {}) {
 
   const blob = await Packer.toBlob(doc);
   const suffix = recruiterReady ? "_Recruiter" : "_ATS";
-  const filename = state.personal.name
-    ? `${state.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV${suffix}.docx`
+  const filename = cv.personal.name
+    ? `${cv.personal.name.replace(/\s+/g, "_")}_InspireAmbitions_CV${suffix}.docx`
     : `InspireAmbitions_CV${suffix}.docx`;
+  return { blob, filename };
+}
+
+export async function exportWord(draft: CVState, options: ExportOptions = {}) {
+  const { blob, filename } = await buildWord(draft, options);
   saveAs(blob, filename);
 }

@@ -109,17 +109,18 @@ export function formatSectorCredential(
 export function getUAEHeaderParts(state: CVState): string[] {
   const { personal } = state;
   return [
+    personal.nationality && personal.nationality !== "Prefer not to say"
+      ? `Nationality: ${personal.nationality}`
+      : "",
     personal.visa_status && personal.visa_status !== "Prefer not to say"
       ? `Visa: ${personal.visa_status}`
       : "",
-    personal.notice_period ? `Notice: ${personal.notice_period}` : "",
+    personal.notice_period ? `Notice period: ${personal.notice_period}` : "",
+    personal.driving_license ? `Driving licence: ${personal.driving_license}` : "",
     personal.availability_date
       ? `Available: ${formatDateForUAE(personal.availability_date)}`
       : "",
     personal.noc_available ? `NOC: ${personal.noc_available}` : "",
-    personal.nationality && personal.nationality !== "Prefer not to say"
-      ? `Nationality: ${personal.nationality}`
-      : "",
     personal.arabic_proficiency
       ? `Arabic: ${personal.arabic_proficiency}`
       : "",

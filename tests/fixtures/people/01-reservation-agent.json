@@ -1,0 +1,42 @@
+{
+  "personal": {
+    "name": "Amina Nakato",
+    "title": "Finance clerk",
+    "email": "amina@example.com",
+    "phone": "+971 50 000 0001",
+    "location": "Dubai, UAE",
+    "nationality": "Ugandan",
+    "notice_period": "30 days"
+  },
+  "summary": "Finance clerk. Skills include Handling emails, verifying reservation, using Microsoft office, communication.",
+  "geo": "gulf",
+  "experience": [
+    {
+      "role": "Waitress",
+      "company": "City Hotel Barsha",
+      "location": "Dubai",
+      "dates": "Oct 2023 to Jul 2025",
+      "description": "- Handling restaurant reservations\n- Welcomed guests, explained menu items and recorded orders with care.\n- Checked on guests during service and handled requests with the team.\n- Prepared and reset tables before, during and after service.\n- Served food and drinks while following hygiene and presentation standards."
+    },
+    {
+      "role": "Reservation Agent",
+      "company": "City Hotel Barsha",
+      "location": "Dubai",
+      "dates": "Aug 2025 to Present",
+      "description": "- Helped customers or colleagues and passed difficult issues to the supervisor.\n- Kept work records accurate and reported problems without delay.\n* Taking guest calls and making their reservations with precision"
+    }
+  ],
+  "education": [
+    {
+      "degree": "High school certificate",
+      "institution": "St. Mark's College",
+      "year": "2022"
+    }
+  ],
+  "skills": [
+    "Handling emails, verifying reservation",
+    "using Microsoft office",
+    "communication",
+    " Microsoft Office "
+  ]
+}

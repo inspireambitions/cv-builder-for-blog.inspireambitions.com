@@ -33,7 +33,10 @@ test("mobile candidates can add and edit role wording", async ({ page }) => {
 
   await page.getByLabel("What did you do or achieve?").fill(`${suggestion}\nSupported a safe closing shift.`);
   await expect(page.getByLabel("What did you do or achieve?")).toHaveValue(`${suggestion}\nSupported a safe closing shift.`);
-  await expect(page.getByRole("button", { name: "Show 2 more suggestions" })).toBeVisible();
+  const sentences = getRoleSuggestionGroup("Kitchen Steward").sentences;
+  await page.getByRole("button", { name: `Show ${sentences.length - 4} more suggestions`, exact: true }).click();
+  await expect(page.getByRole("button", { name: "Show fewer suggestions", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: sentences.at(-1), exact: true })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(overflow).toBe(false);
 });

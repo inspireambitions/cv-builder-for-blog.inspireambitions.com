@@ -119,7 +119,7 @@ test("P0 CV builder path restores drafts, gates downloads by email, and exports 
   }
 
   await expect(
-    page.getByRole("heading", { name: /Almost there:/ })
+    page.getByRole("heading", { name: /^Recruiter check:/ })
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Move from CV review to interview preparation" })

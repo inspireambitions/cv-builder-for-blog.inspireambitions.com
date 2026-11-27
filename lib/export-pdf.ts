@@ -4,7 +4,9 @@ import { saveAs } from "file-saver";
 import type { CVState } from "./types";
 import type { ExportOptions } from "./export-options";
 import { isRecruiterReady } from "./export-options";
-import { normaliseUAEPhoneForDisplay } from "./format";
+import { cvContactParts, finishCV } from "./cv-finish";
+import { SECTION_LABELS, TEMPLATE_CONFIG } from "./template-config";
+import { BULLET_GAP_PT, JOB_GAP_PT, MM_PER_POINT, chooseBodyLayout, contactLines, packPages, type BodyLayout } from "./cv-page-layout";
 import {
   formatSectorCredential,
   getSelectedSectorCredentials,
@@ -18,168 +20,145 @@ function filenameFor(state: CVState, extension: string, suffix = ""): string {
     : `InspireAmbitions_CV${safeSuffix}.${extension}`;
 }
 
-function stripBulletPrefix(value: string): string {
-  return value.replace(/^[-•]\s*/, "").trim();
-}
-
 function imageTypeFromDataUrl(value: string): "JPEG" | "PNG" | "WEBP" {
   if (value.startsWith("data:image/png")) return "PNG";
   if (value.startsWith("data:image/webp")) return "WEBP";
   return "JPEG";
 }
 
-export async function buildPDF(state: CVState, options: ExportOptions = {}) {
+const arabic = /\p{Script=Arabic}/u;
+const nativePdfText = /^[\x20-\x7e\xa0-\xff\n\r\t€‘’“”–—•…™œŒŠšŽžŸ]+$/u;
+const arabicFontNames = ["Amiri-Regular.ttf", "Amiri-Bold.ttf"];
+
+async function fetchArabicFont(file: string) {
+  const response = await fetch(`/cv-fonts/${file}`);
+  if (!response.ok) throw new Error("PDF typeface could not load");
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 12_000) binary += String.fromCharCode(...bytes.subarray(i, i + 12_000));
+  return btoa(binary);
+}
+
+export async function buildPDF(draft: CVState, options: ExportOptions = {}, loadArabicFont = fetchArabicFont) {
+  const { cv } = finishCV(draft, options.asOf);
+  const rtl = cv.cvLanguage === "ar";
+  const labels = SECTION_LABELS[cv.cvLanguage];
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4",
   });
+  const hasArabic = rtl || arabic.test(JSON.stringify(cv));
+  let arabicLoaded = false;
+  if (hasArabic) {
+    try {
+      const [regular, bold] = await Promise.all(arabicFontNames.map((name) => loadArabicFont(name)));
+      for (const [style, name, data] of [["normal", arabicFontNames[0], regular], ["bold", arabicFontNames[1], bold]]) {
+        pdf.addFileToVFS(name, data);
+        pdf.addFont(name, "amiri", style);
+      }
+      arabicLoaded = true;
+    } catch {
+      // Keep the preview-based fallback available if a font cannot load.
+    }
+  }
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const marginX = 18;
+  const marginY = 18;
   const maxWidth = pageWidth - marginX * 2;
-  let y = 18;
   const recruiterReady = isRecruiterReady(options);
-  const sectionColour: [number, number, number] = state.template === "ats-clean" ? [17, 85, 204] : [26, 39, 68];
-
-  function ensureSpace(needed = 10) {
-    if (y + needed <= pageHeight - 18) return;
-    pdf.addPage();
-    y = 18;
-  }
-
-  function writeLines(
-    text: string,
-    options: {
+  const config = TEMPLATE_CONFIG[cv.template];
+  const colour = config.accent;
+  let firstPageInset = 0;
+  type RowOptions = {
       size?: number;
       style?: "normal" | "bold" | "italic";
-      color?: [number, number, number];
-      align?: "left" | "center";
+      color?: [number, number, number] | string;
+      align?: "left" | "right" | "center";
       before?: number;
       after?: number;
-      lineHeight?: number;
-      indent?: number;
-    } = {}
-  ) {
-    if (!text.trim()) return;
-    const {
-      size = 10.5,
-      style = "normal",
-      color = [34, 34, 34],
-      align = "left",
-      before = 0,
-      after = 3,
-      lineHeight = size * 0.42,
-      indent = 0,
-    } = options;
-
-    y += before;
-    pdf.setFont("helvetica", style);
-    pdf.setFontSize(size);
-    pdf.setTextColor(color[0], color[1], color[2]);
-    const lines = pdf.splitTextToSize(text, maxWidth - indent);
-    ensureSpace(lines.length * lineHeight + after);
-
-    const x = align === "center" ? pageWidth / 2 : marginX + indent;
-    pdf.text(lines, x, y, {
-      align,
-      maxWidth: maxWidth - indent,
-      lineHeightFactor: 1.25,
-    });
-    y += lines.length * lineHeight + after;
+      keepWithNext?: boolean;
+      bullet?: boolean;
+      heading?: boolean;
+      contact?: boolean;
+  };
+  const rows: { text: string; options: RowOptions }[] = [];
+  function writeLines(text: string, options: RowOptions = {}) {
+    if (text.trim()) rows.push({ text, options });
   }
 
   function sectionHeading(text: string) {
-    ensureSpace(18);
-    y += 1;
-    pdf.setDrawColor(...sectionColour);
-    pdf.setLineWidth(0.4);
     writeLines(text.toUpperCase(), {
-      size: 11,
-      style: "bold",
-      color: sectionColour,
-      after: 1,
+      size: 11, style: "bold", color: colour, heading: true, keepWithNext: true,
     });
-    pdf.line(marginX, y, pageWidth - marginX, y);
-    y += 4.5;
   }
 
-  if (recruiterReady && state.template !== "ats-clean" && state.photoPreference === "photo" && state.photo) {
+  if (recruiterReady && config.photo !== "hidden" && cv.photoPreference === "photo" && cv.photo) {
     try {
-      pdf.addImage(state.photo, imageTypeFromDataUrl(state.photo), marginX, 16, 24, 24);
+      pdf.addImage(cv.photo, imageTypeFromDataUrl(cv.photo), pageWidth / 2 - 12, marginY, 24, 24);
+      firstPageInset = 28;
     } catch {
       // Keep the text export working even if a browser cannot decode the image.
     }
   }
 
-  writeLines(state.personal.name || "Your Name", {
+  writeLines(cv.personal.name, {
     size: 20,
     style: "bold",
     align: "center",
-    after: 2,
+    after: 1, keepWithNext: true,
   });
 
-  writeLines(state.personal.title, {
+  writeLines(cv.personal.title, {
     size: 12,
     color: [85, 85, 85],
     align: "center",
-    after: 2,
+    after: 1, keepWithNext: true,
   });
 
-  const contactParts = [
-    state.personal.email,
-    normaliseUAEPhoneForDisplay(state.personal.phone),
-    state.personal.location,
-    state.personal.linkedin,
-  ].filter(Boolean);
-  writeLines(contactParts.join(" | "), {
-    size: 9.5,
-    color: [80, 80, 80],
-    align: "center",
-    after: 2,
-  });
+  function writeContact(parts: string[], color: string) {
+    pdf.setFontSize(9.5);
+    for (const line of contactLines(parts, (text) => {
+      pdf.setFont(arabicLoaded && arabic.test(text) ? "amiri" : "helvetica", "normal");
+      return pdf.getTextWidth(text);
+    }, maxWidth)) {
+      writeLines(line, { size: 9.5, color, align: "center", contact: true });
+    }
+  }
+  writeContact(cvContactParts(cv), "#505050");
+  writeContact(getUAEHeaderParts(cv), "#486e4a");
 
-  writeLines(getUAEHeaderParts(state).join(" | "), {
-    size: 9.5,
-    color: [72, 110, 74],
-    align: "center",
-    after: 3,
-  });
-
-  if (state.summary.trim()) {
-    sectionHeading("Professional Summary");
-    writeLines(state.summary, { after: 3 });
+  if (cv.summary.trim()) {
+    sectionHeading(labels.summary);
+    writeLines(cv.summary, { after: 3 });
   }
 
-  const filledExperience = state.experience.filter(
+  const filledExperience = cv.experience.filter(
     (entry) => entry.role.trim() || entry.company.trim()
   );
   if (filledExperience.length > 0) {
-    sectionHeading("Work Experience");
-    for (const exp of filledExperience) {
+    sectionHeading(labels.experience);
+    for (const [index, exp] of filledExperience.entries()) {
       writeLines(
-        [exp.role, exp.company].filter(Boolean).join(" - "),
-        { size: 11.5, style: "bold", after: 1 }
+        [exp.role, exp.company].filter(Boolean).join(", "),
+        { size: 11.5, style: "bold", before: index ? JOB_GAP_PT * MM_PER_POINT : 0, keepWithNext: true }
       );
       writeLines([exp.location, exp.dates].filter(Boolean).join(" | "), {
         size: 9.5,
         color: [100, 100, 100],
-        after: 1.5,
+        after: 1.5, keepWithNext: Boolean(exp.description || exp.companyDesc),
       });
       writeLines(exp.companyDesc, {
         size: 9.5,
         style: "italic",
         color: [100, 100, 100],
-        after: 1.5,
+        after: 1.5, keepWithNext: Boolean(exp.description),
       });
       for (const bullet of exp.description.split("\n").filter(Boolean)) {
-        writeLines(`- ${stripBulletPrefix(bullet)}`, {
-          size: 10.2,
-          indent: 4,
-          after: 0.3,
-        });
+        writeLines(bullet, { bullet: true, after: BULLET_GAP_PT * MM_PER_POINT });
       }
       writeLines(exp.gap ? `Career note: ${exp.gap}` : "", {
         size: 9.5,
@@ -190,31 +169,45 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const filledEducation = state.education.filter(
+  const filledEducation = cv.education.filter(
     (entry) => entry.degree.trim() || entry.institution.trim()
   );
   if (filledEducation.length > 0) {
-    sectionHeading("Education");
+    sectionHeading(labels.education);
     for (const edu of filledEducation) {
-      writeLines([edu.degree, edu.institution].filter(Boolean).join(" - "), {
+      writeLines([[edu.degree, edu.institution].filter(Boolean).join(", "), edu.year, edu.grade].filter(Boolean).join(" | "), {
         size: 10.8,
         style: "bold",
         after: 1,
       });
-      writeLines([edu.year, edu.grade].filter(Boolean).join(" | "), {
-        size: 9.5,
-        color: [100, 100, 100],
-        after: 2,
-      });
     }
   }
 
-  const filledCerts = state.certifications.filter((entry) =>
+  const filledSkills = cv.skills.filter((skill) => skill.trim());
+  if (filledSkills.length > 0) {
+    sectionHeading(labels.skills);
+    writeLines(filledSkills.join(" | "), { after: 3 });
+  }
+
+  const filledLanguages = cv.languages.filter((lang) =>
+    lang.language.trim()
+  );
+  if (filledLanguages.length > 0) {
+    sectionHeading(labels.languages);
+    writeLines(
+      filledLanguages
+        .map((lang) => [lang.language, lang.level].filter(Boolean).join(" - "))
+        .join(", "),
+      { after: 5 }
+    );
+  }
+
+  const filledCerts = cv.certifications.filter((entry) =>
     entry.name.trim()
   );
-  const sectorCredentials = getSelectedSectorCredentials(state);
+  const sectorCredentials = getSelectedSectorCredentials(cv);
   if (filledCerts.length > 0 || sectorCredentials.length > 0) {
-    sectionHeading("Certifications & Credentials");
+    sectionHeading(labels.credentials);
     for (const credential of sectorCredentials) {
       writeLines(formatSectorCredential(credential), {
         size: 10.5,
@@ -237,83 +230,133 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const filledSkills = state.skills.filter((skill) => skill.trim());
-  if (filledSkills.length > 0) {
-    sectionHeading("Skills");
-    writeLines(filledSkills.join(", "), { after: 3 });
-  }
-
-  const filledLanguages = state.languages.filter((lang) =>
-    lang.language.trim()
-  );
-  if (filledLanguages.length > 0) {
-    sectionHeading("Languages");
-    writeLines(
-      filledLanguages
-        .map((lang) => [lang.language, lang.level].filter(Boolean).join(" - "))
-        .join(", "),
-      { after: 5 }
-    );
-  }
-
-  const filledAchievements = state.achievements.filter((entry) =>
+  const filledAchievements = cv.achievements.filter((entry) =>
     entry.title.trim()
   );
   if (filledAchievements.length > 0) {
-    sectionHeading("Achievements & Awards");
+    sectionHeading(labels.achievements);
     for (const achievement of filledAchievements) {
-      writeLines(achievement.title, { size: 10.5, style: "bold", after: 1 });
+      writeLines([achievement.title, achievement.awardingBody, achievement.year].filter(Boolean).join(" | "),
+        { size: 10.5, style: "bold", after: 1 });
       writeLines(achievement.body, { after: 1.5 });
-      writeLines(
-        [achievement.awardingBody, achievement.year].filter(Boolean).join(" | "),
-        { size: 9.5, color: [100, 100, 100], after: 2 }
-      );
     }
   }
 
+  const extras = [
+    { label: labels.volunteer, values: cv.volunteer.map((entry) => [[entry.role, entry.org].filter(Boolean).join(", "), entry.dates, entry.impact]) },
+    { label: labels.projects, values: cv.projects.map((entry) => [entry.name, entry.description, entry.outcomes, entry.url]) },
+    { label: labels.publications, values: cv.publications.map((entry) => [[entry.title, entry.outlet].filter(Boolean).join(", "), [entry.date, entry.url].filter(Boolean).join(" | ")]) },
+    { label: labels.memberships, values: cv.memberships.map((entry) => [entry.org, [entry.level, entry.year].filter(Boolean).join(" | ")]) },
+  ];
+  for (const { label, values } of extras) {
+    if (!values.some((entry) => entry.some((value) => value?.trim()))) continue;
+    sectionHeading(label);
+    for (const value of values) writeLines(value.filter(Boolean).join(" | "));
+  }
+
+  function measure(layout: BodyLayout) {
+    let section = 0;
+    return rows.flatMap(({ text, options }) => {
+      const scriptFont = arabicLoaded && arabic.test(text);
+      const style = scriptFont && options.style === "italic" ? "normal" : options.style ?? "normal";
+      const font = scriptFont ? "amiri" : options.heading && recruiterReady && config.heading === "serif" ? "times" : "helvetica";
+      pdf.setFont(font, style);
+      let size = options.size ?? layout.size;
+      pdf.setFontSize(size);
+      if (options.contact && pdf.getTextWidth(text) > maxWidth) {
+        size *= maxWidth / pdf.getTextWidth(text);
+        pdf.setFontSize(size);
+      }
+      const indent = options.bullet ? 4 : 0;
+      const lines: string[] = options.contact ? [text] : pdf.splitTextToSize(text, maxWidth - indent);
+      const before = options.heading ? (section++ ? layout.sectionGap * MM_PER_POINT : 2) : options.before ?? 0;
+      const lineHeight = size * MM_PER_POINT * layout.leading;
+      return lines.map((line, index) => {
+        const first = index === 0;
+        const last = index === lines.length - 1;
+        const top = first ? before : 0;
+        const divider = !!options.heading && last;
+        return {
+          line, size, style, font, indent, top, divider, options,
+          rtl: rtl || /^[^\p{L}]*\p{Script=Arabic}/u.test(line),
+          marker: options.bullet && first,
+          keepWithNext: !last || options.keepWithNext,
+          height: top + lineHeight + (last ? options.after ?? 0 : 0) + (divider ? 2 : 0),
+        };
+      });
+    });
+  }
+
+  const capacity = pageHeight - marginY * 2;
+  const firstCapacity = capacity - firstPageInset;
+  const breaks = Math.max(0, rows.filter((row) => row.options.heading).length - 1);
+  const layout = chooseBodyLayout((body) => measure(body).reduce((height, line) => height + line.height, 0), breaks, firstCapacity);
+  const pages = packPages(measure(layout), capacity, firstCapacity);
+  const pageLineCounts: number[] = [];
+  const pageFills: number[] = [];
+  for (const [index, page] of pages.entries()) {
+    if (index) pdf.addPage();
+    let y = marginY + (index === 0 ? firstPageInset : 0);
+    for (const row of page) {
+      const baseline = y + row.top + row.size * MM_PER_POINT;
+      pdf.setFont(row.font, row.style);
+      pdf.setFontSize(row.size);
+      const textColour = row.options.color ?? "#222222";
+      if (typeof textColour === "string") pdf.setTextColor(textColour);
+      else pdf.setTextColor(...textColour);
+      const align = row.options.align ?? (row.rtl ? "right" : "left");
+      if (row.marker) {
+        pdf.setFont("helvetica", "normal");
+        pdf.text("•", row.rtl ? pageWidth - marginX : marginX, baseline, { align: row.rtl ? "right" : "left" });
+        pdf.setFont(row.font, row.style);
+      }
+      const x = align === "center" ? pageWidth / 2 : align === "right" ? pageWidth - marginX - row.indent : marginX + row.indent;
+      pdf.text(row.line, x, baseline, row.font === "amiri"
+        ? { align, isInputRtl: row.rtl, isInputVisual: false, isOutputVisual: true }
+        : { align });
+      if (row.divider) {
+        pdf.setDrawColor(colour);
+        pdf.setLineWidth(0.3);
+        pdf.line(marginX, baseline + 1.6, pageWidth - marginX, baseline + 1.6);
+      }
+      y += row.height;
+    }
+    pageLineCounts.push(page.length);
+    pageFills.push(y / pageHeight);
+  }
   return {
     blob: pdf.output("blob"),
-    filename: filenameFor(state, "pdf", recruiterReady ? "Recruiter" : "ATS"),
+    filename: filenameFor(cv, "pdf", recruiterReady ? "Recruiter" : "ATS"),
     pageCount: pdf.getNumberOfPages(),
+    pageLineCounts,
+    pageFills,
+    needsUnicodeRendering: rows.some(({ text }) => {
+      const unsupported = arabicLoaded ? text.replace(/\p{Script=Arabic}|[\u061c\u200c-\u200f]/gu, "") : text;
+      return Boolean(unsupported && !nativePdfText.test(unsupported));
+    }),
   };
 }
 
-export async function exportPDF(state: CVState, options: ExportOptions = {}) {
-  if (isRecruiterReady(options)) {
-    const element = document.getElementById("cv-render");
-    if (element) {
-      const html2canvas = (await import("html2canvas-pro")).default;
-      const { jsPDF } = await import("jspdf");
-      const preview = element.closest("[data-preview-container]") as HTMLElement | null;
-      const previousTransform = preview?.style.transform;
-      const previousHeight = preview?.style.height;
-      if (preview) { preview.style.transform = "none"; preview.style.height = "auto"; }
-      try {
-        const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 794 });
-        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imageHeight = pageWidth * canvas.height / canvas.width;
-        let remaining = imageHeight;
-        let offset = 0;
-        const image = canvas.toDataURL("image/jpeg", 0.96);
-        pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
-        remaining -= pageHeight;
-        while (remaining > 0) {
-          offset -= pageHeight;
-          pdf.addPage();
-          pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
-          remaining -= pageHeight;
-        }
-        const output = { blob: pdf.output("blob"), filename: filenameFor(state, "pdf", "Recruiter"), pageCount: pdf.getNumberOfPages() };
-        saveAs(output.blob, output.filename);
-        return output;
-      } finally {
-        if (preview) { preview.style.transform = previousTransform ?? ""; preview.style.height = previousHeight ?? ""; }
-      }
+export async function exportPDF(draft: CVState, options: ExportOptions = {}) {
+  const output = await buildPDF(draft, options);
+  // Standard PDF fonts do not cover all scripts. Preserve the candidate's
+  // letters in the download rather than saving a damaged text layer.
+  if (output.needsUnicodeRendering) {
+    const [{ captureCV }, { jsPDF }] = await Promise.all([import("./capture-cv"), import("jspdf")]);
+    const canvas = await captureCV(isRecruiterReady(options) ? draft : { ...draft, template: "ats-clean" });
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const width = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imageHeight = width * canvas.height / canvas.width;
+    const image = canvas.toDataURL("image/jpeg", 0.96);
+    for (let top = 0; top < imageHeight; top += pageHeight) {
+      if (top > 0) pdf.addPage();
+      pdf.addImage(image, "JPEG", 0, -top, width, imageHeight);
     }
+    const visual = { blob: pdf.output("blob"), filename: output.filename, pageCount: pdf.getNumberOfPages() };
+    saveAs(visual.blob, visual.filename);
+    return visual;
   }
-  const output = await buildPDF(state, options);
   saveAs(output.blob, output.filename);
   return output;
 }

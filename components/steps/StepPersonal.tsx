@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useCVState } from "@/lib/state";
+import { useLocale } from "@/lib/locale";
 import { PHONE_PLACEHOLDERS } from "@/lib/constants";
 import type { SectorCredentialAuthority } from "@/lib/types";
 import {
@@ -12,7 +13,8 @@ import {
   SECTOR_CREDENTIAL_OPTIONS,
   VISA_STATUS_OPTIONS,
 } from "@/lib/uae";
-import { validateEmail, validateLinkedIn, validatePhone } from "@/lib/validators";
+import { validateEmail, validateLinkedIn } from "@/lib/validators";
+import { PhoneField, LocationFields } from "@/components/shared/CVContactFields";
 import GuidedPersonal from "./GuidedPersonal";
 import PhotoEditor from "@/components/shared/PhotoEditor";
 
@@ -25,9 +27,14 @@ interface FieldStatus {
 export default function StepPersonal() {
   const { state, updatePersonal } = useCVState();
   const { personal, geo } = state;
+  const { t } = useLocale();
+  const instanceId = useId();
+  const fieldId = (name: string) => `${instanceId}-${name}`;
+  const optionLabel = (option: string) => t(option ? `personalUi.option.${option}` : "personalUi.skip");
+  const credentialLabel = (authority: SectorCredentialAuthority) =>
+    authority === "Other" ? optionLabel(authority) : <bdi dir="ltr">{authority}</bdi>;
 
   const [emailStatus, setEmailStatus] = useState<FieldStatus>({});
-  const [phoneStatus, setPhoneStatus] = useState<FieldStatus>({});
   const [linkedinStatus, setLinkedinStatus] = useState<FieldStatus>({});
   const selectedCredentialAuthorities = new Set(
     personal.sector_credentials.map((credential) => credential.authority)
@@ -69,14 +76,6 @@ export default function StepPersonal() {
     });
   }
 
-  function handlePhoneBlur() {
-    const result = validatePhone(personal.phone);
-    setPhoneStatus({
-      valid: result.valid,
-      warning: result.warning,
-      error: !result.valid && personal.phone ? result.warning : undefined,
-    });
-  }
 
   function handleLinkedinBlur() {
     const result = validateLinkedIn(personal.linkedin);
@@ -89,59 +88,70 @@ export default function StepPersonal() {
 
   return (
     <>
-      <div className="md:hidden">
+      <div className="sm:hidden">
         <GuidedPersonal />
       </div>
-      <div className="hidden space-y-8 md:block">
+      <div className="hidden space-y-8 sm:block">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">
-          Personal Details
+          {t("personalUi.desktopTitle")}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          This information appears at the top of your CV
+          {t("personalUi.desktopIntro")}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Full Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Full Name
+          <label htmlFor={fieldId("name")} className="block text-sm font-medium text-gray-700 mb-1.5">
+            {t("personalUi.name")}
           </label>
           <input
+            data-cv-fix="name"
+            id={fieldId("name")}
             type="text"
+            autoComplete="name"
+            dir="auto"
             value={personal.name}
             onChange={(e) => updatePersonal({ name: e.target.value })}
-            placeholder="e.g. Sarah Al-Mansoori"
+            placeholder={t("personalUi.nameExample")}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
           />
         </div>
 
         {/* Professional Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Professional Title
+          <label htmlFor={fieldId("title")} className="block text-sm font-medium text-gray-700 mb-1.5">
+            {t("personalUi.title")}
           </label>
           <input
+            id={fieldId("title")}
             type="text"
+            dir="auto"
             value={personal.title}
             onChange={(e) => updatePersonal({ title: e.target.value })}
-            placeholder="e.g. Room Attendant"
+            placeholder={t("personalUi.titleExample")}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Email Address
+          <label htmlFor={fieldId("email")} className="block text-sm font-medium text-gray-700 mb-1.5">
+            {t("personalUi.email")}
           </label>
           <input
+            id={fieldId("email")}
             type="email"
+            autoComplete="email"
+            dir="ltr"
+            aria-invalid={Boolean(emailStatus.error)}
+            aria-describedby={emailStatus.error || emailStatus.warning ? fieldId("email-feedback") : undefined}
             value={personal.email}
             onChange={(e) => updatePersonal({ email: e.target.value })}
             onBlur={handleEmailBlur}
-            placeholder="firstname.lastname@gmail.com"
+            placeholder={t("personalUi.emailExample")}
             className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow ${
               emailStatus.error
                 ? "border-red-400"
@@ -151,70 +161,35 @@ export default function StepPersonal() {
             }`}
           />
           {emailStatus.error && (
-            <p className="mt-1 text-sm text-red-600">{emailStatus.error}</p>
+            <p id={fieldId("email-feedback")} className="mt-1 text-sm text-red-600">{t("personalUi.emailInvalid")}</p>
           )}
           {emailStatus.warning && !emailStatus.error && (
-            <p className="mt-1 text-sm text-amber-600">
-              {emailStatus.warning}
+            <p id={fieldId("email-feedback")} className="mt-1 text-sm text-amber-600">
+              {t("personalUi.emailWarning")}
             </p>
           )}
         </div>
 
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            value={personal.phone}
-            onChange={(e) => updatePersonal({ phone: e.target.value })}
-            onBlur={handlePhoneBlur}
-            placeholder={PHONE_PLACEHOLDERS[geo] ?? PHONE_PLACEHOLDERS.global}
-            className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow ${
-              phoneStatus.error
-                ? "border-red-400"
-                : phoneStatus.warning
-                  ? "border-amber-400"
-                  : "border-gray-300"
-            }`}
-          />
-          {phoneStatus.error && (
-            <p className="mt-1 text-sm text-red-600">{phoneStatus.error}</p>
-          )}
-          {phoneStatus.warning && !phoneStatus.error && (
-            <p className="mt-1 text-sm text-amber-600">
-              {phoneStatus.warning}
-            </p>
-          )}
-        </div>
-
-        {/* City / Country */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            City / Country
-          </label>
-          <input
-            type="text"
-            value={personal.location}
-            onChange={(e) => updatePersonal({ location: e.target.value })}
-            placeholder="e.g. Dubai, UAE"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
-          />
-        </div>
+        <PhoneField phone={personal.phone} onChange={(phone) => updatePersonal({ phone })} placeholder={PHONE_PLACEHOLDERS[geo] ?? PHONE_PLACEHOLDERS.global} />
+        <LocationFields value={personal.location} onChange={(location) => updatePersonal({ location })} />
 
         {/* LinkedIn */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            LinkedIn URL
+          <label htmlFor={fieldId("linkedin")} className="block text-sm font-medium text-gray-700 mb-1.5">
+            {t("personalUi.linkedin")}
           </label>
           <div className="relative">
             <input
+              id={fieldId("linkedin")}
               type="url"
+              autoComplete="url"
+              dir="ltr"
+              aria-invalid={Boolean(linkedinStatus.error)}
+              aria-describedby={linkedinStatus.error ? fieldId("linkedin-feedback") : undefined}
               value={personal.linkedin}
               onChange={(e) => updatePersonal({ linkedin: e.target.value })}
               onBlur={handleLinkedinBlur}
-              placeholder="https://linkedin.com/in/your-name"
+              placeholder={t("personalUi.linkedinExample")}
               className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow ${
                 linkedinStatus.error
                   ? "border-red-400"
@@ -224,9 +199,10 @@ export default function StepPersonal() {
               }`}
             />
             {linkedinStatus.valid && personal.linkedin && (
-              <span className="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-green-600 flex items-center gap-1">
+              <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-sm text-green-600 flex items-center gap-1 bg-white">
                 <svg
                   className="w-4 h-4"
+                  aria-hidden="true"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -238,13 +214,13 @@ export default function StepPersonal() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Valid
+                {t("personalUi.valid")}
               </span>
             )}
           </div>
           {linkedinStatus.error && (
-            <p className="mt-1 text-sm text-red-600">
-              {linkedinStatus.error}
+            <p id={fieldId("linkedin-feedback")} className="mt-1 text-sm text-red-600">
+              {t("personalUi.linkedinInvalid")}
             </p>
           )}
         </div>
@@ -255,24 +231,24 @@ export default function StepPersonal() {
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
-              UAE &amp; GCC Details
+              {t("personalUi.gulfDetails")}
             </h3>
             <p className="mt-1 text-sm text-gray-600">
-              Optional fields for UAE applications. Leave blank or skip anything you do not want on your CV.
+              {t("personalUi.desktopGulfHint")}
             </p>
           </div>
           <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-            Optional
+            {t("personalUi.optional")}
           </span>
         </div>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Visa Status
+            <label htmlFor={fieldId("visa")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.visa")}
             </label>
             <select
-              aria-label="Visa Status"
+              id={fieldId("visa")}
               value={personal.visa_status}
               onChange={(e) =>
                 updatePersonal({
@@ -283,32 +259,35 @@ export default function StepPersonal() {
             >
               {VISA_STATUS_OPTIONS.map((option) => (
                 <option key={option || "blank"} value={option}>
-                  {option || "Skip / leave blank"}
+                  {optionLabel(option)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Notice Period
+            <label htmlFor={fieldId("notice")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.notice")}
             </label>
             <input
+              id={fieldId("notice")}
               type="text"
+              dir="auto"
               value={personal.notice_period}
               onChange={(e) =>
                 updatePersonal({ notice_period: e.target.value })
               }
-              placeholder="e.g. Immediate, 30 days"
+              placeholder={t("personalUi.noticeExample")}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Availability Date
+            <label htmlFor={fieldId("availability")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.availability")}
             </label>
             <input
+              id={fieldId("availability")}
               type="date"
               value={personal.availability_date}
               onChange={(e) =>
@@ -319,24 +298,26 @@ export default function StepPersonal() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Driving Licence
+            <label htmlFor={fieldId("licence")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.licence")}
             </label>
             <input
+              id={fieldId("licence")}
               type="text"
+              dir="auto"
               value={personal.driving_license}
               onChange={(e) => updatePersonal({ driving_license: e.target.value })}
-              placeholder="e.g. UAE light vehicle, valid"
+              placeholder={t("personalUi.licenceExample")}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Letter from your sponsor allowing you to change job (NOC)
+            <label htmlFor={fieldId("noc")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.noc")}
             </label>
             <select
-              aria-label="Letter from your sponsor allowing you to change job (NOC)"
+              id={fieldId("noc")}
               value={personal.noc_available}
               onChange={(e) =>
                 updatePersonal({
@@ -347,37 +328,39 @@ export default function StepPersonal() {
             >
               {NOC_OPTIONS.map((option) => (
                 <option key={option || "blank"} value={option}>
-                  {option || "Skip / leave blank"}
+                  {optionLabel(option)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Nationality
+            <label htmlFor={fieldId("nationality")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.nationality")}
             </label>
             <input
+              id={fieldId("nationality")}
               type="text"
+              dir="auto"
               list="nationality-options"
               value={personal.nationality}
               onChange={(e) => updatePersonal({ nationality: e.target.value })}
-              placeholder="Start typing or skip"
+              placeholder={t("personalUi.nationalityExample")}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
             />
             <datalist id="nationality-options">
               {NATIONALITY_OPTIONS.map((option) => (
-                <option key={option} value={option} />
+                <option key={option} value={option} label={optionLabel(option)} />
               ))}
             </datalist>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Arabic Proficiency
+            <label htmlFor={fieldId("arabic")} className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t("personalUi.arabic")}
             </label>
             <select
-              aria-label="Arabic Proficiency"
+              id={fieldId("arabic")}
               value={personal.arabic_proficiency}
               onChange={(e) =>
                 updatePersonal({
@@ -389,7 +372,7 @@ export default function StepPersonal() {
             >
               {ARABIC_PROFICIENCY_OPTIONS.map((option) => (
                 <option key={option || "blank"} value={option}>
-                  {option || "Skip / leave blank"}
+                  {optionLabel(option)}
                 </option>
               ))}
             </select>
@@ -405,10 +388,11 @@ export default function StepPersonal() {
                 }
                 className="h-4 w-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
               />
-              Include date of birth on CV
+              {t("personalUi.includeDob")}
             </label>
             <input
               type="date"
+              aria-label={t("personalUi.dob")}
               value={personal.date_of_birth}
               onChange={(e) =>
                 updatePersonal({ date_of_birth: e.target.value })
@@ -428,9 +412,10 @@ export default function StepPersonal() {
                 }
                 className="h-4 w-4 rounded border-gray-300 text-gold-600 focus:ring-gold-500"
               />
-              Include marital status on CV
+              {t("personalUi.includeMarital")}
             </label>
             <select
+              aria-label={t("personalUi.marital")}
               value={personal.marital_status}
               onChange={(e) =>
                 updatePersonal({
@@ -443,7 +428,7 @@ export default function StepPersonal() {
             >
               {MARITAL_STATUS_OPTIONS.map((option) => (
                 <option key={option || "blank"} value={option}>
-                  {option || "Skip / leave blank"}
+                  {optionLabel(option)}
                 </option>
               ))}
             </select>
@@ -451,14 +436,15 @@ export default function StepPersonal() {
         </div>
 
         <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Sector Credentials
-          </label>
+          <h4 className="block text-sm font-medium text-gray-700 mb-2">
+            {t("personalUi.credentials")}
+          </h4>
           <div className="flex flex-wrap gap-2">
             {SECTOR_CREDENTIAL_OPTIONS.map((authority) => (
               <button
                 key={authority}
                 type="button"
+                aria-pressed={selectedCredentialAuthorities.has(authority)}
                 onClick={() => toggleCredential(authority)}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-colors ${
                   selectedCredentialAuthorities.has(authority)
@@ -466,7 +452,7 @@ export default function StepPersonal() {
                     : "bg-white text-gray-700 ring-gray-200 hover:ring-emerald-300"
                 }`}
               >
-                {authority}
+                {credentialLabel(authority)}
               </button>
             ))}
           </div>
@@ -479,7 +465,7 @@ export default function StepPersonal() {
                   className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-100 bg-white p-3 sm:grid-cols-[90px_1fr_1fr]"
                 >
                   <div className="flex items-center text-sm font-semibold text-emerald-800">
-                    {credential.authority}
+                    {credentialLabel(credential.authority)}
                   </div>
                   <input
                     type="text"
@@ -489,11 +475,14 @@ export default function StepPersonal() {
                         license_no: e.target.value,
                       })
                     }
-                    placeholder="Licence / registration number"
+                    aria-label={t("personalUi.licenceNumber")}
+                    placeholder={t("personalUi.licenceNumber")}
+                    dir="auto"
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                   />
                   <input
                     type="date"
+                    aria-label={t("personalUi.expiry")}
                     value={credential.expiry_date}
                     onChange={(e) =>
                       updateCredential(credential.authority, {
@@ -512,14 +501,12 @@ export default function StepPersonal() {
       <PhotoEditor />
 
       {/* HR Tip */}
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+      <div className="bg-amber-50 border-s-4 border-amber-400 p-4 rounded-e-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Career Specialist Tip
+          {t("personalUi.tip")}
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          Recruiters see your email before your CV.
-          firstname.lastname@gmail.com is the gold standard. Avoid nicknames,
-          birth years, or numbers.
+          {t("personalUi.tipText")}
         </p>
       </div>
       </div>

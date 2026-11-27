@@ -1,4 +1,5 @@
 import type { CVState, ScoreResult, ScoreCriterion, ScoreLayer, ScoreLevel } from "./types";
+import { validatePhone, locationParts } from "./validators";
 import {
   ACTION_VERBS,
   QUANTIFIER_PATTERNS,
@@ -74,14 +75,14 @@ function hasAnyPattern(text: string, patterns: RegExp[]): boolean {
    ââââââââââââââââââââââââââââââââââââââââââ */
 
 function scoreContact(state: CVState): ScoreCriterion {
-  const { name, email, phone, location } = state.personal;
+  const { name, phone, location } = state.personal;
+  const { city, country } = locationParts(location);
   let pts = 0;
   if (name.trim().length > 0) pts += 2;
-  if (email.trim().length > 0 && email.includes("@")) pts += 2;
-  if (phone.trim().length > 0) pts += 2;
-  if (location.trim().length > 0) pts += 2;
+  if (validatePhone(phone).valid) pts += 4;
+  if (city && country) pts += 2;
   const s = Math.min(pts, 8);
-  return { score: s, max: 8, level: level(s, 8), label: "Contact Details", tip: s < 8 ? "Add your full name, email, phone, and location." : undefined };
+  return { score: s, max: 8, level: level(s, 8), label: "Contact Details", tip: s < 8 ? "Add your full name, phone, city and country." : undefined };
 }
 
 function scoreSummary(state: CVState): ScoreCriterion {
@@ -90,7 +91,7 @@ function scoreSummary(state: CVState): ScoreCriterion {
   if (len > 200) s = 8;
   else if (len > 100) s = 5;
   else if (len > 30) s = 2;
-  return { score: s, max: 8, level: level(s, 8), label: "About you (2 to 3 lines)", tip: s < 8 ? "Write a 3-4 sentence summary highlighting your top achievements and what you bring to a Gulf employer." : undefined };
+  return { score: s, max: 8, level: level(s, 8), label: "About you (2 to 3 lines)", tip: s < 8 ? "Add work details, skills or languages to build a fuller profile." : undefined };
 }
 
 function scoreExperience(state: CVState): ScoreCriterion {
@@ -249,7 +250,7 @@ function scoreSummaryKeywords(state: CVState): ScoreCriterion {
   if (words.length >= 40) s = 5;
   else if (words.length >= 20) s = 3;
   else if (words.length >= 5) s = 1;
-  return { score: s, max: 5, level: level(s, 5), label: "Summary Depth", tip: s < 5 ? "Expand your summary to 40+ words. Company computers extract keywords from this section first." : undefined };
+  return { score: s, max: 5, level: level(s, 5), label: "Profile length", tip: s < 5 ? "Check that your work history and skills cover the role you want." : undefined };
 }
 
 function atsFormattingLayer(state: CVState): ScoreLayer {
@@ -306,8 +307,8 @@ export function calculateScore(state: CVState): ScoreResult {
 export function getMissingCVItems(state: CVState) {
   const missing: { key: string; label: string; step: number }[] = [];
   if (!state.personal.name.trim()) missing.push({ key: "name", label: "Add your name", step: 1 });
-  if (state.personal.phone.replace(/\D/g, "").length < 7 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.personal.email.trim())) {
-    missing.push({ key: "contact", label: "Add a phone number or email", step: 1 });
+  if (!validatePhone(state.personal.phone).valid) {
+    missing.push({ key: "contact", label: "Add your phone number", step: 1 });
   }
   if (!state.experience.some((entry) => entry.role.trim() && (entry.company.trim() || entry.companyDesc.trim()) && entry.description.trim())) {
     missing.push({ key: "job", label: "Add one job and your duties", step: 2 });

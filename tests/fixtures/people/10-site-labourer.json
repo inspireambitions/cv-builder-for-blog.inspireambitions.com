@@ -1,0 +1,32 @@
+{
+  "personal": {
+    "name": "Fictional Amir Venn",
+    "title": "Construction Labourer",
+    "email": "case10@example.com",
+    "phone": "+971 50 000 0010",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Construction Labourer",
+      "company": "Example Redrock Works",
+      "location": "Dubai",
+      "dates": "Jun 2018 to Mar 2023",
+      "description": "Moving materials to the marked bay\nchecking tools before use\nClear waste from work areas at the end of the shift"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ],
+  "education": []
+}

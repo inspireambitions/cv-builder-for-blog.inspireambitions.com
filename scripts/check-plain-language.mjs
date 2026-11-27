@@ -85,7 +85,7 @@ function files(dir) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   // Server prompts and SDK descriptions are not UI copy.
-  const uiLibraries = ["lib/i18n.ts", "lib/constants.ts", "lib/comparison-data.ts", "lib/gulf-match.ts", "lib/score.ts", "lib/role-suggestions.ts", "lib/role-examples.ts", "lib/template-recommendation.ts", "lib/plain-summary.ts"];
+  const uiLibraries = ["lib/i18n.ts", "lib/constants.ts", "lib/comparison-data.ts", "lib/gulf-match.ts", "lib/score.ts", "lib/role-suggestions.ts", "lib/role-examples.ts", "lib/template-recommendation.ts", "lib/profile-builder.ts"];
   const targets = [...files("components"), ...files("app").filter((file) => !file.replaceAll("\\", "/").startsWith("app/api/")), ...uiLibraries, ...files("lib").filter((file) => /talk/i.test(file))];
   const issues = targets.flatMap((file) => inspectSource(fs.readFileSync(file, "utf8"), file.replaceAll("\\", "/")));
   if (issues.length) {

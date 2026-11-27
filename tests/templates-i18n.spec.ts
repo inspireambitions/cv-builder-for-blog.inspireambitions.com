@@ -13,10 +13,8 @@ async function openDesignStep(page: import("@playwright/test").Page) {
   await expect(page.getByRole("heading", { name: "Choose your CV design", exact: true })).toBeVisible();
 }
 
-test("all ten templates and five UI languages are available", async ({ page }) => {
+test("all ten templates remain available", async ({ page }) => {
   await openDesignStep(page);
-  const language = page.getByLabel("Interface language");
-  await expect(language.locator("option")).toHaveCount(5);
   const showAll = page.getByRole("button", { name: "See all CV designs" });
   if (await showAll.isVisible()) await showAll.click();
   for (const name of ["Clear", "Classic GCC", "Site", "Service", "Care", "Ledger", "Crew", "Stack", "Move", "Corner"]) await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible();

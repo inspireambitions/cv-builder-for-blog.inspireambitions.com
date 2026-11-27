@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useLocale } from "@/lib/locale";
 
 export default function SaveToast() {
+  const { t } = useLocale();
   const [visible, setVisible] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -30,7 +32,7 @@ export default function SaveToast() {
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
-      &#10003; Progress saved
+      <span aria-hidden="true">&#10003;</span>{" "}{t("toast.saved")}
     </div>
   );
 }

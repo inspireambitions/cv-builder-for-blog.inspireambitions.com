@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Rani Daro",
+    "title": "Room Attendant",
+    "email": "case02@example.com",
+    "phone": "+971 50 000 0002",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Room Attendant",
+      "company": "Example Cedar Hotel",
+      "location": "Dubai",
+      "dates": "Jan 2020 to Present",
+      "description": "Cleaned guest rooms and public areas to the required standard and schedule.\nChanged bed linen, replaced towels and restocked guest supplies.\nReported maintenance faults, damage and lost property through the correct process."
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

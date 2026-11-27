@@ -6,7 +6,7 @@ test("usage consent can be withdrawn below the fixed mobile actions", async ({ p
   await expect(preference).toBeVisible();
   await expect(preference).not.toBeChecked();
   await preference.check();
-  await page.getByRole("button", { name: "Build My CV", exact: true }).click();
+  await page.getByRole("button", { name: /^(Build My CV|Fill in the full form)$/ }).click();
   await expect(page.getByPlaceholder((page.viewportSize()?.width ?? 1440) < 640 ? "For example, Amina Yusuf" : "e.g. Sarah Al-Mansoori")).toBeVisible();
   await preference.uncheck();
   await expect(preference).not.toBeChecked();

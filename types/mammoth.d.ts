@@ -6,6 +6,7 @@ declare module "mammoth" {
 
   const mammoth: {
     extractRawText(input: { buffer: Buffer }): Promise<ExtractRawTextResult>;
+    convertToHtml(input: { buffer: Buffer }): Promise<ExtractRawTextResult>;
   };
 
   export default mammoth;

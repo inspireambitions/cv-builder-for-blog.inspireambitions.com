@@ -5,6 +5,9 @@ import { useCVState } from "@/lib/state";
 import { LANGUAGE_LEVELS } from "@/lib/constants";
 import type { LangEntry } from "@/lib/types";
 import { getRoleExamples } from "@/lib/role-examples";
+import { getRoleSuggestionGroup } from "@/lib/role-suggestions";
+import { useLocale } from "@/lib/locale";
+import { authoredTranslations } from "@/lib/i18n";
 
 function generateLangId() {
   return "lang-" + Math.random().toString(36).slice(2, 9);
@@ -12,8 +15,12 @@ function generateLangId() {
 
 export default function StepSkills() {
   const { state, updateField } = useCVState();
+  const { locale, t } = useLocale();
   const skills = state.skills;
   const languages = state.languages;
+  const role = state.personal.title || state.experience[0]?.role || "";
+  const family = getRoleSuggestionGroup(role).key;
+  const skillExample = locale === "en" ? getRoleExamples(role).skill : authoredTranslations[locale][`example.skill.${family}`] ?? t("example.skill.general");
 
   const [skillInput, setSkillInput] = useState("");
 
@@ -36,6 +43,7 @@ export default function StepSkills() {
   function handleSkillKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
+      if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
       addSkill();
     }
   }
@@ -78,9 +86,9 @@ export default function StepSkills() {
       {/* ── Skills Section ── */}
       <div className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Skills</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t("skills.title")}</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Add your key skills. Type a skill and press Enter or click Add.
+            {t("skillUi.intro")}
           </p>
         </div>
 
@@ -88,19 +96,20 @@ export default function StepSkills() {
         <div className="flex gap-3">
           <input
             type="text"
+            dir="auto"
             value={skillInput}
             onChange={(e) => setSkillInput(e.target.value)}
             onKeyDown={handleSkillKeyDown}
-            aria-label="Add a skill"
-            placeholder={getRoleExamples(state.personal.title || state.experience[0]?.role || "").skill}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
+            aria-label={t("skills.addLabel")}
+            placeholder={skillExample}
+            className="min-w-0 flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
           />
           <button
             type="button"
             onClick={addSkill}
             className="bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
           >
-            Add
+            {t("skills.add")}
           </button>
         </div>
 
@@ -110,14 +119,14 @@ export default function StepSkills() {
             {skills.map((skill) => (
               <span
                 key={skill}
-                className="inline-flex items-center bg-gold-500/10 text-gold-600 px-3 py-1 rounded-full text-sm font-medium"
+                className="inline-flex max-w-full items-center bg-gold-500/10 text-gold-600 px-3 py-1 rounded-full text-sm font-medium"
               >
-                {skill}
+                <bdi className="min-w-0 [overflow-wrap:anywhere]">{skill}</bdi>
                 <button
                   type="button"
                   onClick={() => removeSkill(skill)}
                   className="ms-2 text-gold-500 hover:text-gold-700 transition-colors"
-                  aria-label={`Remove ${skill}`}
+                  aria-label={t("skills.remove", { skill })}
                 >
                   &times;
                 </button>
@@ -128,16 +137,16 @@ export default function StepSkills() {
 
         {/* Counter */}
         <p className={`text-sm font-medium ${skillCountColor}`}>
-          {skillCount} skill{skillCount !== 1 ? "s" : ""} added
+          {t(skillCount === 1 ? "skillUi.single" : "skills.counter", { count: skillCount })}
         </p>
       </div>
 
       {/* ── Languages Section ── */}
       <div className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Languages</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t("skills.langTitle")}</h2>
           <p className="mt-1 text-sm text-gray-600">
-            List the languages you speak and your proficiency level
+            {t("skillUi.langIntro")}
           </p>
         </div>
 
@@ -145,63 +154,48 @@ export default function StepSkills() {
           {languages.map((entry, index) => (
             <div
               key={entry.id}
-              className="flex items-end gap-4"
+              className="space-y-3 rounded-lg border border-gray-200 p-3"
             >
               {/* Language name */}
-              <div className="flex-1">
-                {index === 0 && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Language
-                  </label>
-                )}
+              <label className="block text-sm font-medium text-gray-700">
+                {index === 0 ? t("skills.langName") : t("skillUi.langNumber", { number: index + 1 })}
                 <input
+                  data-cv-fix={index === 0 ? "languages" : undefined}
                   type="text"
+                  dir="auto"
                   value={entry.language}
                   onChange={(e) =>
                     updateLang(entry.id, "language", e.target.value)
                   }
-                  placeholder="e.g. English"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
+                  placeholder={t("skillUi.langExample")}
+                  className="mt-1 w-full min-h-12 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow"
                 />
-              </div>
+              </label>
 
               {/* Proficiency level */}
-              <div className="flex-1">
-                {index === 0 && (
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Proficiency
-                  </label>
-                )}
-                <select
-                  value={entry.level}
-                  onChange={(e) =>
-                    updateLang(entry.id, "level", e.target.value)
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none transition-shadow bg-white"
-                >
-                  <option value="">Choose your level</option>
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-gray-700">{t("skillUi.langQuestion")}</legend>
+                <div className="flex flex-wrap gap-2">
                   {LANGUAGE_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
+                    <label key={level} className="cursor-pointer">
+                      <input type="radio" name={`lang-level-${entry.id}`} className="peer sr-only"
+                        checked={entry.level === level} onChange={() => updateLang(entry.id, "level", level)} />
+                      <span className="flex min-h-11 items-center rounded-lg border border-gray-300 px-3 text-sm text-gray-800 peer-checked:border-gold-600 peer-checked:bg-amber-50 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-600">{t(`languageLevel.${level}`)}</span>
+                    </label>
                   ))}
-                </select>
-              </div>
+                </div>
+              </fieldset>
 
               {/* Remove button (not for first row) */}
-              <div className="w-20 flex-shrink-0">
-                {index > 0 ? (
+              {index > 0 && (
                   <button
                     type="button"
                     onClick={() => removeLang(entry.id)}
                     className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors py-2.5"
                   >
-                    Remove
+                    {t("form.remove")}
                   </button>
-                ) : (
-                  <div className="py-2.5" />
-                )}
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -210,6 +204,7 @@ export default function StepSkills() {
         <button
           type="button"
           onClick={addLang}
+          data-cv-fix={languages.length ? undefined : "languages"}
           className="flex items-center gap-2 bg-gold-500 hover:bg-gold-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
         >
           <svg
@@ -217,6 +212,7 @@ export default function StepSkills() {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -225,18 +221,17 @@ export default function StepSkills() {
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-          Add Language
+          {t("skillUi.addLang")}
         </button>
       </div>
 
       {/* HR Tip */}
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+      <div className="bg-amber-50 border-s-4 border-amber-400 p-4 rounded-e-lg">
         <p className="font-semibold text-amber-800 text-sm">
-          HR Career Specialist Tip
+          {t("personalUi.tip")}
         </p>
         <p className="mt-1 text-sm text-amber-900">
-          Use the job advert&apos;s words only when they describe your skills.
-          Do not add skills you do not have.
+          {t("skills.tip")}
         </p>
       </div>
     </div>

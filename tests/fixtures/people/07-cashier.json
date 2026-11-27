@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Vani Rael",
+    "title": "Cashier",
+    "email": "case07@example.com",
+    "phone": "+971 50 000 0007",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Cashier",
+      "company": "Example Reef Grocery",
+      "location": "Dubai",
+      "dates": "Jul 2023 to Present",
+      "description": "responsible for cash\nResponsible for cash.\nRESPONSIBLE FOR CASH\n* responsible for cash!\n- responsible for   cash\nCount till cash before closing"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

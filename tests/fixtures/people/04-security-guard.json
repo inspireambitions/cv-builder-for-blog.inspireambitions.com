@@ -1,0 +1,40 @@
+{
+  "personal": {
+    "name": "Fictional Tari Dale",
+    "title": "Security Guard",
+    "email": "",
+    "phone": "+971 50 000 0004",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Security Guard",
+      "company": "Example Key Security",
+      "location": "Dubai",
+      "dates": "Jan 2021 to Apr 2025",
+      "description": "Monitor entrances and check visitor passes\nlog 20 rounds in the site logbook each week"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-4",
+      "name": "Security Guard Licence",
+      "issuer": "Example Licensing Office",
+      "date": "Apr 2024",
+      "expiry": "Apr 2027"
+    }
+  ]
+}

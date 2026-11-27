@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { useLocale } from "@/lib/locale";
 import { useCVState } from "@/lib/state";
 import type {
   AchievementEntry,
@@ -28,35 +29,44 @@ function AccordionSection({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
+  const { locale, t } = useLocale();
+  const legacyCountName = count === 1
+    ? title.toLowerCase().replace(/s$/, "").split(" ").pop()
+    : title.toLowerCase().split(" ").pop();
+  const countLabel = locale === "en" ? `${count} ${legacyCountName}` : t("extrasUi.count", { count });
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex items-center justify-between w-full p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          {count > 0 && (
-            <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
-              {count} {count === 1 ? title.toLowerCase().replace(/s$/, "").split(" ").pop() : title.toLowerCase().split(" ").pop()}
-            </span>
-          )}
-        </div>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <h3>
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={onToggle}
+          className="flex w-full items-center justify-between gap-3 rounded-lg bg-gray-50 p-4 text-start hover:bg-gray-100 transition-colors"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
+          <span className="flex min-w-0 flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-gray-900">{title}</span>
+            {count > 0 && (
+              <span className="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                {countLabel}
+              </span>
+            )}
+          </span>
+          <svg
+            aria-hidden="true"
+            className={`w-5 h-5 shrink-0 text-gray-500 motion-safe:transition-transform ${open ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+      </h3>
       {open && <div className="p-4 space-y-4">{children}</div>}
     </div>
   );
@@ -72,6 +82,7 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
     >
       <svg
         className="w-4 h-4"
+        aria-hidden="true"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -90,13 +101,14 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
 
 // ── Remove button ──
 function RemoveButton({ onClick }: { onClick: () => void }) {
+  const { t } = useLocale();
   return (
     <button
       type="button"
       onClick={onClick}
       className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
     >
-      Remove
+      {t("form.remove")}
     </button>
   );
 }
@@ -104,7 +116,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
 // ── HR Tip inline ──
 function HRTipInline({ text }: { text: string }) {
   return (
-    <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r-lg">
+    <div className="bg-amber-50 border-s-4 border-amber-400 p-3 rounded-e-lg">
       <p className="text-sm text-amber-900">{text}</p>
     </div>
   );
@@ -117,6 +129,8 @@ const TEXTAREA_CLASS =
 
 export default function StepExtras() {
   const { state, updateField } = useCVState();
+  const { t } = useLocale();
+  const instanceId = useId();
 
   // Accordion open state
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -283,27 +297,27 @@ export default function StepExtras() {
   }
 
   return (
-    <div className="space-y-8">
+    <section aria-labelledby={`${instanceId}-heading`} className="space-y-8">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">
-          Additional Sections
+        <h2 id={`${instanceId}-heading`} className="text-lg font-semibold text-gray-900">
+          {t("extrasUi.heading")}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Optional sections that can strengthen your CV
+          {t("extrasUi.hint")}
         </p>
       </div>
 
       <div className="space-y-4">
         {/* ── 1. Achievements & Awards ── */}
         <AccordionSection
-          title="Achievements & Awards"
+          title={t("extras.achievements")}
           count={achievements.length}
           open={openSections.achievements}
           onToggle={() => toggle("achievements")}
         >
-          <HRTipInline text="Awards, patents, speaking engagements, and media features all belong here." />
+          <HRTipInline text={t("extrasUi.awardTip")} />
 
-          {achievements.map((entry) => (
+          {achievements.map((entry, index) => (
             <div
               key={entry.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
@@ -313,24 +327,24 @@ export default function StepExtras() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Title
+                  <label htmlFor={`${instanceId}-achievements-${index}-title`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.title")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-achievements-${index}-title`} dir="auto"
                     type="text"
                     value={entry.title}
                     onChange={(e) =>
                       updateAchievement(entry.id, "title", e.target.value)
                     }
-                    placeholder="e.g. Employee of the Year"
+                    placeholder={t("extrasUi.awardExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Awarding Body
+                  <label htmlFor={`${instanceId}-achievements-${index}-awardingBody`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.awardingBody")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-achievements-${index}-awardingBody`} dir="auto"
                     type="text"
                     value={entry.awardingBody}
                     onChange={(e) =>
@@ -340,55 +354,55 @@ export default function StepExtras() {
                         e.target.value
                       )
                     }
-                    placeholder="e.g. Deloitte"
+                    placeholder={t("extrasUi.awardingBodyExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Year
+                  <label htmlFor={`${instanceId}-achievements-${index}-year`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.year")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-achievements-${index}-year`} dir="ltr" inputMode="numeric"
                     type="text"
                     value={entry.year}
                     onChange={(e) =>
                       updateAchievement(entry.id, "year", e.target.value)
                     }
-                    placeholder="e.g. 2023"
+                    placeholder={t("extrasUi.yearExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Brief Description
+                <label htmlFor={`${instanceId}-achievements-${index}-briefDescription`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t("extrasUi.briefDescription")}
                 </label>
-                <textarea
+                <textarea id={`${instanceId}-achievements-${index}-briefDescription`} dir="auto"
                   value={entry.body}
                   onChange={(e) =>
                     updateAchievement(entry.id, "body", e.target.value)
                   }
                   rows={2}
-                  placeholder="Describe the achievement and its significance"
+                  placeholder={t("extrasUi.achievementExample")}
                   className={TEXTAREA_CLASS}
                 />
               </div>
             </div>
           ))}
 
-          <AddButton label="Add Achievement" onClick={addAchievement} />
+          <AddButton label={t("extrasUi.addAchievement")} onClick={addAchievement} />
         </AccordionSection>
 
         {/* ── 2. Volunteer Work ── */}
         <AccordionSection
-          title="Volunteer Work"
+          title={t("extras.volunteer")}
           count={volunteer.length}
           open={openSections.volunteer}
           onToggle={() => toggle("volunteer")}
         >
-          <HRTipInline text="Add volunteer work when it shows useful skills, responsibility or service. Only include details you can explain in an interview." />
+          <HRTipInline text={t("extrasUi.volunteerTip")} />
 
-          {volunteer.map((entry) => (
+          {volunteer.map((entry, index) => (
             <div
               key={entry.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
@@ -398,78 +412,78 @@ export default function StepExtras() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Role
+                  <label htmlFor={`${instanceId}-volunteer-${index}-role`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.role")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-volunteer-${index}-role`} dir="auto"
                     type="text"
                     value={entry.role}
                     onChange={(e) =>
                       updateVolunteer(entry.id, "role", e.target.value)
                     }
-                    placeholder="e.g. Fundraising Lead"
+                    placeholder={t("extrasUi.volunteerRoleExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Organisation
+                  <label htmlFor={`${instanceId}-volunteer-${index}-organisation`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.organisation")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-volunteer-${index}-organisation`} dir="auto"
                     type="text"
                     value={entry.org}
                     onChange={(e) =>
                       updateVolunteer(entry.id, "org", e.target.value)
                     }
-                    placeholder="e.g. Red Cross"
+                    placeholder={t("extrasUi.volunteerOrgExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Dates
+                  <label htmlFor={`${instanceId}-volunteer-${index}-dates`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.dates")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-volunteer-${index}-dates`} dir="auto"
                     type="text"
                     value={entry.dates}
                     onChange={(e) =>
                       updateVolunteer(entry.id, "dates", e.target.value)
                     }
-                    placeholder="e.g. Jan 2021 to Present"
+                    placeholder={t("extrasUi.volunteerDateExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Impact Description
+                <label htmlFor={`${instanceId}-volunteer-${index}-impact`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t("extrasUi.impact")}
                 </label>
-                <textarea
+                <textarea id={`${instanceId}-volunteer-${index}-impact`} dir="auto"
                   value={entry.impact}
                   onChange={(e) =>
                     updateVolunteer(entry.id, "impact", e.target.value)
                   }
                   rows={2}
-                  placeholder="Describe the impact of your volunteer work"
+                  placeholder={t("extrasUi.volunteerImpactExample")}
                   className={TEXTAREA_CLASS}
                 />
               </div>
             </div>
           ))}
 
-          <AddButton label="Add Volunteer Entry" onClick={addVolunteer} />
+          <AddButton label={t("extrasUi.addVolunteer")} onClick={addVolunteer} />
         </AccordionSection>
 
         {/* ── 3. Personal Projects ── */}
         <AccordionSection
-          title="Personal Projects"
+          title={t("extras.projects")}
           count={projects.length}
           open={openSections.projects}
           onToggle={() => toggle("projects")}
         >
-          <HRTipInline text="Especially important for career changers and recent graduates." />
+          <HRTipInline text={t("extrasUi.projectTip")} />
 
-          {projects.map((entry) => (
+          {projects.map((entry, index) => (
             <div
               key={entry.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
@@ -479,77 +493,77 @@ export default function StepExtras() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Project Name
+                  <label htmlFor={`${instanceId}-projects-${index}-projectName`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.projectName")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-projects-${index}-projectName`} dir="auto"
                     type="text"
                     value={entry.name}
                     onChange={(e) =>
                       updateProject(entry.id, "name", e.target.value)
                     }
-                    placeholder="e.g. Open Source Data Dashboard"
+                    placeholder={t("extrasUi.projectExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    URL{" "}
-                    <span className="text-gray-400 font-normal">(optional)</span>
+                  <label htmlFor={`${instanceId}-projects-${index}-url`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.url")}{" "}
+                    <span className="text-gray-400 font-normal">{t("form.optional")}</span>
                   </label>
-                  <input
+                  <input id={`${instanceId}-projects-${index}-url`} dir="ltr" inputMode="url"
                     type="text"
                     value={entry.url}
                     onChange={(e) =>
                       updateProject(entry.id, "url", e.target.value)
                     }
-                    placeholder="e.g. https://github.com/username/project"
+                    placeholder={t("extrasUi.projectUrlExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Description
+                <label htmlFor={`${instanceId}-projects-${index}-description`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t("extrasUi.description")}
                 </label>
-                <textarea
+                <textarea id={`${instanceId}-projects-${index}-description`} dir="auto"
                   value={entry.description}
                   onChange={(e) =>
                     updateProject(entry.id, "description", e.target.value)
                   }
                   rows={2}
-                  placeholder="Describe the project and technologies used"
+                  placeholder={t("extrasUi.projectDescriptionExample")}
                   className={TEXTAREA_CLASS}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Key Outcomes
+                <label htmlFor={`${instanceId}-projects-${index}-outcomes`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t("extrasUi.outcomes")}
                 </label>
-                <textarea
+                <textarea id={`${instanceId}-projects-${index}-outcomes`} dir="auto"
                   value={entry.outcomes}
                   onChange={(e) =>
                     updateProject(entry.id, "outcomes", e.target.value)
                   }
                   rows={2}
-                  placeholder="e.g. 500+ GitHub stars, featured on Hacker News"
+                  placeholder={t("extrasUi.outcomesExample")}
                   className={TEXTAREA_CLASS}
                 />
               </div>
             </div>
           ))}
 
-          <AddButton label="Add Project" onClick={addProject} />
+          <AddButton label={t("extrasUi.addProject")} onClick={addProject} />
         </AccordionSection>
 
         {/* ── 4. Publications, Media & Speaking ── */}
         <AccordionSection
-          title="Publications, Media & Speaking"
+          title={t("extras.publications")}
           count={publications.length}
           open={openSections.publications}
           onToggle={() => toggle("publications")}
         >
-          {publications.map((entry) => (
+          {publications.map((entry, index) => (
             <div
               key={entry.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
@@ -559,59 +573,59 @@ export default function StepExtras() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Title
+                  <label htmlFor={`${instanceId}-publications-${index}-title`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.title")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-publications-${index}-title`} dir="auto"
                     type="text"
                     value={entry.title}
                     onChange={(e) =>
                       updatePublication(entry.id, "title", e.target.value)
                     }
-                    placeholder="e.g. The Future of Remote Work"
+                    placeholder={t("extrasUi.publicationTitleExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Outlet / Event
+                  <label htmlFor={`${instanceId}-publications-${index}-outlet`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.outlet")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-publications-${index}-outlet`} dir="auto"
                     type="text"
                     value={entry.outlet}
                     onChange={(e) =>
                       updatePublication(entry.id, "outlet", e.target.value)
                     }
-                    placeholder="e.g. Forbes, TEDx Dubai"
+                    placeholder={t("extrasUi.outletExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Date
+                  <label htmlFor={`${instanceId}-publications-${index}-date`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.date")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-publications-${index}-date`} dir="auto"
                     type="text"
                     value={entry.date}
                     onChange={(e) =>
                       updatePublication(entry.id, "date", e.target.value)
                     }
-                    placeholder="e.g. October 2023"
+                    placeholder={t("extrasUi.dateExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    URL{" "}
-                    <span className="text-gray-400 font-normal">(optional)</span>
+                  <label htmlFor={`${instanceId}-publications-${index}-url`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.url")}{" "}
+                    <span className="text-gray-400 font-normal">{t("form.optional")}</span>
                   </label>
-                  <input
+                  <input id={`${instanceId}-publications-${index}-url`} dir="ltr" inputMode="url"
                     type="text"
                     value={entry.url}
                     onChange={(e) =>
                       updatePublication(entry.id, "url", e.target.value)
                     }
-                    placeholder="e.g. https://example.com/article"
+                    placeholder={t("extrasUi.publicationUrlExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
@@ -619,17 +633,17 @@ export default function StepExtras() {
             </div>
           ))}
 
-          <AddButton label="Add Publication" onClick={addPublication} />
+          <AddButton label={t("extrasUi.addPublication")} onClick={addPublication} />
         </AccordionSection>
 
         {/* ── 5. Professional Memberships ── */}
         <AccordionSection
-          title="Professional Memberships"
+          title={t("extras.memberships")}
           count={memberships.length}
           open={openSections.memberships}
           onToggle={() => toggle("memberships")}
         >
-          {memberships.map((entry) => (
+          {memberships.map((entry, index) => (
             <div
               key={entry.id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4"
@@ -639,44 +653,44 @@ export default function StepExtras() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Organisation Name
+                  <label htmlFor={`${instanceId}-memberships-${index}-organisationName`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.organisationName")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-memberships-${index}-organisationName`} dir="auto"
                     type="text"
                     value={entry.org}
                     onChange={(e) =>
                       updateMembership(entry.id, "org", e.target.value)
                     }
-                    placeholder="e.g. CIPD, SHRM, PMI"
+                    placeholder={t("extrasUi.professionalOrgExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Membership Level
+                  <label htmlFor={`${instanceId}-memberships-${index}-membershipLevel`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.membershipLevel")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-memberships-${index}-membershipLevel`} dir="auto"
                     type="text"
                     value={entry.level}
                     onChange={(e) =>
                       updateMembership(entry.id, "level", e.target.value)
                     }
-                    placeholder="e.g. Fellow, Associate, Member"
+                    placeholder={t("extrasUi.levelExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Year Joined
+                  <label htmlFor={`${instanceId}-memberships-${index}-yearJoined`} className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t("extrasUi.yearJoined")}
                   </label>
-                  <input
+                  <input id={`${instanceId}-memberships-${index}-yearJoined`} dir="ltr" inputMode="numeric"
                     type="text"
                     value={entry.year}
                     onChange={(e) =>
                       updateMembership(entry.id, "year", e.target.value)
                     }
-                    placeholder="e.g. 2019"
+                    placeholder={t("extrasUi.yearJoinedExample")}
                     className={INPUT_CLASS}
                   />
                 </div>
@@ -684,9 +698,9 @@ export default function StepExtras() {
             </div>
           ))}
 
-          <AddButton label="Add Membership" onClick={addMembership} />
+          <AddButton label={t("extrasUi.addMembership")} onClick={addMembership} />
         </AccordionSection>
       </div>
-    </div>
+    </section>
   );
 }

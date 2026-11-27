@@ -25,11 +25,11 @@ export const TEMPLATE_CONFIG: Record<TemplateType, TemplateConfig> = {
 
 export const SECTION_LABELS = {
   en: {
-    summary: "Professional Profile",
-    experience: "Professional Experience",
+    summary: "Profile",
+    experience: "Work experience",
     education: "Education",
     credentials: "Certifications & Credentials",
-    skills: "Core Expertise",
+    skills: "Skills",
     languages: "Languages",
     projects: "Selected Projects",
     achievements: "Achievements & Awards",

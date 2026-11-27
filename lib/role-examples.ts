@@ -1,4 +1,4 @@
-import { getRoleSuggestionGroup } from "./role-suggestions";
+import { getRoleFamilies, getRoleSuggestionGroup } from "./role-suggestions";
 
 const EXAMPLES: Record<string, [string, string, string, string]> = {
   "housekeeping": ["Room Attendant", "5-star hotel, Dubai", "Housekeeping certificate", "Housekeeping procedures"],
@@ -23,6 +23,12 @@ const EXAMPLES: Record<string, [string, string, string, string]> = {
 
 export function getRoleExamples(role: string) {
   const family = getRoleSuggestionGroup(role);
+  return getRoleExamplesForFamily(family.key);
+}
+
+// Localised displays already know the family. Do not rematch a translated title.
+export function getRoleExamplesForFamily(key: string) {
+  const family = getRoleFamilies().find((item) => item.key === key) ?? getRoleSuggestionGroup("");
   const [title, company, education, skill] = EXAMPLES[family.key] ?? ["Your job title", "Your workplace", "Your course or school level", "A skill you use at work"];
   return { title, company, education, skill, duty: family.key === "general" ? "Add one duty or result per line." : family.sentences[0], institution: "Your school or training centre", grade: "Your grade, if you want to add it" };
 }

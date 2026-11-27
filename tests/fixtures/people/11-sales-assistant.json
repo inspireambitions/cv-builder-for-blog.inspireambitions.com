@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Asha Ray",
+    "title": "Sales Assistant",
+    "email": "case11@example.com",
+    "phone": "+971 50 000 0011",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Sales Assistant",
+      "company": "Example Bay Retail",
+      "location": "Dubai",
+      "dates": "May 2020 to Present",
+      "description": "Restock displays before opening\nLabel new bags before putting them on display\nConfirm refund details with customers\nRecord prices in Shopify POS\nAnswer product questions\nPack reserved items before collection\nExplain care instructions to customers\nCount 45 items for the weekly stock check\nPrint shelf labels from the till"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}
