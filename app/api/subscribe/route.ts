@@ -51,6 +51,7 @@ export async function POST(req: Request) {
   let payload: Record<string, unknown>;
   try {
     payload = await req.json();
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Invalid email request");
   } catch {
     return NextResponse.json(
       { error: "We could not read the email request. Please try again." },
@@ -69,6 +70,8 @@ export async function POST(req: Request) {
 
   let contactSaved = false;
   let emailSent = false;
+  let practiceLinkIncluded = false;
+  const requestPracticeLink = process.env.NEXT_PUBLIC_MUQABALA_PRACTICE_LINK === "true" && payload.requestPracticeLink === true;
 
   try {
     const segmentId = process.env.RESEND_CV_SEGMENT_ID;
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
       ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
     });
     if (!contact.ok && contact.status !== 409) {
-      throw new Error(await contact.text());
+      throw new Error(`Contact storage returned ${contact.status}`);
     }
     contactSaved = true;
   } catch (error) {
@@ -90,8 +93,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    await sendCVConfirmation(email, firstName, String(payload.format || "pdf"));
+    const confirmation = await sendCVConfirmation(email, firstName, String(payload.format || "pdf"), requestPracticeLink);
     emailSent = true;
+    practiceLinkIncluded = confirmation.practiceLinkIncluded;
   } catch (error) {
     console.error(
       "Cloudflare welcome email failed",
@@ -103,6 +107,7 @@ export async function POST(req: Request) {
     success: true,
     contactSaved,
     emailSent,
+    practiceLinkIncluded,
     ...(!emailSent
       ? {
           warning:

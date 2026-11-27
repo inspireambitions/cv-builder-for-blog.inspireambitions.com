@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { useLocale } from "@/lib/locale";
 import { exportJPEG } from "@/lib/export-jpeg";
@@ -26,6 +26,8 @@ type AtsReport = {
 const DOWNLOAD_GATE_KEY = "ia-cv-download-email-unlocked";
 const REVIEW_PROMPT_KEY = "ia-cv-review-prompt-seen";
 const MAX_EXPORT_ATTEMPTS = 3;
+const PRACTICE_LINK_ENABLED = process.env.NEXT_PUBLIC_MUQABALA_PRACTICE_LINK === "true";
+const PRACTICE_URL = "https://trymuqabala.com/practice";
 
 async function wait(ms: number) {
   await new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -39,6 +41,9 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
   const [showMoreFormats, setShowMoreFormats] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [email, setEmail] = useState("");
+  const practiceLinkId = useId();
+  const [requestPracticeLink, setRequestPracticeLink] = useState(false);
+  const [showPracticeLink, setShowPracticeLink] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<AtsReport | null>(null);
   const [showReview, setShowReview] = useState(false);
@@ -48,8 +53,11 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
 
   useEffect(() => {
     if (!isOpen) return;
-    const unlockedEmail = localStorage.getItem(DOWNLOAD_GATE_KEY);
+    let unlockedEmail: string | null = null;
+    try { unlockedEmail = localStorage.getItem(DOWNLOAD_GATE_KEY); } catch { /* Storage is optional. */ }
     queueMicrotask(() => {
+      setRequestPracticeLink(false);
+      setShowPracticeLink(false);
       if (unlockedEmail) {
         setEmail(unlockedEmail);
         setEmailStatus("unlocked");
@@ -64,7 +72,8 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
 
   async function unlockDownloads(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validation = validateEmail(email);
+    const recipient = email.toLowerCase().trim();
+    const validation = validateEmail(recipient);
     if (!validation.valid) {
       setError(locale === "en" && validation.warning ? validation.warning : t("export.badEmail"));
       return;
@@ -73,35 +82,40 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
     setError(null);
     setNotice(null);
     trackToolEvent("email_gate_shown", { surface: "cv_download_gate", format: "pdf_ats" });
+    const wantsPracticeLink = PRACTICE_LINK_ENABLED && requestPracticeLink;
+    let result: { error?: string; warning?: string; contactSaved?: boolean; practiceLinkIncluded?: boolean } | null = null;
+    let serviceConfirmed = false;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 8000);
     try {
       const firstName = (state.personal.name || "").split(" ")[0] || "";
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, firstName, source: "cv-builder-download-gate", template: state.template, cvLang: state.cvLanguage, uiLang: document.documentElement.lang || "en", format: "pdf_ats" }),
+        signal: controller.signal,
+        body: JSON.stringify({ email: recipient, firstName, source: "cv-builder-download-gate", template: state.template, cvLang: state.cvLanguage, uiLang: document.documentElement.lang || "en", format: "pdf_ats", ...(wantsPracticeLink ? { requestPracticeLink: true } : {}) }),
       });
-      const result = (await response.json().catch(() => null)) as {
-        error?: string;
-        warning?: string;
-      } | null;
-      if (!response.ok) {
-        throw new Error(
-          (locale === "en" && result?.error) || t("export.unlockIssue")
-        );
+      result = await response.json().catch(() => null);
+      if (response.status === 400) {
+        setEmailStatus("error");
+        setError((locale === "en" && result?.error) || t("export.badEmail"));
+        return;
       }
-      localStorage.setItem(DOWNLOAD_GATE_KEY, email.toLowerCase().trim());
-      setEmailStatus("unlocked");
-      setNotice(result?.warning ? (locale === "en" ? result.warning : t("export.emailNotice")) : null);
-      trackToolEvent("email_captured", { surface: "cv_download_gate", format: "pdf_ats" });
-      await runDownload("pdf_ats");
-    } catch (unlockError) {
-      setEmailStatus("error");
-      setError(
-        locale === "en" && unlockError instanceof Error
-          ? unlockError.message
-          : t("export.unlockIssue")
-      );
+      serviceConfirmed = response.ok && result !== null;
+    } catch {
+      // The email service must not stop a valid CV download.
+    } finally {
+      window.clearTimeout(timer);
     }
+    try { localStorage.setItem(DOWNLOAD_GATE_KEY, recipient); } catch { /* The file still works in this session. */ }
+    setEmailStatus("unlocked");
+    setShowPracticeLink(wantsPracticeLink);
+    if (!serviceConfirmed || result?.warning) setNotice(t("export.emailNotice"));
+    else if (wantsPracticeLink && result?.practiceLinkIncluded !== true) setNotice(t("export.practiceLinkUnconfirmed"));
+    if (serviceConfirmed && result?.contactSaved === true) {
+      trackToolEvent("email_captured", { surface: "cv_download_gate", format: "pdf_ats" });
+    }
+    await runDownload("pdf_ats");
   }
 
   async function runDownload(format: DownloadFormat) {
@@ -225,6 +239,11 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
             {notice}
           </div>
         )}
+        {showPracticeLink && (
+          <a href={PRACTICE_URL} className="mt-3 inline-flex min-h-12 items-center text-sm font-semibold text-gray-900 underline underline-offset-4">
+            {t("export.openPracticeLink")}
+          </a>
+        )}
 
         <button
           type="button"
@@ -245,6 +264,7 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
               </span>
               <input
                 type="email"
+                name="email"
                 dir="ltr"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -254,6 +274,16 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
                 required
               />
             </label>
+            {PRACTICE_LINK_ENABLED && (
+              <div className="flex min-h-12 items-start gap-3 text-sm text-gray-800">
+                <input id={practiceLinkId} type="checkbox" name="requestPracticeLink" checked={requestPracticeLink}
+                  onChange={(event) => setRequestPracticeLink(event.target.checked)} disabled={emailStatus === "loading"}
+                  className="mt-4 size-5 shrink-0 accent-gold-600" />
+                <label htmlFor={practiceLinkId} className="flex min-h-12 flex-1 cursor-pointer select-none items-center py-2">
+                  {t("export.requestPracticeLink")}
+                </label>
+              </div>
+            )}
             <button
               type="submit"
               aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
