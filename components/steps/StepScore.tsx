@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCVState } from "@/lib/state";
-import { calculateScore, getMissingCVItems } from "@/lib/score";
+import { calculateScore } from "@/lib/score";
+import { checkCV, type CVIssue } from "@/lib/cv-quality";
 import { finishCV } from "@/lib/cv-finish";
 import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
@@ -122,10 +123,13 @@ function LayerCard({ layer }: { layer: ScoreLayer }) {
   );
 }
 
-export default function StepScore() {
-  const { state, goToStep } = useCVState();
-  const missing = getMissingCVItems(state);
-  const score = useMemo(() => calculateScore(finishCV(state).cv), [state]);
+export default function StepScore({ onFix }: { onFix: (issue: CVIssue) => void }) {
+  const { state } = useCVState();
+  const { score, issues } = useMemo(() => {
+    const { cv } = finishCV(state);
+    return { score: calculateScore(cv), issues: checkCV(cv) };
+  }, [state]);
+  const basicMissing = issues.filter((issue) => issue.basic).length;
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const completionTracked = useRef(false);
 
@@ -152,10 +156,16 @@ export default function StepScore() {
     <div className="space-y-8">
       <section className="rounded-2xl border border-[#d8c895] bg-[#faf7ee] p-6 text-center sm:p-8">
         <p className="text-sm font-bold text-[#2f6b5e]">Your work is saved</p>
-        <h1 className="mt-2 text-3xl font-bold text-ink">{missing.length ? `Almost there: ${missing.length} things missing` : "Your CV is ready"}</h1>
-        {missing.length > 0 && <ul className="mt-4 space-y-2">{missing.map((item) => <li key={item.key}><button type="button" onClick={() => goToStep(item.step)} className="min-h-12 px-4 text-accent underline">{item.label}</button></li>)}</ul>}
+        <h1 className="mt-2 text-3xl font-bold text-ink">{issues.length ? `Recruiter check: ${issues.length} ${issues.length === 1 ? "thing" : "things"} to fix` : "Recruiter check: ready to download"}</h1>
+        {issues.length > 0 && <ul className="mx-auto mt-4 max-w-xl divide-y divide-[#e7ddc6] text-start">
+          {issues.map((issue) => <li key={issue.id} className="flex items-center justify-between gap-3 py-1 text-sm text-ink">
+            <p>{issue.label}</p>
+            <button type="button" onClick={() => onFix(issue)} aria-label={`Fix: ${issue.label}`}
+              className="min-h-12 shrink-0 rounded-lg px-3 font-semibold text-accent underline focus-visible:outline-2 focus-visible:outline-accent">Fix</button>
+          </li>)}
+        </ul>}
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#586174]">
-          Check your details, then choose a file to download.
+          {issues.length ? "You can still download your CV now." : "Check your details, then choose a file to download."}
         </p>
         <button
           type="button"
@@ -215,6 +225,7 @@ export default function StepScore() {
       <DownloadModal
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
+        basicMissing={basicMissing}
       />
 
       <TailorWorkspace />

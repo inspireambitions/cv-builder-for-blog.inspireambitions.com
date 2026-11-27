@@ -8,7 +8,8 @@ import {
   NOC_OPTIONS,
   VISA_STATUS_OPTIONS,
 } from "@/lib/uae";
-import { Eye, Mail, Phone, UserRound } from "lucide-react";
+import { Eye, Mail, UserRound } from "lucide-react";
+import { PhoneField, LocationFields } from "@/components/shared/CVContactFields";
 import PhotoEditor from "@/components/shared/PhotoEditor";
 
 const inputClass =
@@ -37,16 +38,10 @@ export default function GuidedPersonal() {
               Full name
               <span className="relative block">
                 <UserRound className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 translate-y-[-35%] text-[#806017]" aria-hidden="true" />
-                <input autoComplete="name" value={personal.name} onChange={(event) => updatePersonal({ name: event.target.value })} placeholder="For example, Amina Yusuf" className={iconInputClass} />
+                <input data-cv-fix="name" autoComplete="name" value={personal.name} onChange={(event) => updatePersonal({ name: event.target.value })} placeholder="For example, Amina Yusuf" className={iconInputClass} />
               </span>
             </label>
-            <label className="block text-sm font-semibold">
-              Phone number
-              <span className="relative block">
-                <Phone className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 translate-y-[-35%] text-[#806017]" aria-hidden="true" />
-                <input type="tel" inputMode="tel" autoComplete="tel" value={personal.phone} onChange={(event) => updatePersonal({ phone: event.target.value })} placeholder={PHONE_PLACEHOLDERS[geo]} className={iconInputClass} />
-              </span>
-            </label>
+            <PhoneField phone={personal.phone} onChange={(phone) => updatePersonal({ phone })} placeholder={PHONE_PLACEHOLDERS[geo]} />
             <label className="block text-sm font-semibold">
               Email address
               <span className="relative block">
@@ -93,16 +88,7 @@ export default function GuidedPersonal() {
                 className={inputClass}
               />
             </label>
-            <label className="block text-sm font-semibold">
-              Current city or country
-              <input
-                autoComplete="address-level2"
-                value={personal.location}
-                onChange={(event) => updatePersonal({ location: event.target.value })}
-                placeholder="For example, Dubai, UAE"
-                className={inputClass}
-              />
-            </label>
+            <LocationFields value={personal.location} onChange={(location) => updatePersonal({ location })} />
             <label className="block text-sm font-semibold">
               LinkedIn profile <span className="font-normal text-[#6b7280]">(optional)</span>
               <input

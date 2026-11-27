@@ -8,6 +8,7 @@ import { STEPS } from "@/lib/constants";
 import { useLocale } from "@/lib/locale";
 import { createResumeLink } from "@/lib/resume-link";
 import { trackToolEvent } from "@/lib/analytics";
+import type { CVIssue } from "@/lib/cv-quality";
 import LanguageToggle from "./shared/LanguageToggle";
 import ThemeToggle from "./shared/ThemeToggle";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -47,7 +48,6 @@ const STEP_COMPONENTS = [
   StepSummary,
   StepTemplate,
   StepExtras,
-  StepScore,
 ];
 
 function TemplateRenderer({ state }: { state: ReturnType<typeof useCVState>["state"] }) {
@@ -71,6 +71,30 @@ export default function CVBuilder() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
   const [mobileMode, setMobileMode] = useState<"edit" | "preview" | "score">("edit");
+  const nextFix = useRef<CVIssue | null>(null);
+  function fixIssue(issue: CVIssue) {
+    nextFix.current = issue;
+    if (issue.step === 1) updateField({ mobilePersonalPage: issue.field === "location" ? 1 : 0 });
+    setMobileMode("edit");
+    goToStep(issue.step);
+  }
+  useEffect(() => {
+    const issue = nextFix.current;
+    if (!issue?.field || issue.step !== state.step) return;
+    const focus = () => {
+      const element = Array.from(document.querySelectorAll<HTMLElement>("[data-cv-fix]"))
+        .find((field) => field.dataset.cvFix === issue.field && field.getClientRects().length);
+      if (!element) return false;
+      element.focus({ preventScroll: true });
+      element.scrollIntoView({ block: "center" });
+      nextFix.current = null;
+      return true;
+    };
+    if (focus()) return;
+    const observer = new MutationObserver(() => { if (focus()) observer.disconnect(); });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [state.step, state.mobilePersonalPage]);
   const [resumeLinkStatus, setResumeLinkStatus] = useState<
     "idle" | "copying" | "copied" | "error"
   >("idle");
@@ -325,7 +349,7 @@ export default function CVBuilder() {
           {/* Form Panel */}
           <div className={`flex-1 min-w-0 ${mobileMode === "edit" || (mobileMode === "score" && state.step === 8) ? "block" : "hidden lg:block"}`}>
             <div className="mb-6 bg-transparent p-0 shadow-none sm:rounded-xl sm:border sm:border-gray-200 sm:bg-white sm:p-6 sm:shadow-sm [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
-              <CurrentStep />
+              {state.step === 8 ? <StepScore onFix={fixIssue} /> : <CurrentStep />}
             </div>
 
             {state.step === 8 && (
@@ -452,7 +476,7 @@ export default function CVBuilder() {
         {state.step > 0 && state.step !== 8 && mobileMode === "score" && (
           <section className="lg:hidden" aria-label="CV score and export">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <StepScore />
+              <StepScore onFix={fixIssue} />
             </div>
           </section>
         )}

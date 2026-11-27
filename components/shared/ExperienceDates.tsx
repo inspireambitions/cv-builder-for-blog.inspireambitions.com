@@ -16,7 +16,7 @@ export default function ExperienceDates({ entry, onChange }: { entry: ExpEntry; 
     <legend className="text-sm font-medium text-gray-700">When did you work here?</legend>
     {entry.dates && entry.startYear === undefined && <p className="text-sm text-ink-muted">Saved dates: <bdi>{entry.dates}</bdi>. Keep these or choose dates below.</p>}
     <div className="grid grid-cols-2 gap-3">
-      <label className="text-sm text-gray-700">Start month<select aria-label="Start month" value={entry.startMonth ?? ""} onChange={(event) => change({ startMonth: event.target.value })} className={className}><option value="">Choose month</option>{MONTHS.map((month, index) => <option key={month} value={String(index + 1)}>{month}</option>)}</select></label>
+      <label className="text-sm text-gray-700">Start month<select data-cv-fix={`${entry.id}-dates`} aria-label="Start month" value={entry.startMonth ?? ""} onChange={(event) => change({ startMonth: event.target.value })} className={className}><option value="">Choose month</option>{MONTHS.map((month, index) => <option key={month} value={String(index + 1)}>{month}</option>)}</select></label>
       <label className="text-sm text-gray-700">Start year<select aria-label="Start year" value={entry.startYear ?? ""} onChange={(event) => change({ startYear: event.target.value })} className={className}><option value="">Choose year</option>{years.map((year) => <option key={year}>{year}</option>)}</select></label>
     </div>
     <label className="flex min-h-12 items-center gap-3 text-base"><input type="checkbox" checked={entry.current ?? false} onChange={(event) => change({ current: event.target.checked })} />I still work here</label>

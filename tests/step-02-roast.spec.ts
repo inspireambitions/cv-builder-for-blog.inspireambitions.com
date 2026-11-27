@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { defaultCVState, type CVState } from "../lib/types";
 import { sampleServiceCVState } from "../lib/sample-data";
-import { getMissingCVItems } from "../lib/score";
+import { checkCV } from "../lib/cv-quality";
+import { finishCV } from "../lib/cv-finish";
 import { migrateExperienceDates, experienceDateText } from "../lib/experience-dates";
 import { getRoleExamples } from "../lib/role-examples";
 
@@ -17,10 +18,11 @@ async function restore(page: Page, state: CVState, locale = "en") {
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 }
 
-test("review minimum checks name, contact and a real job", () => {
-  expect(getMissingCVItems(defaultCVState)).toHaveLength(3);
-  expect(getMissingCVItems(sampleServiceCVState)).toHaveLength(0);
-  expect(getMissingCVItems({ ...sampleServiceCVState, experience: [{ ...sampleServiceCVState.experience[0], description: "" }] })).toHaveLength(1);
+test("review basic checks prioritise name, phone, location and language", () => {
+  expect(checkCV(finishCV(defaultCVState).cv).filter((item) => item.basic).map((item) => item.id)).toEqual(["name", "phone", "location", "language"]);
+  const withoutPhone = { ...sampleServiceCVState, personal: { ...sampleServiceCVState.personal, phone: "" } };
+  expect(checkCV(finishCV(withoutPhone).cv).some((item) => item.id === "phone")).toBe(true);
+  expect(checkCV(finishCV({ ...sampleServiceCVState, experience: [{ ...sampleServiceCVState.experience[0], description: "" }] }).cv).some((item) => item.id.startsWith("few-"))).toBe(true);
 });
 
 test("old dates migrate without changing exported text or unusual dates", () => {
@@ -37,10 +39,10 @@ test("examples follow the candidate's role and stay neutral for unknown roles", 
 });
 
 test("every missing item opens the correct form", async ({ page }) => {
-  for (const item of getMissingCVItems(defaultCVState)) {
+  for (const item of checkCV(finishCV(defaultCVState).cv)) {
     const itemPage = await page.context().newPage();
     await restore(itemPage, { ...defaultCVState, step: 8 });
-    await itemPage.getByRole("button", { name: item.label, exact: true }).click();
+    await itemPage.getByRole("button", { name: `Fix: ${item.label}`, exact: true }).click();
     await expect.poll(() => itemPage.evaluate(() => JSON.parse(localStorage.getItem("inspireambitions-cv-state")!).state.step)).toBe(item.step);
     await itemPage.close();
   }
@@ -50,7 +52,7 @@ for (const locale of ["en", "ar", "ur"]) {
   test(`honest review and stable brand in ${locale}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await restore(page, { ...defaultCVState, step: 8 }, locale);
-    await expect(page.getByRole("heading", { name: "Almost there: 3 things missing" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Recruiter check: 5 things to fix" })).toBeVisible();
     const brand = page.getByTestId("brand");
     await expect(brand).toHaveAttribute("dir", "ltr");
     await expect(brand).toHaveText("InspireAmbitions");
@@ -59,8 +61,8 @@ for (const locale of ["en", "ar", "ur"]) {
     await expect(page.getByText(/Grok|Sonnet|Premium beta/i)).toHaveCount(0);
     await mkdir("outputs/step-02", { recursive: true });
     await page.screenshot({ path: `outputs/step-02/review-${locale}-${testInfo.project.name}.png`, fullPage: true });
-    await page.getByRole("button", { name: "Add one job and your duties" }).click();
-    await expect(page.getByRole("heading", { name: "Work Experience", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Fix: Add at least one language you speak." }).click();
+    await expect(page.getByRole("heading", { name: "Languages", exact: true })).toBeVisible();
     await page.screenshot({ path: `outputs/step-02/work-history-${locale}-${testInfo.project.name}.png`, fullPage: true });
   });
 }

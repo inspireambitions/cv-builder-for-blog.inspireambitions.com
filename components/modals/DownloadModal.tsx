@@ -10,6 +10,7 @@ import { reportClientError } from "@/lib/error-reporting";
 import { saveAs } from "file-saver";
 
 interface DownloadModalProps {
+  basicMissing: number;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -29,7 +30,7 @@ async function wait(ms: number) {
   await new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
+export default function DownloadModal({ isOpen, onClose, basicMissing }: DownloadModalProps) {
   const { state } = useCVState();
   const [downloading, setDownloading] = useState<DownloadFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -207,6 +208,9 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         <p className="mt-2 text-sm leading-6 text-gray-500">
           Pictures download with no email. PDF and Word ask for your email once on this device.
         </p>
+        {basicMissing > 0 && <p className="mt-2 text-sm text-amber-900" id="cv-download-quality-note">
+          {basicMissing === 1 ? "1 thing recruiters look for is missing." : `${basicMissing} things recruiters look for are missing.`} You can still download your CV.
+        </p>}
 
         {error && (
           <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
@@ -223,6 +227,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
         <button
           type="button"
           onClick={() => runDownload("jpeg")}
+          aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
           disabled={downloading !== null}
           className="mt-5 w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
         >
@@ -248,6 +253,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             </label>
             <button
               type="submit"
+              aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
               disabled={emailStatus === "loading"}
               className="min-h-12 w-full rounded-xl bg-gold-500 px-4 text-base font-semibold text-white transition-colors hover:bg-gold-600 disabled:opacity-60"
             >
@@ -276,6 +282,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           )}
           <button
             onClick={() => runDownload("pdf_ats")}
+            aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
             disabled={downloading !== null}
             className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
@@ -296,6 +303,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
 
           <button
             onClick={() => runDownload("pdf_recruiter")}
+            aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
             disabled={downloading !== null}
             className="w-full rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
           >
@@ -317,6 +325,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               onClick={() => runDownload("word_ats")}
+              aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
               disabled={downloading !== null}
               className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
@@ -331,6 +340,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
 
             <button
               onClick={() => runDownload("word_recruiter")}
+              aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
               disabled={downloading !== null}
               className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
@@ -355,6 +365,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
           {showMoreFormats && (
             <button
               onClick={() => runDownload("jpeg")}
+              aria-describedby={basicMissing ? "cv-download-quality-note" : undefined}
               disabled={downloading !== null}
               className="w-full rounded-xl border border-gray-200 p-4 text-start transition-colors hover:border-gray-300 disabled:opacity-60"
             >

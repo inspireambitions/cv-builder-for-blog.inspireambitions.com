@@ -167,6 +167,7 @@ export default function StepExperience() {
               </label>
               <textarea
                 id={`${entry.id}-description`}
+                data-cv-fix={`${entry.id}-description`}
                 value={entry.description}
                 onChange={(e) =>
                   updateEntry(entry.id, "description", e.target.value)
@@ -192,6 +193,7 @@ export default function StepExperience() {
               </label>
               <input
                 id={`${entry.id}-gap`}
+                data-cv-fix={`${entry.id}-gap`}
                 type="text"
                 value={entry.gap}
                 onChange={(e) =>

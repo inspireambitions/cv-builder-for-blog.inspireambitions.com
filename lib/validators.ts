@@ -29,18 +29,24 @@ export function validateLinkedIn(url: string): { valid: boolean; warning?: strin
 }
 
 export function validatePhone(phone: string): { valid: boolean; warning?: string } {
-  if (!phone) return { valid: false };
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 7) {
-    return { valid: false, warning: "Please enter a valid phone number" };
+  const input = phone.trim();
+  if (!input) return { valid: false };
+  const digits = input.match(/\p{Nd}/gu)?.length ?? 0;
+  if (!/^\+?[\p{Nd} .()‐‑-]+$/u.test(input) || digits < (input.startsWith("+") ? 8 : 7) || digits > 15 || /^\+0/.test(input)) {
+    return { valid: false, warning: "Enter a full phone number, including the country code." };
   }
-  if (!phone.startsWith("+")) {
+  if (!input.startsWith("+")) {
     return {
       valid: true,
       warning: "HR tip: Include your country code (e.g. +971, +44, +1) for international applications",
     };
   }
   return { valid: true };
+}
+
+export function locationParts(value: string) {
+  const [city = "", ...country] = value.split(/[,،]/);
+  return { city: city.trim(), country: country.join(",").trim() };
 }
 
 export function validateFileUpload(file: File): { valid: boolean; error?: string } {

@@ -5,6 +5,7 @@ import { getRoleFamilyForJob } from "./role-suggestions";
 import { getRoleDetails } from "./role-details";
 import { cleanAllCaps, cleanSkillName, hasNamedSystem, uppercaseFirst } from "./skill-names";
 import type { CVState, ExpEntry } from "./types";
+import { locationParts } from "./validators";
 import { getVerbForms } from "./verb-forms";
 
 export type FinishChange = {
@@ -169,5 +170,7 @@ export function finishCV(
 
 export function cvContactParts(cv: CVState) {
   const { location, phone, email, linkedin } = cv.personal;
-  return [location, phone, email, linkedin].map((item) => item.trim()).filter(Boolean);
+  const { city, country } = locationParts(location);
+  const place = [city, country].filter(Boolean).join(", ");
+  return [place, /^(?:\+\d{1,4})$/.test(phone.trim()) ? "" : phone, email, linkedin].map((item) => item.trim()).filter(Boolean);
 }
