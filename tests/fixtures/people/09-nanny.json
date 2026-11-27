@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Saya Alon",
+    "title": "Nanny",
+    "email": "case09@example.com",
+    "phone": "+971 50 000 0009",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Nanny",
+      "company": "Private household",
+      "location": "Dubai",
+      "dates": "Apr 2021 to Mar 2025",
+      "description": "Keep a record of children's daily routines\nPrepared meals using the household's instructions\nHelped with homework and school drop-offs"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

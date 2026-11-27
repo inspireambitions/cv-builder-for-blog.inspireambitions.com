@@ -1,0 +1,38 @@
+{
+  "personal": {
+    "name": "Fictional Sami Dell",
+    "title": "Delivery Rider",
+    "email": "case14@example.com",
+    "phone": "+971 50 000 0014",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Bike Courier",
+      "company": "Example Quick Parcel",
+      "location": "Dubai",
+      "dates": "Feb 2022 to Present",
+      "description": "Deliver packages on assigned routes\nTrack deliveries in WhatsApp"
+    },
+    {
+      "role": "Food Delivery Rider",
+      "company": "Example Blueplate Dispatch",
+      "location": "Dubai",
+      "dates": "Mar 2024 to Present",
+      "description": "Confirm delivery addresses\nSecure food orders in insulated bags"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

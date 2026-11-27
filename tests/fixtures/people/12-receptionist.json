@@ -1,0 +1,38 @@
+{
+  "personal": {
+    "name": "Fictional Talia Vale",
+    "title": "Receptionist",
+    "email": "case12@example.com",
+    "phone": "+971 50 000 0012",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Receptionist",
+      "company": "Example Reed Clinic",
+      "location": "Dubai",
+      "dates": "Apr 2021 to Aug 2023",
+      "description": "Answered calls about opening hours\nChecked guest passes"
+    },
+    {
+      "role": "Receptionist",
+      "company": "Example Harbor Centre",
+      "location": "Dubai",
+      "dates": "Nov 2024 to Present",
+      "description": "Record arrivals in the visitor book\nBook meeting rooms in Microsoft Outlook"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}
