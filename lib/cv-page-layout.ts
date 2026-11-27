@@ -6,13 +6,13 @@ export const JOB_GAP_PT = 11;
 export const BULLET_GAP_PT = 2.5;
 
 export type BodyLayout = { size: number; leading: number; sectionGap: number };
-export const regularBody: BodyLayout = { size: 11, leading: 1.32, sectionGap: 13 };
+export const regularBody: BodyLayout = { size: 11, leading: 1.32, sectionGap: 11 };
 export const compactBody: BodyLayout = { size: 10.5, leading: 1.25, sectionGap: 10 };
 export const openBody: BodyLayout = { size: 11.5, leading: 1.4, sectionGap: 13 };
 
 export function chooseBodyLayout(measure: (layout: BodyLayout) => number, sectionBreaks: number, capacity: number): BodyLayout {
   const normal = measure(regularBody);
-  if (normal > capacity && normal <= capacity * 1.1) return compactBody;
+  if (normal > capacity && (normal <= capacity * 1.1 || measure(compactBody) <= capacity)) return compactBody;
   if (normal >= capacity * 0.6) return regularBody;
   const openHeight = measure(openBody);
   const extra = sectionBreaks > 0 ? Math.max(0, (capacity * 0.76 - openHeight) / sectionBreaks) : 0;

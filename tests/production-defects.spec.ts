@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdir, readFile, stat } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
+import { buildPDF } from "../lib/export-pdf";
 import { defaultCVState, type CVState } from "../lib/types";
 
 function completeState(template: CVState["template"] = "service"): CVState {
@@ -174,6 +175,23 @@ test("dense kitchen steward PDF stays on one page and omits blank language separ
     { id: "lang-1", language: "English", level: "" },
     { id: "lang-2", language: "Arabic", level: "Basic" },
   ];
+  // The old PDF omitted these four sections. They now remain in the full
+  // document on a useful second page rather than shrinking below body limits.
+  const full = await buildPDF(state);
+  expect(full.pageCount).toBe(2);
+  expect(full.pageLineCounts.at(-1)).toBeGreaterThanOrEqual(6);
+  const fullParser = new PDFParse({ data: new Uint8Array(await full.blob.arrayBuffer()) });
+  const fullText = (await fullParser.getText()).text;
+  await fullParser.destroy();
+  for (const section of ["VOLUNTEER WORK", "SELECTED PROJECTS", "PUBLICATIONS", "PROFESSIONAL MEMBERSHIPS"]) {
+    expect(fullText).toContain(section);
+  }
+  state.volunteer = [];
+  state.projects = [];
+  state.publications = [];
+  state.memberships = [];
+  const measured = await buildPDF(state);
+  expect(measured.pageCount, `PDF lines: ${measured.pageLineCounts.join(", ")}.`).toBe(1);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/api/subscribe", (route) =>
