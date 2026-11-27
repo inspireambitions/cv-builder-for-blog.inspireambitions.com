@@ -109,7 +109,8 @@ test("finishes fictional drafts without changing them or inventing facts", () =>
   expect(cv.personal.title).toBe("Reservation Agent");
   expect(cv.experience.map((job) => job.role)).toEqual(["Reservation Agent", "Waitress"]);
   expect(cv.experience[0].description).toContain("Take guest calls and make their reservations.");
-  expect(cv.experience[0].description).toContain("Help customers or colleagues and pass difficult issues to the supervisor.");
+  expect(cv.experience[0].description).toBe("Take guest calls and make their reservations.");
+  expect(draft.experience[1].description).toContain("Helped customers or colleagues and passed difficult issues to the supervisor.");
   expect(cv.experience[1].description).toContain("Handled restaurant reservations.");
   expect(cv.experience[1].description).toContain("Welcomed guests, explained menu items and recorded orders.");
   expect(cv.skills).toEqual(["Email handling", "Reservation checks", "Microsoft Office", "Communication"]);

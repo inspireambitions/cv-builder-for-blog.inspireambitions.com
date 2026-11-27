@@ -28,7 +28,7 @@ export default function StepExperience() {
   function updateEntry(id: string, field: keyof ExpEntry, value: string | undefined) {
     updateField({
       experience: entries.map((e) =>
-        e.id === id ? { ...e, [field]: value } : e
+        e.id === id ? { ...e, [field]: value, ...(field === "role" ? { roleFamily: undefined } : {}) } : e
       ),
     });
   }
@@ -177,7 +177,8 @@ export default function StepExperience() {
               />
               <RoleSentenceSuggestions
                 role={entry.role}
-                targetRole={state.personal.title}
+                selectedFamily={entry.roleFamily}
+                onFamilyChange={(key) => updateEntry(entry.id, "roleFamily", key)}
                 currentText={entry.description}
                 onChange={(value) => updateEntry(entry.id, "description", value)}
               />

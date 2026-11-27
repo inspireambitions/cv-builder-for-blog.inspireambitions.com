@@ -1,7 +1,8 @@
 import { experienceDateText, migrateExperienceDates } from "./experience-dates";
 import { cleanCVProse, findBannedCVPhrase } from "./banned-phrases";
 import { buildProfile, latestHeldRole } from "./profile-builder";
-import { getRoleSuggestionGroup } from "./role-suggestions";
+import { getRoleFamilyForJob } from "./role-suggestions";
+import { getRoleDetails } from "./role-details";
 import { cleanAllCaps, cleanSkillName, hasNamedSystem, uppercaseFirst } from "./skill-names";
 import type { CVState, ExpEntry } from "./types";
 import { getVerbForms } from "./verb-forms";
@@ -38,7 +39,7 @@ function prepareJob(entry: ExpEntry) {
   return { job, dates, group, start, end, tense };
 }
 
-function normaliseBullet(value: string, tense: Tense) {
+function normaliseBullet(value: string, tense: Tense, knownSentence = false) {
   let line = value.trim().replace(/^(?:(?:[-–—](?!\.?\p{N})|[•*])\s*)+/u, "");
   line = cleanCVProse(line);
   const firstWord = line.match(/^[a-z]+(?=\s|$)/i)?.[0];
@@ -56,7 +57,11 @@ function normaliseBullet(value: string, tense: Tense) {
       if (!coordinated) return match;
       const lower = word.toLowerCase();
       // Ambiguous base forms can be nouns, as in "stock and order records".
-      if (lower === coordinated.base || (lower === coordinated.gerund && !firstWasGerund)) return match;
+      // An edited line can use the same word as a noun. Only inflect base
+      // forms when a curated sentence or another verb gives us clear context.
+      const clearAction = /^(?:check|confirm|record|report|flag|update|share|secure|explain|compare|prepare|send|save|report|inspect|correct)$/i.test(word);
+      if ((lower === coordinated.base && (!knownSentence || !clearAction)) ||
+        (lower === coordinated.gerund && !firstWasGerund)) return match;
       return join + (tense === "present" ? coordinated.base : coordinated.past);
     });
     line = initial + rest;
@@ -70,15 +75,26 @@ function bulletKey(line: string) {
     .match(/[+−-]?\p{N}+(?:[.,/–-]\p{N}+)*%?|[\p{L}\p{M}]+/gu) ?? []).join(" ");
 }
 
+const retired = [
+  "Helped customers or colleagues and passed difficult issues to the supervisor.",
+  "Kept work records accurate and reported problems without delay.",
+];
+const retiredKeys = new Set(retired.flatMap((line) => [undefined, "present", "past"].map(
+  (tense) => bulletKey(normaliseBullet(line, tense as Tense))
+)));
+
 function finishBullets(job: ExpEntry, tense: Tense) {
-  const library = new Set(
-    getRoleSuggestionGroup(job.role).sentences.map((line) => bulletKey(normaliseBullet(line, tense)))
-  );
+  const group = getRoleFamilyForJob(job.role, job.roleFamily);
+  const known = new Set([
+    ...group.sentences,
+    ...getRoleDetails(group.key).flatMap((question) => question.options.map((option) => option.bullet)),
+  ].map((line) => bulletKey(normaliseBullet(line, undefined))));
+  const library = new Set(group.sentences.map((line) => bulletKey(normaliseBullet(line, tense, true))));
   const seen = new Set<string>();
   const bullets = job.description.split(/\r?\n/).flatMap((raw) => {
-    const line = normaliseBullet(raw, tense);
+    const line = normaliseBullet(raw, tense, known.has(bulletKey(normaliseBullet(raw, undefined))));
     const key = bulletKey(line);
-    if (!key || seen.has(key)) return [];
+    if (!key || seen.has(key) || retiredKeys.has(key)) return [];
     seen.add(key);
     const rank = /\p{N}/u.test(line) || hasNamedSystem(line) ? 0 : library.has(key) ? 2 : 1;
     return [{ line, rank }];

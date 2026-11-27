@@ -5,7 +5,7 @@ const phraseSource = await readFile(new URL("../lib/banned-phrases.ts", import.m
 const compiled = ts.transpileModule(phraseSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ESNext } });
 const { findBannedCVPhrase } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputText).toString("base64")}`);
 const files = process.argv.slice(2);
-if (!files.length) files.push("lib/role-suggestions.ts", "lib/role-examples.ts", "lib/sample-data.ts");
+if (!files.length) files.push("lib/role-suggestions.ts", "lib/role-families.ts", "lib/role-details.ts", "lib/role-examples.ts", "lib/sample-data.ts");
 
 for (const file of files) {
   const source = ts.createSourceFile(file, await readFile(file, "utf8"), ts.ScriptTarget.Latest, true);
