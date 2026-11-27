@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { getRoleSuggestionGroup, ROLE_SUGGESTION_FAMILIES } from "../lib/role-suggestions";
 import { applyRoleDetail, getRoleDetails } from "../lib/role-details";
 import { getVerbForms } from "../lib/verb-forms";
+import { defaultCVState } from "../lib/types";
 
 const titleSets: Record<string, string> = {
   "reservations": "Reservation Agent|Reservations Agent|Reservations Sales Agent|Reservation Clerk|Booking Agent|Room Reservations|Reservations Executive|Booking Coordinator|Reservation Officer|Reservations Coordinator",
@@ -69,5 +70,31 @@ test("never pre-populates a volume and replaces a changed choice without removin
   expect(changed).not.toContain("20 to 40");
   expect(changed).toContain(original);
   expect(changed).toContain("Use Opera to make and change bookings.");
+});
+
+test("a candidate can choose a matching work family and add only the details they tap", async ({ page }) => {
+  const draft = { ...defaultCVState, step: 2, experience: [{ ...defaultCVState.experience[0], role: "Guest bookings desk specialist" }] };
+  await page.addInitScript((state) => {
+    if (!sessionStorage.getItem("role-detail-test")) {
+      sessionStorage.setItem("role-detail-test", "1");
+      localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 8, state, savedAt: new Date().toISOString() }));
+    }
+  }, draft);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByText("Which kind of work is this closest to?")).toBeVisible();
+  await page.getByRole("button", { name: "Hotel and food" }).click();
+  await page.getByLabel("Pick a type of work").selectOption("reservations");
+  await page.getByText("Add real details (optional)", { exact: true }).click();
+  const description = page.getByRole("textbox", { name: "What did you do or achieve?" });
+  await expect(description).toHaveValue("");
+  await page.getByRole("button", { name: "Opera", exact: true }).click();
+  await page.getByRole("button", { name: "20 to 40", exact: true }).click();
+  await page.getByRole("button", { name: "80 or more", exact: true }).click();
+  await expect(description).toHaveValue("Use Opera to make and change bookings.\nHandle 80 or more guest calls a day.");
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("inspireambitions-cv-state") ?? "{}").state?.experience[0]?.roleFamily)).toBe("reservations");
+  await page.reload();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(description).toHaveValue(/Handle 80 or more/);
 });
 
