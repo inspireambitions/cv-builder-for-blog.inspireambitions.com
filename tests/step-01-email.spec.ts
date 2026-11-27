@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { defaultCVState } from "../lib/types";
+import { availableLanguages } from "../lib/ui-languages";
 
 for (const locale of ["en", "ar", "ur"] as const) {
   test(`step 1 preserves the download screen in ${locale}`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-360", "Required screenshots use 360 px.");
+    test.skip(!availableLanguages.includes(locale), "Incomplete locale requires the translation preview flag.");
     const state = {
       ...defaultCVState,
       step: 8,
@@ -17,7 +19,7 @@ for (const locale of ["en", "ar", "ur"] as const) {
       localStorage.setItem("cv-locale", locale);
     }, { state, locale });
     await page.goto("/");
-    await page.getByLabel("Interface language").selectOption(locale);
+    await page.locator("#ui-language").selectOption(locale);
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     const restore = page.getByRole("button", { name: "Continue", exact: true });
     if (await restore.isVisible()) await restore.click();

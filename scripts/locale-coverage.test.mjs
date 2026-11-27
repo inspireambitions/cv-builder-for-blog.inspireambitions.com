@@ -51,4 +51,5 @@ test("RTL progress numbers stay isolated and zero is not lost", () => {
   assert.equal(formatUITranslation("السؤال {current} من {total}", { current: 0, total: 24 }), "السؤال \u20680\u2069 من \u206824\u2069");
   assert.equal(formatUITranslation("{missing}", {}), "{missing}");
   assert.equal(formatUITranslation("Save"), "Save");
+  assert.equal(formatUITranslation("Personal details • {page} of {total}", { page: 1, total: 3 }, false), "Personal details • 1 of 3");
 });

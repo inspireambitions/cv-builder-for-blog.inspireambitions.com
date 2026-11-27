@@ -4,13 +4,21 @@ import { sampleServiceCVState } from "../lib/sample-data";
 import { translations } from "../lib/i18n";
 import { defaultTalkProgress } from "../lib/talk-flow";
 import { finishCV } from "../lib/cv-finish";
+import { availableLanguages } from "../lib/ui-languages";
 
-const draftFlag = process.env.NEXT_PUBLIC_PREVIEW_DRAFT_LOCALES === "true";
 const talkFlag = process.env.NEXT_PUBLIC_TALK_MODE === "true";
+
+test("the language switcher offers only enabled interface locales", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: talkFlag ? /Fill in the full form/ : /Build My CV/ }).click();
+  const options = page.locator("#ui-language option");
+  await expect(options).toHaveCount(availableLanguages.length);
+  expect(await options.evaluateAll(nodes => nodes.map(node => (node as HTMLOptionElement).value))).toEqual(availableLanguages);
+});
 
 for (const locale of ["en", "ar", "ur"] as const) {
   test(`changing interface to ${locale} keeps the English CV intact`, async ({ page }, testInfo) => {
-    test.skip(locale !== "en" && !draftFlag, "Incomplete packs are available only in translation QA.");
+    test.skip(!availableLanguages.includes(locale), "Incomplete packs are available only in translation QA.");
     const state = {
       ...sampleServiceCVState,
       builderMode: "full" as const,
@@ -52,7 +60,7 @@ for (const locale of ["en", "ar", "ur"] as const) {
   });
 
   test(`Talk Mode restores a saved profile from an older draft in ${locale}`, async ({ page }, testInfo) => {
-    test.skip(!talkFlag || (locale !== "en" && !draftFlag), "Talk and draft locale flags are required.");
+    test.skip(!talkFlag || !availableLanguages.includes(locale), "Talk and supported locale are required.");
     const state = {
       ...sampleServiceCVState,
       builderMode: "talk" as const,

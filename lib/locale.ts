@@ -63,9 +63,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const t = useCallback(
     (key: string, values?: Record<string, string | number>): string => {
       const text = translations[locale][key] || translations["en"][key] || key;
-      return formatUITranslation(text, values);
+      return formatUITranslation(text, values, dir === "rtl");
     },
-    [locale]
+    [locale, dir]
   );
 
   return React.createElement(

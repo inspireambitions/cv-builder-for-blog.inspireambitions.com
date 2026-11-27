@@ -6,6 +6,7 @@ import { checkCV } from "../lib/cv-quality";
 import { finishCV } from "../lib/cv-finish";
 import { migrateExperienceDates, experienceDateText } from "../lib/experience-dates";
 import { getRoleExamples } from "../lib/role-examples";
+import { availableLanguages } from "../lib/ui-languages";
 
 async function restore(page: Page, state: CVState, locale = "en") {
   await page.addInitScript(({ state, locale }) => {
@@ -14,7 +15,7 @@ async function restore(page: Page, state: CVState, locale = "en") {
     localStorage.setItem("cv-locale", locale);
   }, { state, locale });
   await page.goto("/");
-  await page.getByLabel("Interface language").selectOption(locale);
+  await page.locator("#ui-language").selectOption(locale);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 }
 
@@ -48,8 +49,9 @@ test("every missing item opens the correct form", async ({ page }) => {
   }
 });
 
-for (const locale of ["en", "ar", "ur"]) {
+for (const locale of ["en", "ar", "ur"] as const) {
   test(`honest review and stable brand in ${locale}`, async ({ page }, testInfo) => {
+    test.skip(!availableLanguages.includes(locale), "Incomplete locale requires the translation preview flag.");
     await page.setViewportSize({ width: 360, height: 800 });
     await restore(page, { ...defaultCVState, step: 8 }, locale);
     await expect(page.getByRole("heading", { name: "Recruiter check: 5 things to fix" })).toBeVisible();

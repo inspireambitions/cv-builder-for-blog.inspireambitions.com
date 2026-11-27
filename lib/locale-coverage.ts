@@ -1,9 +1,12 @@
 export const UI_LOCALES = ["en", "ar", "hi", "ur", "tl"] as const;
 export type UILocale = (typeof UI_LOCALES)[number];
 
-export function formatUITranslation(text: string, values?: Record<string, string | number>): string {
-  return values ? text.replace(/\{([a-zA-Z]+)\}/g, (match, name: string) =>
-    values[name] === undefined ? match : `\u2068${String(values[name])}\u2069`) : text;
+export function formatUITranslation(text: string, values?: Record<string, string | number>, isolate = true): string {
+  return values ? text.replace(/\{([a-zA-Z]+)\}/g, (match, name: string) => {
+    if (values[name] === undefined) return match;
+    const value = String(values[name]);
+    return isolate ? `\u2068${value}\u2069` : value;
+  }) : text;
 }
 
 // Check the authored packs, not a dictionary filled with English fallback values.

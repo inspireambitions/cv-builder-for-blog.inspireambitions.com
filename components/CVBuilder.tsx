@@ -284,7 +284,7 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                 <div>
                   <p className="text-sm font-bold text-[#1a2744]">
                     {t("builder.progress", {
-                      step: t(STEP_I18N_KEY[currentStep.key]),
+                      step: t(state.step === 1 ? "builder.personalStep" : STEP_I18N_KEY[currentStep.key]),
                       number: state.step === 1 ? state.mobilePersonalPage + 1 : state.step,
                       total: state.step === 1 ? 3 : 8,
                     })}

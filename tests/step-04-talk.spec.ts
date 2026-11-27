@@ -9,6 +9,7 @@ import { defaultTalkProgress, getTalkQuestions, normalizeTalk } from "../lib/tal
 import { getRoleFamilies, getTalkSentences } from "../lib/role-suggestions";
 import { isTalkTextGrounded } from "../lib/evidence";
 import { translations, type Locale } from "../lib/i18n";
+import { availableLanguages } from "../lib/ui-languages";
 
 test("sentence library supports every family without auto-selected facts", () => {
   for (const family of getRoleFamilies().filter((entry) => entry.key !== "general")) expect(getTalkSentences(family.key).length).toBeGreaterThanOrEqual(8);
@@ -209,7 +210,7 @@ test("AI suggestions need approval and adding another job preserves the first", 
 for (const locale of ["en", "ar", "ur"] as const satisfies readonly Locale[]) {
   test(`every Talk screen fits 360px with usable targets: ${locale}`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-360", "360px screenshot matrix.");
-    test.skip(locale !== "en" && process.env.NEXT_PUBLIC_PREVIEW_DRAFT_LOCALES !== "true", "Draft locales are not publicly selectable.");
+    test.skip(!availableLanguages.includes(locale), "Draft locales are not publicly selectable.");
     test.setTimeout(180000);
     await page.goto("/");
     test.skip(await page.getByRole("button", { name: /Answer simple questions/ }).count() === 0, "Feature is off.");

@@ -2,6 +2,7 @@
 // Each row contains English, Arabic, Hindi, Urdu and Filipino interface text.
 const rows: Record<string, readonly [string, string, string, string, string]> = {
   "builder.simpleQuestions": ["Simple questions", "أسئلة بسيطة", "आसान सवाल", "آسان سوال", "Mga simpleng tanong"],
+  "builder.personalStep": ["Personal details", "المعلومات الشخصية", "निजी जानकारी", "ذاتی معلومات", "Personal na detalye"],
   "builder.progress": ["{step} • {number} of {total}", "{step} • {number} من {total}", "{step} • {total} में से {number}", "{step} • {total} میں سے {number}", "{step} • {number} sa {total}"],
   "builder.timeLeft": ["About 6 minutes left", "بقي نحو 6 دقائق", "लगभग 6 मिनट बाकी हैं", "تقریباً 6 منٹ باقی ہیں", "Mga 6 na minuto pa"],
   "builder.goodProgress": ["You are making good progress", "أنت تتقدم بشكل جيد", "आप अच्छी प्रगति कर रहे हैं", "آپ اچھی پیش رفت کر رہے ہیں", "Maganda ang pag-usad mo"],

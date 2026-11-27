@@ -5,6 +5,8 @@ import { finishCV } from "../lib/cv-finish";
 import { sampleServiceCVState } from "../lib/sample-data";
 import { defaultCVState } from "../lib/types";
 import { webcrypto } from "node:crypto";
+import { availableLanguages } from "../lib/ui-languages";
+import { translations } from "../lib/i18n";
 
 test("draft migration preserves every section across old layouts", () => {
   for (const version of [5, 6, 7]) {
@@ -75,9 +77,10 @@ test("old private continue link restores summary rather than work history", asyn
   await expect.poll(() => page.evaluate(() => location.hash)).toBe("");
 });
 
-for (const locale of ["en", "ar", "ur"]) {
+for (const locale of ["en", "ar", "ur"] as const) {
   test(`profile screen at 360px: ${locale}`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-360", "360px evidence only");
+    test.skip(!availableLanguages.includes(locale), "Incomplete locale requires the translation preview flag.");
     await page.goto("/");
     await page.evaluate(({ state, locale }) => {
       localStorage.clear();
@@ -85,14 +88,14 @@ for (const locale of ["en", "ar", "ur"]) {
       localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 8, savedAt: new Date().toISOString(), state: { ...state, summary: "", step: 5 } }));
     }, { state: sampleServiceCVState, locale });
     await page.reload();
-    await page.getByLabel("Interface language").selectOption(locale);
+    await page.locator("#ui-language").selectOption(locale);
     await page.getByRole("button", { name: "Continue", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "About you (2 to 3 lines)" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: translations[locale]["summary.title"] })).toBeVisible();
     const summary = page.getByTestId("built-profile");
     await expect(summary).toContainText(/with .*experience/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await mkdir("outputs/step-03", { recursive: true });
     await page.screenshot({ path: `outputs/step-03/profile-${locale}-360.png`, fullPage: true });
-    await expect(page.getByLabel("Saved profile notes")).toHaveCount(0);
+    await expect(page.locator("#cv-profile-notes")).toHaveCount(0);
   });
 }
