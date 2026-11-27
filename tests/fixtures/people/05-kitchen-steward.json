@@ -1,0 +1,23 @@
+{
+  "personal": {
+    "name": "Fictional Kai Dela Cruz",
+    "title": "Kitchen Steward",
+    "email": "kai@example.com",
+    "phone": "+971 50 000 0005",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Kitchen Steward",
+      "company": "Example Lantern Kitchen",
+      "dates": "Jun 2023 to Present",
+      "description": "• WASHED POTS AND PANS\nCLEANING WORK SURFACES, WITH CARE\n* CHECKED HACCP RECORDS\nCLEAN WORK SURFACES."
+    }
+  ],
+  "skills": [
+    "HACCP",
+    "Kitchen cleaning",
+    "Dishwashing",
+    "Waste sorting"
+  ]
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
 import { exportJPEG } from "@/lib/export-jpeg";
+import { finishCV } from "@/lib/cv-finish";
 import { trackToolEvent } from "@/lib/analytics";
 import { validateEmail } from "@/lib/validators";
 import { reportClientError } from "@/lib/error-reporting";
@@ -121,7 +122,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
                 name: state.personal.name,
                 email: state.personal.email,
                 phone: state.personal.phone,
-                skills: state.skills,
+                skills: finishCV(state).cv.skills,
               })
             );
             try {
@@ -145,7 +146,7 @@ export default function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
             await exportWord(state, { mode: "recruiter" });
           }
           if (format === "jpeg") {
-            await exportJPEG(state.personal.name);
+            await exportJPEG(state);
           }
           break;
         } catch (error) {

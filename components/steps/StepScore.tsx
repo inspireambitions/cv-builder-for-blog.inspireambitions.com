@@ -7,6 +7,7 @@ import type { ScoreLayer } from "@/lib/types";
 import DownloadModal from "@/components/modals/DownloadModal";
 import TailorWorkspace from "@/components/tailoring/TailorWorkspace";
 import { trackToolEvent } from "@/lib/analytics";
+import FinishDetails from "@/components/shared/FinishDetails";
 
 // SVG ring constants
 const SIZE = 160;
@@ -163,6 +164,8 @@ export default function StepScore() {
           Download my CV
         </button>
       </section>
+
+      <FinishDetails draft={state} />
 
       <details className="rounded-2xl border border-gray-200 bg-white p-5">
         <summary className="cursor-pointer text-base font-bold text-[#1a2744]">

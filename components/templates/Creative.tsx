@@ -1,5 +1,6 @@
 "use client";
 
+import { cvContactParts, finishCV } from "@/lib/cv-finish";
 import type { CVState } from "@/lib/types";
 import {
   formatSectorCredential,
@@ -7,10 +8,11 @@ import {
   getUAEHeaderParts,
 } from "@/lib/uae";
 
-export default function Creative({ state }: { state: CVState }) {
-  const { personal, photo, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = state;
-  const uaeHeaderParts = getUAEHeaderParts(state);
-  const sectorCredentials = getSelectedSectorCredentials(state);
+export default function Creative({ state: draft }: { state: CVState }) {
+  const { cv } = finishCV(draft);
+  const { personal, photo, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = cv;
+  const uaeHeaderParts = getUAEHeaderParts(cv);
+  const sectorCredentials = getSelectedSectorCredentials(cv);
 
   const filledExperience = experience.filter(e => e.role.trim() || e.company.trim());
   const filledEducation = education.filter(e => e.degree.trim() || e.institution.trim());
@@ -24,11 +26,11 @@ export default function Creative({ state }: { state: CVState }) {
   const filledMemberships = memberships.filter(m => m.org.trim());
 
   return (
-    <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14, display: "flex" }}>
+    <div id="cv-render" data-finished-cv="true" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14, display: "flex" }}>
       {/* Left Sidebar */}
       <div style={{ width: 210, flexShrink: 0, background: "linear-gradient(180deg, #2d1a44 0%, #140d22 100%)", padding: "32px 18px 28px", color: "#fff", display: "flex", flexDirection: "column", minHeight: 1123 }}>
         {/* Photo */}
-        {state.photoPreference === "photo" && photo && (
+        {cv.photoPreference === "photo" && photo && (
           <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
             <img
               src={photo}
@@ -52,26 +54,7 @@ export default function Creative({ state }: { state: CVState }) {
 
         {/* Contact */}
         <div style={{ marginTop: 20, marginBottom: 20 }}>
-          {personal.email.trim() && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6, wordBreak: "break-all" }}>
-              <span style={{ marginRight: 6, fontWeight: 700 }}>Email</span>{personal.email}
-            </div>
-          )}
-          {personal.phone.trim() && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
-              <span style={{ marginRight: 6, fontWeight: 700 }}>Phone</span>{personal.phone}
-            </div>
-          )}
-          {personal.location.trim() && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
-              <span style={{ marginRight: 6, fontWeight: 700 }}>Based</span>{personal.location}
-            </div>
-          )}
-          {personal.linkedin.trim() && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", marginBottom: 6, wordBreak: "break-all" }}>
-              <span style={{ marginRight: 6, fontWeight: 700 }}>LinkedIn</span>{personal.linkedin}
-            </div>
-          )}
+          {cvContactParts(cv).map((part) => <div key={part} style={{ fontSize: 11, marginBottom: 6, overflowWrap: "anywhere" }}><bdi>{part}</bdi></div>)}
           {uaeHeaderParts.length > 0 && (
             <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", marginTop: 8, lineHeight: 1.4 }}>
               {uaeHeaderParts.join(" | ")}
@@ -108,7 +91,7 @@ export default function Creative({ state }: { state: CVState }) {
         {/* Summary */}
         {summary.trim() && (
           <section style={{ marginBottom: 22 }}>
-            <MainHeading>Summary</MainHeading>
+            <MainHeading>Profile</MainHeading>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: "#333" }}>{summary}</p>
           </section>
         )}

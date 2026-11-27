@@ -1,0 +1,45 @@
+{
+  "personal": {
+    "name": "Fictional Dev Mehra",
+    "title": "Transport Manager",
+    "email": "dev@example.com",
+    "phone": "+971 50 000 0003",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Driver",
+      "company": "Example Dune Transit",
+      "dates": "Mar 2018 to Mar 2020",
+      "description": "* Drive the delivery van\nDeliver parcels as required."
+    },
+    {
+      "role": "Driver",
+      "company": "Example Route Logistics",
+      "dates": "Feb 2024 to Present",
+      "description": "Delivered parcels\nInspecting the van before the first trip"
+    },
+    {
+      "role": "Driver",
+      "company": "Example Oasis Dispatch",
+      "dates": "Apr 2020 to Jan 2024",
+      "description": "Checking tyre pressure\nDrive the morning route"
+    }
+  ],
+  "education": [
+    {
+      "degree": "School certificate",
+      "year": "2017"
+    },
+    {
+      "degree": "Transport course",
+      "year": "2021"
+    }
+  ],
+  "skills": [
+    "Driving",
+    " Route planning",
+    "Vehicle checks",
+    "Delivery records"
+  ]
+}

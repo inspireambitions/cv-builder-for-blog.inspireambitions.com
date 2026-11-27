@@ -1,5 +1,6 @@
 "use client";
 
+import { cvContactParts, finishCV } from "@/lib/cv-finish";
 import type { CVState } from "@/lib/types";
 import {
   formatSectorCredential,
@@ -7,12 +8,13 @@ import {
   getUAEHeaderParts,
 } from "@/lib/uae";
 
-export default function Minimal({ state }: { state: CVState }) {
-  const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = state;
+export default function Minimal({ state: draft }: { state: CVState }) {
+  const { cv } = finishCV(draft);
+  const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = cv;
 
-  const contactParts = [personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean);
-  const uaeHeaderParts = getUAEHeaderParts(state);
-  const sectorCredentials = getSelectedSectorCredentials(state);
+  const contactParts = cvContactParts(cv);
+  const uaeHeaderParts = getUAEHeaderParts(cv);
+  const sectorCredentials = getSelectedSectorCredentials(cv);
 
   const filledExperience = experience.filter(e => e.role.trim() || e.company.trim());
   const filledEducation = education.filter(e => e.degree.trim() || e.institution.trim());
@@ -26,7 +28,7 @@ export default function Minimal({ state }: { state: CVState }) {
   const filledMemberships = memberships.filter(m => m.org.trim());
 
   return (
-    <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "Arial, sans-serif", fontSize: 14, color: "#202226", padding: "44px 52px" }}>
+    <div id="cv-render" data-finished-cv="true" className="w-[794px] min-h-[1123px] bg-white" style={{ fontFamily: "Arial, sans-serif", fontSize: 14, color: "#202226", padding: "44px 52px" }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         {personal.name.trim() && (
@@ -59,7 +61,7 @@ export default function Minimal({ state }: { state: CVState }) {
           {/* Summary */}
           {summary.trim() && (
             <section style={{ marginBottom: 24 }}>
-              <MinimalHeading>Summary</MinimalHeading>
+              <MinimalHeading>Profile</MinimalHeading>
               <p style={{ fontSize: 13, lineHeight: 1.65, color: "#444" }}>{summary}</p>
             </section>
           )}

@@ -4,7 +4,9 @@ import { saveAs } from "file-saver";
 import type { CVState } from "./types";
 import type { ExportOptions } from "./export-options";
 import { isRecruiterReady } from "./export-options";
-import { normaliseUAEPhoneForDisplay } from "./format";
+import { cvContactParts, finishCV } from "./cv-finish";
+import { captureCV } from "./capture-cv";
+import { SECTION_LABELS } from "./template-config";
 import {
   formatSectorCredential,
   getSelectedSectorCredentials,
@@ -18,17 +20,17 @@ function filenameFor(state: CVState, extension: string, suffix = ""): string {
     : `InspireAmbitions_CV${safeSuffix}.${extension}`;
 }
 
-function stripBulletPrefix(value: string): string {
-  return value.replace(/^[-•]\s*/, "").trim();
-}
-
 function imageTypeFromDataUrl(value: string): "JPEG" | "PNG" | "WEBP" {
   if (value.startsWith("data:image/png")) return "PNG";
   if (value.startsWith("data:image/webp")) return "WEBP";
   return "JPEG";
 }
 
-export async function buildPDF(state: CVState, options: ExportOptions = {}) {
+export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
+  const { cv } = finishCV(draft);
+  // This text exporter still uses Helvetica. Keep its readable English
+  // headings until the PDF layout step adds script-aware rendering.
+  const labels = SECTION_LABELS.en;
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
@@ -42,7 +44,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
   const maxWidth = pageWidth - marginX * 2;
   let y = 18;
   const recruiterReady = isRecruiterReady(options);
-  const sectionColour: [number, number, number] = state.template === "ats-clean" ? [17, 85, 204] : [26, 39, 68];
+  const sectionColour: [number, number, number] = cv.template === "ats-clean" ? [17, 85, 204] : [26, 39, 68];
 
   function ensureSpace(needed = 10) {
     if (y + needed <= pageHeight - 18) return;
@@ -106,34 +108,29 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     y += 4.5;
   }
 
-  if (recruiterReady && state.template !== "ats-clean" && state.photoPreference === "photo" && state.photo) {
+  if (recruiterReady && cv.template !== "ats-clean" && cv.photoPreference === "photo" && cv.photo) {
     try {
-      pdf.addImage(state.photo, imageTypeFromDataUrl(state.photo), marginX, 16, 24, 24);
+      pdf.addImage(cv.photo, imageTypeFromDataUrl(cv.photo), marginX, 16, 24, 24);
     } catch {
       // Keep the text export working even if a browser cannot decode the image.
     }
   }
 
-  writeLines(state.personal.name || "Your Name", {
+  writeLines(cv.personal.name, {
     size: 20,
     style: "bold",
     align: "center",
     after: 2,
   });
 
-  writeLines(state.personal.title, {
+  writeLines(cv.personal.title, {
     size: 12,
     color: [85, 85, 85],
     align: "center",
     after: 2,
   });
 
-  const contactParts = [
-    state.personal.email,
-    normaliseUAEPhoneForDisplay(state.personal.phone),
-    state.personal.location,
-    state.personal.linkedin,
-  ].filter(Boolean);
+  const contactParts = cvContactParts(cv);
   writeLines(contactParts.join(" | "), {
     size: 9.5,
     color: [80, 80, 80],
@@ -141,26 +138,26 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     after: 2,
   });
 
-  writeLines(getUAEHeaderParts(state).join(" | "), {
+  writeLines(getUAEHeaderParts(cv).join(" | "), {
     size: 9.5,
     color: [72, 110, 74],
     align: "center",
     after: 3,
   });
 
-  if (state.summary.trim()) {
-    sectionHeading("Professional Summary");
-    writeLines(state.summary, { after: 3 });
+  if (cv.summary.trim()) {
+    sectionHeading(labels.summary);
+    writeLines(cv.summary, { after: 3 });
   }
 
-  const filledExperience = state.experience.filter(
+  const filledExperience = cv.experience.filter(
     (entry) => entry.role.trim() || entry.company.trim()
   );
   if (filledExperience.length > 0) {
-    sectionHeading("Work Experience");
+    sectionHeading(labels.experience);
     for (const exp of filledExperience) {
       writeLines(
-        [exp.role, exp.company].filter(Boolean).join(" - "),
+        [exp.role, exp.company].filter(Boolean).join(", "),
         { size: 11.5, style: "bold", after: 1 }
       );
       writeLines([exp.location, exp.dates].filter(Boolean).join(" | "), {
@@ -175,7 +172,7 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
         after: 1.5,
       });
       for (const bullet of exp.description.split("\n").filter(Boolean)) {
-        writeLines(`- ${stripBulletPrefix(bullet)}`, {
+        writeLines(`• ${bullet}`, {
           size: 10.2,
           indent: 4,
           after: 0.3,
@@ -190,13 +187,13 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const filledEducation = state.education.filter(
+  const filledEducation = cv.education.filter(
     (entry) => entry.degree.trim() || entry.institution.trim()
   );
   if (filledEducation.length > 0) {
-    sectionHeading("Education");
+    sectionHeading(labels.education);
     for (const edu of filledEducation) {
-      writeLines([edu.degree, edu.institution].filter(Boolean).join(" - "), {
+      writeLines([edu.degree, edu.institution].filter(Boolean).join(", "), {
         size: 10.8,
         style: "bold",
         after: 1,
@@ -209,12 +206,31 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const filledCerts = state.certifications.filter((entry) =>
+  const filledSkills = cv.skills.filter((skill) => skill.trim());
+  if (filledSkills.length > 0) {
+    sectionHeading(labels.skills);
+    writeLines(filledSkills.join(" | "), { after: 3 });
+  }
+
+  const filledLanguages = cv.languages.filter((lang) =>
+    lang.language.trim()
+  );
+  if (filledLanguages.length > 0) {
+    sectionHeading(labels.languages);
+    writeLines(
+      filledLanguages
+        .map((lang) => [lang.language, lang.level].filter(Boolean).join(" - "))
+        .join(", "),
+      { after: 5 }
+    );
+  }
+
+  const filledCerts = cv.certifications.filter((entry) =>
     entry.name.trim()
   );
-  const sectorCredentials = getSelectedSectorCredentials(state);
+  const sectorCredentials = getSelectedSectorCredentials(cv);
   if (filledCerts.length > 0 || sectorCredentials.length > 0) {
-    sectionHeading("Certifications & Credentials");
+    sectionHeading(labels.credentials);
     for (const credential of sectorCredentials) {
       writeLines(formatSectorCredential(credential), {
         size: 10.5,
@@ -237,30 +253,11 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
     }
   }
 
-  const filledSkills = state.skills.filter((skill) => skill.trim());
-  if (filledSkills.length > 0) {
-    sectionHeading("Skills");
-    writeLines(filledSkills.join(", "), { after: 3 });
-  }
-
-  const filledLanguages = state.languages.filter((lang) =>
-    lang.language.trim()
-  );
-  if (filledLanguages.length > 0) {
-    sectionHeading("Languages");
-    writeLines(
-      filledLanguages
-        .map((lang) => [lang.language, lang.level].filter(Boolean).join(" - "))
-        .join(", "),
-      { after: 5 }
-    );
-  }
-
-  const filledAchievements = state.achievements.filter((entry) =>
+  const filledAchievements = cv.achievements.filter((entry) =>
     entry.title.trim()
   );
   if (filledAchievements.length > 0) {
-    sectionHeading("Achievements & Awards");
+    sectionHeading(labels.achievements);
     for (const achievement of filledAchievements) {
       writeLines(achievement.title, { size: 10.5, style: "bold", after: 1 });
       writeLines(achievement.body, { after: 1.5 });
@@ -273,47 +270,30 @@ export async function buildPDF(state: CVState, options: ExportOptions = {}) {
 
   return {
     blob: pdf.output("blob"),
-    filename: filenameFor(state, "pdf", recruiterReady ? "Recruiter" : "ATS"),
+    filename: filenameFor(cv, "pdf", recruiterReady ? "Recruiter" : "ATS"),
     pageCount: pdf.getNumberOfPages(),
   };
 }
 
-export async function exportPDF(state: CVState, options: ExportOptions = {}) {
-  if (isRecruiterReady(options)) {
-    const element = document.getElementById("cv-render");
-    if (element) {
-      const html2canvas = (await import("html2canvas-pro")).default;
-      const { jsPDF } = await import("jspdf");
-      const preview = element.closest("[data-preview-container]") as HTMLElement | null;
-      const previousTransform = preview?.style.transform;
-      const previousHeight = preview?.style.height;
-      if (preview) { preview.style.transform = "none"; preview.style.height = "auto"; }
-      try {
-        const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 794 });
-        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imageHeight = pageWidth * canvas.height / canvas.width;
-        let remaining = imageHeight;
-        let offset = 0;
-        const image = canvas.toDataURL("image/jpeg", 0.96);
-        pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
-        remaining -= pageHeight;
-        while (remaining > 0) {
-          offset -= pageHeight;
-          pdf.addPage();
-          pdf.addImage(image, "JPEG", 0, offset, pageWidth, imageHeight);
-          remaining -= pageHeight;
-        }
-        const output = { blob: pdf.output("blob"), filename: filenameFor(state, "pdf", "Recruiter"), pageCount: pdf.getNumberOfPages() };
-        saveAs(output.blob, output.filename);
-        return output;
-      } finally {
-        if (preview) { preview.style.transform = previousTransform ?? ""; preview.style.height = previousHeight ?? ""; }
-      }
-    }
+export async function exportPDF(draft: CVState, options: ExportOptions = {}) {
+  if (!isRecruiterReady(options)) {
+    const output = await buildPDF(draft, options);
+    saveAs(output.blob, output.filename);
+    return output;
   }
-  const output = await buildPDF(state, options);
+
+  const canvas = await captureCV(draft);
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imageHeight = pageWidth * canvas.height / canvas.width;
+  const image = canvas.toDataURL("image/jpeg", 0.96);
+  for (let top = 0; top < imageHeight; top += pageHeight) {
+    if (top > 0) pdf.addPage();
+    pdf.addImage(image, "JPEG", 0, -top, pageWidth, imageHeight);
+  }
+  const output = { blob: pdf.output("blob"), filename: filenameFor(draft, "pdf", "Recruiter"), pageCount: pdf.getNumberOfPages() };
   saveAs(output.blob, output.filename);
   return output;
 }

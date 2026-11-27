@@ -1,5 +1,6 @@
 "use client";
 
+import { cvContactParts, finishCV } from "@/lib/cv-finish";
 import type { CVState } from "@/lib/types";
 import {
   formatSectorCredential,
@@ -7,13 +8,14 @@ import {
   getUAEHeaderParts,
 } from "@/lib/uae";
 
-export default function Corporate({ state }: { state: CVState }) {
-  const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = state;
+export default function Corporate({ state: draft }: { state: CVState }) {
+  const { cv } = finishCV(draft);
+  const { personal, summary, experience, education, certifications, skills, languages, achievements, volunteer, projects, publications, memberships } = cv;
 
   const hasContact = personal.email || personal.phone || personal.location || personal.linkedin;
-  const contactParts = [personal.email, personal.phone, personal.location, personal.linkedin].filter(Boolean);
-  const uaeHeaderParts = getUAEHeaderParts(state);
-  const sectorCredentials = getSelectedSectorCredentials(state);
+  const contactParts = cvContactParts(cv);
+  const uaeHeaderParts = getUAEHeaderParts(cv);
+  const sectorCredentials = getSelectedSectorCredentials(cv);
 
   const filledExperience = experience.filter(e => e.role.trim() || e.company.trim());
   const filledEducation = education.filter(e => e.degree.trim() || e.institution.trim());
@@ -29,7 +31,7 @@ export default function Corporate({ state }: { state: CVState }) {
   const hasSidebar = filledSkills.length > 0 || filledLanguages.length > 0 || filledAchievements.length > 0 || filledVolunteer.length > 0 || filledProjects.length > 0 || filledPublications.length > 0 || filledMemberships.length > 0;
 
   return (
-    <div id="cv-render" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14 }}>
+    <div id="cv-render" data-finished-cv="true" className="w-[794px] min-h-[1123px] bg-white text-[#222]" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: 14 }}>
       {/* Header */}
       <div style={{ backgroundColor: "#ffffff", borderBottom: "2px solid #1a2744", padding: "34px 40px 22px" }}>
         {personal.name.trim() && (
@@ -61,7 +63,7 @@ export default function Corporate({ state }: { state: CVState }) {
           {/* Summary */}
           {summary.trim() && (
             <section style={{ marginBottom: 22 }}>
-              <SectionHeading>Summary</SectionHeading>
+              <SectionHeading>Profile</SectionHeading>
               <p style={{ fontSize: 14, lineHeight: 1.6, color: "#333" }}>{summary}</p>
             </section>
           )}

@@ -1,0 +1,23 @@
+{
+  "personal": {
+    "name": "Fictional Sami Ali",
+    "title": "Waiter",
+    "email": "sami@example.com",
+    "phone": "+971 50 000 0008",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Waiter",
+      "company": "Example Cedar Restaurant",
+      "dates": "Mar 2023 to Dec 2024",
+      "description": "- Greeting guests\n• Taking orders and making drinks\n* Serving food\nChecking orders\nChecking orders, as required.\nUsing Micros to enter orders"
+    }
+  ],
+  "skills": [
+    "Order taking",
+    "Micros",
+    "Guest service",
+    "Table service"
+  ]
+}
