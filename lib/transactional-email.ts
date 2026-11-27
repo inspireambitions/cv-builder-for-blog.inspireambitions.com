@@ -17,10 +17,11 @@ export async function verifyCVEmailBridge() {
     headers: { Authorization: `Bearer ${bridgeSecret()}` },
     redirect: "error", cache: "no-store", signal: AbortSignal.timeout(10000),
   });
-  if (!response.ok) throw new Error("CV email bridge is not ready");
+  if (!response.ok) throw new Error(`CV email bridge health returned HTTP ${response.status}`);
   const status = await response.json() as { ready?: boolean; practiceLinkSupported?: boolean };
-  if (status.ready !== true || (process.env.NEXT_PUBLIC_MUQABALA_PRACTICE_LINK === "true" && status.practiceLinkSupported !== true)) {
-    throw new Error("CV email bridge is not ready");
+  if (status.ready !== true) throw new Error("CV email bridge reports that Cloudflare sending is unavailable");
+  if (process.env.NEXT_PUBLIC_MUQABALA_PRACTICE_LINK === "true" && status.practiceLinkSupported !== true) {
+    throw new Error("CV email bridge does not report practice link support");
   }
 }
 
