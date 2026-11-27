@@ -92,6 +92,9 @@ test("a candidate can choose a matching work family and add only the details the
   await page.getByRole("button", { name: "20 to 40", exact: true }).click();
   await page.getByRole("button", { name: "80 or more", exact: true }).click();
   await expect(description).toHaveValue("Use Opera to make and change bookings.\nHandle 80 or more guest calls a day.");
+  await page.getByRole("button", { name: "80 or more", exact: true }).click();
+  await expect(description).toHaveValue("Use Opera to make and change bookings.");
+  await page.getByRole("button", { name: "80 or more", exact: true }).click();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("inspireambitions-cv-state") ?? "{}").state?.experience[0]?.roleFamily)).toBe("reservations");
   await page.reload();
   await page.getByRole("button", { name: "Continue", exact: true }).click();

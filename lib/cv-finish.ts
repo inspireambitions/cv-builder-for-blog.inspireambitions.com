@@ -1,7 +1,7 @@
 import { experienceDateText, migrateExperienceDates } from "./experience-dates";
 import { cleanCVProse, findBannedCVPhrase } from "./banned-phrases";
 import { buildProfile, latestHeldRole } from "./profile-builder";
-import { findRoleSuggestionFamily, getRoleSuggestionGroup } from "./role-suggestions";
+import { getRoleFamilyForJob } from "./role-suggestions";
 import { getRoleDetails } from "./role-details";
 import { cleanAllCaps, cleanSkillName, hasNamedSystem, uppercaseFirst } from "./skill-names";
 import type { CVState, ExpEntry } from "./types";
@@ -84,8 +84,7 @@ const retiredKeys = new Set(retired.flatMap((line) => [undefined, "present", "pa
 )));
 
 function finishBullets(job: ExpEntry, tense: Tense) {
-  const detected = getRoleSuggestionGroup(job.role);
-  const group = detected.key === "general" ? findRoleSuggestionFamily(job.roleFamily) ?? detected : detected;
+  const group = getRoleFamilyForJob(job.role, job.roleFamily);
   const known = new Set([
     ...group.sentences,
     ...getRoleDetails(group.key).flatMap((question) => question.options.map((option) => option.bullet)),

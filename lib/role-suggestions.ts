@@ -249,6 +249,10 @@ export function getRoleSuggestionGroup(role: string, targetRole = "") {
   return ROLE_SUGGESTION_FAMILIES.find((group) => group.matches.test(value)) ?? GENERAL_ROLE_SUGGESTIONS;
 }
 
+export function getRoleFamilyForJob(role: string, selectedKey?: string) {
+  return findRoleSuggestionFamily(selectedKey) ?? getRoleSuggestionGroup(role);
+}
+
 export function appendExperienceSentence(current: string, sentence: string) {
   const lines = current
     .split("\n")

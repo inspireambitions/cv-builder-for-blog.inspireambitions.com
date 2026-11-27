@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Building2, CookingPot, HardHat, HeartPulse, ShoppingBag, Truck } from "lucide-react";
-import { appendExperienceSentence, findRoleSuggestionFamily, getRoleSuggestionGroup } from "@/lib/role-suggestions";
+import { appendExperienceSentence, findRoleSuggestionFamily, getRoleFamilyForJob } from "@/lib/role-suggestions";
 import { applyRoleDetail, getRoleDetails, type RoleDetailQuestion } from "@/lib/role-details";
 import { trackToolEvent } from "@/lib/analytics";
 
@@ -24,9 +24,9 @@ export default function RoleSentenceSuggestions({
   const [open, setOpen] = useState(!currentText.trim());
   const [showAll, setShowAll] = useState(false);
   const [message, setMessage] = useState("");
-  const detected = getRoleSuggestionGroup(role);
-  const group = detected.key === "general" ? findRoleSuggestionFamily(selectedFamily) ?? detected : detected;
+  const group = getRoleFamilyForJob(role, selectedFamily);
   const [category, setCategory] = useState("");
+  const [picking, setPicking] = useState(false);
   const used = new Set(
     currentText
       .split("\n")
@@ -42,7 +42,7 @@ export default function RoleSentenceSuggestions({
 
   function addDetail(question: RoleDetailQuestion, bullet: string) {
     onChange(applyRoleDetail(currentText, question, bullet));
-    setMessage("Added to your job description.");
+    setMessage(bullet ? "Added to your job description." : "Removed that answer.");
   }
 
   return (
@@ -60,7 +60,7 @@ export default function RoleSentenceSuggestions({
         <span aria-hidden="true" className="text-lg font-semibold text-[#8a6b00]">{open ? "−" : "+"}</span>
       </button>
 
-      {open && group.key === "general" && (
+      {open && (group.key === "general" || picking) && (
         <div className="space-y-3 border-t border-[#e8ddb4] px-3 py-4 sm:px-4">
           <p className="text-sm font-semibold text-gray-900">Which kind of work is this closest to?</p>
           <div className="grid grid-cols-2 gap-2">
@@ -74,20 +74,21 @@ export default function RoleSentenceSuggestions({
           {!!category && <label className="block text-sm text-gray-900">
             Pick a type of work
             <select className="mt-1 block min-h-12 w-full rounded-lg border border-gray-300 bg-white px-2"
-              value="" onChange={(event) => event.target.value && onFamilyChange(event.target.value)}>
+              value="" onChange={(event) => { if (event.target.value) { onFamilyChange(event.target.value); setPicking(false); } }}>
               <option value="">Choose one</option>
               {workAreas.find((area) => area.label === category)?.keys.map((key) =>
                 <option key={key} value={key}>{findRoleSuggestionFamily(key)?.label}</option>)}
             </select>
           </label>}
           <p className="text-xs text-gray-700">No close match? Use your own words above.</p>
+          {picking && group.key !== "general" && <button type="button" className="min-h-11 text-sm text-[#745900] underline" onClick={() => setPicking(false)}>Keep this work type</button>}
         </div>
       )}
 
-      {open && group.key !== "general" && (
+      {open && group.key !== "general" && !picking && (
         <div className="border-t border-[#e8ddb4] px-3 pb-4 pt-3 sm:px-4">
-          {detected.key === "general" && <button type="button" onClick={() => onFamilyChange(undefined)}
-            className="mb-3 min-h-11 text-sm font-medium text-[#745900] underline">Change type of work</button>}
+          <button type="button" onClick={() => setPicking(true)}
+            className="mb-3 min-h-11 text-sm font-medium text-[#745900] underline">Change type of work</button>
           <p className="mb-3 text-xs leading-5 text-gray-700">
             Tap a sentence only if you did this work. You can change the wording after adding it.
           </p>
@@ -153,7 +154,7 @@ function DetailAnswer({ question, used, onAdd }: { question: RoleDetailQuestion;
       <div className="flex flex-wrap gap-2">
         {question.options.map((option) => (
           <button key={option.label} type="button" aria-pressed={used.has(option.bullet.toLowerCase())}
-            onClick={() => onAdd(option.bullet)}
+            onClick={() => onAdd(used.has(option.bullet.toLowerCase()) ? "" : option.bullet)}
             className="min-h-12 rounded-lg border border-gray-300 px-3 text-start text-sm text-gray-900 aria-pressed:border-gold-600 aria-pressed:bg-amber-50 focus-visible:outline-2 focus-visible:outline-gold-600">
             {option.label}
           </button>
