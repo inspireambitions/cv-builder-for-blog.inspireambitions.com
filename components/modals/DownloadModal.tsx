@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCVState } from "@/lib/state";
+import { useLocale } from "@/lib/locale";
 import { exportJPEG } from "@/lib/export-jpeg";
 import { finishCV } from "@/lib/cv-finish";
 import { trackToolEvent } from "@/lib/analytics";
@@ -32,6 +33,7 @@ async function wait(ms: number) {
 
 export default function DownloadModal({ isOpen, onClose, basicMissing }: DownloadModalProps) {
   const { state } = useCVState();
+  const { locale, t } = useLocale();
   const [downloading, setDownloading] = useState<DownloadFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showMoreFormats, setShowMoreFormats] = useState(false);
@@ -64,7 +66,7 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
     event.preventDefault();
     const validation = validateEmail(email);
     if (!validation.valid) {
-      setError(validation.warning ?? "Please enter a valid email address.");
+      setError(locale === "en" && validation.warning ? validation.warning : t("export.badEmail"));
       return;
     }
     setEmailStatus("loading");
@@ -84,20 +86,20 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
       } | null;
       if (!response.ok) {
         throw new Error(
-          result?.error || "We could not verify your email right now. Please try again."
+          (locale === "en" && result?.error) || t("export.unlockIssue")
         );
       }
       localStorage.setItem(DOWNLOAD_GATE_KEY, email.toLowerCase().trim());
       setEmailStatus("unlocked");
-      setNotice(result?.warning || null);
+      setNotice(result?.warning ? (locale === "en" ? result.warning : t("export.emailNotice")) : null);
       trackToolEvent("email_captured", { surface: "cv_download_gate", format: "pdf_ats" });
       await runDownload("pdf_ats");
     } catch (unlockError) {
       setEmailStatus("error");
       setError(
-        unlockError instanceof Error
+        locale === "en" && unlockError instanceof Error
           ? unlockError.message
-          : "We could not verify your email right now. Please try again."
+          : t("export.unlockIssue")
       );
     }
   }
@@ -164,7 +166,7 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
         trackToolEvent("review_prompt_shown", { format });
       }
     } catch (e) {
-      setError("Export failed after retries. Your CV is still saved; please try again.");
+      setError(t("export.failed"));
       console.error(e);
       reportClientError("cv_download_failed", {
         format,
@@ -178,8 +180,8 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
   }
 
   function downloadStatus(format: DownloadFormat) {
-    if (downloading !== format) return "Unlocked";
-    return attempt > 1 ? `Retrying ${attempt}/${MAX_EXPORT_ATTEMPTS}...` : "Exporting...";
+    if (downloading !== format) return t("export.unlocked");
+    return attempt > 1 ? t("export.retrying", { attempt, total: MAX_EXPORT_ATTEMPTS }) : t("export.exporting");
   }
 
   return (
@@ -189,27 +191,27 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+      <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
         <button
           onClick={onClose}
           className="absolute end-4 top-4 min-h-10 min-w-10 rounded-full text-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          aria-label="Close download dialog"
+          aria-label={t("export.close")}
         >
-          x
+          <span aria-hidden="true">×</span>
         </button>
 
         <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-100">
-          Free. No card. No watermark.
+          {t("export.free")}
         </span>
 
         <h2 className="mt-4 text-2xl font-bold text-gray-900">
-          Download Your CV
+          {t("export.title")}
         </h2>
         <p className="mt-2 text-sm leading-6 text-gray-500">
-          Pictures download with no email. PDF and Word ask for your email once on this device.
+          {t("export.intro")}
         </p>
         {basicMissing > 0 && <p className="mt-2 text-sm text-amber-900" id="cv-download-quality-note">
-          {basicMissing === 1 ? "1 thing recruiters look for is missing." : `${basicMissing} things recruiters look for are missing.`} You can still download your CV.
+          {t(basicMissing === 1 ? "export.missingOne" : "export.missingMany", { count: basicMissing })} {t("export.stillDownload")}
         </p>}
 
         {error && (
@@ -231,21 +233,22 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
           disabled={downloading !== null}
           className="mt-5 w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
         >
-          <div className="font-semibold text-gray-900">Download picture, no email</div>
-          <p className="mt-1 text-sm text-gray-600">Instant, anonymous and watermark-free. PDF is best for sending to companies.</p>
+          <div className="font-semibold text-gray-900">{t("export.picture")}</div>
+          <p className="mt-1 text-sm text-gray-600">{t("export.pictureNote")}</p>
         </button>
 
         {emailStatus !== "unlocked" ? (
           <form onSubmit={unlockDownloads} className="mt-6 space-y-4">
             <label className="block">
               <span className="text-sm font-semibold text-gray-700">
-                Email address
+                {t("export.email")}
               </span>
               <input
                 type="email"
+                dir="ltr"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
+                placeholder={t("export.emailExample")}
                 className="mt-2 min-h-12 w-full rounded-xl border border-gray-300 px-4 text-base text-gray-900 outline-none transition-colors focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20"
                 autoComplete="email"
                 required
@@ -257,12 +260,10 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
               disabled={emailStatus === "loading"}
               className="min-h-12 w-full rounded-xl bg-gold-500 px-4 text-base font-semibold text-white transition-colors hover:bg-gold-600 disabled:opacity-60"
             >
-              {emailStatus === "loading"
-                ? "Unlocking downloads..."
-                : "Unlock and Download PDF"}
+              {t(emailStatus === "loading" ? "export.unlocking" : "export.unlock")}
             </button>
             <p className="text-xs leading-5 text-gray-500">
-              PDF and Word are free. We ask for your email and may send practical Gulf job-search guidance. Unsubscribe anytime. Prefer not to share it? Use the picture button above.
+              {t("export.emailNote")}
             </p>
           </form>
         ) : (
@@ -270,12 +271,12 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
           {atsReport && (
             <div className={`border p-4 ${atsReport.passed ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`} aria-live="polite">
               <div className="flex items-center justify-between gap-4">
-                <div className={`font-semibold ${atsReport.passed ? "text-emerald-950" : "text-amber-950"}`}>Company computer reading check</div>
-                <div className={`text-sm font-bold ${atsReport.passed ? "text-emerald-800" : "text-amber-800"}`}>{atsReport.score}/100</div>
+                <div className={`font-semibold ${atsReport.passed ? "text-emerald-950" : "text-amber-950"}`}>{t("export.check")}</div>
+                <div dir="ltr" className={`text-sm font-bold ${atsReport.passed ? "text-emerald-800" : "text-amber-800"}`}>{atsReport.score}/100</div>
               </div>
               <ul className="mt-2 space-y-1 text-xs text-gray-700">
                 {atsReport.checks.map((check) => (
-                  <li key={check.label}>{check.passed ? "Pass" : "Review"}: {check.label} - {check.detail}</li>
+                  <li key={check.label}>{t(check.passed ? "export.pass" : "export.review")}: <bdi lang="en" dir="ltr">{check.label} - {check.detail}</bdi></li>
                 ))}
               </ul>
             </div>
@@ -289,10 +290,10 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Download PDF for company computers
+                  {t("export.pdfComputer")}
                 </div>
                 <p className="mt-0.5 text-sm text-gray-600">
-                  No photo, no columns, selectable text for applicant tracking systems.
+                  {t("export.pdfComputerNote")}
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
@@ -310,10 +311,10 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Download Recruiter-ready PDF
+                  {t("export.pdfRecruiter")}
                 </div>
                 <p className="mt-0.5 text-sm text-gray-600">
-                  Keeps your professional photo where the selected CV design supports it.
+                  {t("export.pdfRecruiterNote")}
                 </p>
               </div>
               <span className="text-sm font-semibold text-emerald-700">
@@ -329,9 +330,9 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
               disabled={downloading !== null}
               className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
-              <div className="font-semibold text-gray-900">Word (if a company wants to edit it)</div>
+              <div className="font-semibold text-gray-900">{t("export.wordComputer")}</div>
               <p className="mt-0.5 text-sm text-gray-600">
-                Editable, text-first version.
+                {t("export.wordComputerNote")}
               </p>
               <span className="mt-2 inline-block text-sm font-semibold text-emerald-700">
                 {downloadStatus("word_ats")}
@@ -344,9 +345,9 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
               disabled={downloading !== null}
               className="rounded-xl border-2 border-gray-200 p-4 text-start transition-colors hover:border-emerald-400 disabled:opacity-60"
             >
-              <div className="font-semibold text-gray-900">Recruiter Word</div>
+              <div className="font-semibold text-gray-900">{t("export.wordRecruiter")}</div>
               <p className="mt-0.5 text-sm text-gray-600">
-                Editable version with photo when available.
+                {t("export.wordRecruiterNote")}
               </p>
               <span className="mt-2 inline-block text-sm font-semibold text-emerald-700">
                 {downloadStatus("word_recruiter")}
@@ -359,7 +360,7 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
             onClick={() => setShowMoreFormats((value) => !value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
-            {showMoreFormats ? "Hide more formats" : "More formats"}
+            {t(showMoreFormats ? "export.hideMore" : "export.more")}
           </button>
 
           {showMoreFormats && (
@@ -372,14 +373,14 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-semibold text-gray-900">
-                    Picture (good for WhatsApp)
+                    {t("export.pictureShare")}
                   </div>
                   <p className="mt-0.5 text-sm text-gray-500">
-                    Good for WhatsApp. Use PDF for company applications.
+                    {t("export.pictureShareNote")}
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-gray-600">
-                  {downloading === "jpeg" ? downloadStatus("jpeg") : "Download"}
+                  {downloading === "jpeg" ? downloadStatus("jpeg") : t("export.download")}
                 </span>
               </div>
             </button>
@@ -389,17 +390,17 @@ export default function DownloadModal({ isOpen, onClose, basicMissing }: Downloa
 
         {showReview && (
           <div className="mt-5 border border-gold-200 bg-gold-50 p-4">
-            <p className="font-semibold text-gray-950">Did this help?</p>
-            <p className="mt-1 text-sm text-gray-700">A short, honest review helps other Gulf job seekers find this free tool.</p>
+            <p className="font-semibold text-gray-950">{t("export.helped")}</p>
+            <p className="mt-1 text-sm text-gray-700">{t("export.reviewNote")}</p>
             <div className="mt-3 flex gap-3">
-              <a href="https://www.trustpilot.com/evaluate/inspireambitions.com" target="_blank" rel="noreferrer" onClick={() => trackToolEvent("review_prompt_clicked", { surface: "download" })} className="bg-gray-950 px-4 py-2 text-sm font-semibold text-white">Review on Trustpilot</a>
-              <button type="button" onClick={() => setShowReview(false)} className="px-3 py-2 text-sm font-semibold text-gray-700">Not now</button>
+              <a href="https://www.trustpilot.com/evaluate/inspireambitions.com" target="_blank" rel="noreferrer" onClick={() => trackToolEvent("review_prompt_clicked", { surface: "download" })} className="bg-gray-950 px-4 py-2 text-sm font-semibold text-white">{t("export.trustpilot")}</a>
+              <button type="button" onClick={() => setShowReview(false)} className="px-3 py-2 text-sm font-semibold text-gray-700">{t("export.notNow")}</button>
             </div>
           </div>
         )}
 
         <p className="mt-6 text-center text-xs text-gray-400">
-          Your CV stays in your browser. Downloads stay free after email unlock.
+          {t("export.privacy")}
         </p>
       </div>
     </div>

@@ -8,6 +8,7 @@ import type { CVState } from "@/lib/types";
 import { trackToolEvent } from "@/lib/analytics";
 import TemplatePreview from "@/components/templates/TemplatePreview";
 import { defaultTalkProgress, TALK_MODE_ENABLED } from "@/lib/talk-flow";
+import { useLocale } from "@/lib/locale";
 
 type Mode = "hero" | "upload" | "analysing" | "feedback";
 
@@ -59,23 +60,45 @@ const FEEDBACK_SECTION_TITLES = [
   "Keywords",
 ];
 
+// Localise fixed messages, not analysis text returned by the server.
+const STATIC_FEEDBACK_KEYS = new Map<string, string>([
+  ["Review complete", "start.reviewComplete"],
+  ["Your CV was analysed successfully. Review the suggestions below before applying the improved version.", "start.reviewCompleteBody"],
+  ["Recommendation", "start.recommendation"],
+  ["Analysis unavailable", "start.analysisUnavailable"],
+  ["API request failed", "start.analysisRequestFailed"],
+  ["We couldn’t reach the AI service right now. You can still build your CV manually with our guided steps.", "start.analysisUnreachable"],
+  ["Invalid file", "start.invalidFile"],
+  ["File must be under 5MB", "start.fileSize"],
+  ["File must be under 5MB.", "start.fileSizePeriod"],
+  ["Please upload a PDF, DOCX, TXT, RTF, JPG, PNG, WEBP, HEIC, or HEIF file", "start.fileType"],
+  ["Header Section", "start.feedbackHeader"],
+  ["About you (2 to 3 lines)", "summary.title"],
+  ["Experience Section", "start.feedbackExperience"],
+  ["Skills Section", "start.feedbackSkills"],
+  ["Format & Structure", "start.feedbackFormat"],
+  ["Education Section", "start.feedbackEducation"],
+  ["Contact Details", "start.feedbackContact"],
+  ["Achievements", "start.feedbackAchievements"],
+  ["Keywords", "start.feedbackKeywords"],
+]);
+
 const TEMPLATES: {
   key: CVState["template"];
   name: string;
-  bestFor: string;
   badge?: string;
   photo: string;
 }[] = [
-  { key: "ats-clean", name: "Clear", bestFor: "Text-first applications and company applications", badge: "New", photo: "Hidden" },
-  { key: "classic", name: "Classic GCC", bestFor: "Most UAE and Gulf applications", badge: "GCC-first", photo: "Optional" },
-  { key: "site", name: "Site", bestFor: "Construction and engineering", photo: "Optional" },
-  { key: "service", name: "Service", bestFor: "Hospitality and F&B", photo: "Prominent" },
-  { key: "care", name: "Care", bestFor: "Healthcare and clinical roles", photo: "Optional" },
-  { key: "ledger", name: "Ledger", bestFor: "Banking, finance and compliance", photo: "Optional" },
-  { key: "crew", name: "Crew", bestFor: "Aviation and cabin service", photo: "Prominent" },
-  { key: "stack", name: "Stack", bestFor: "Technology and product roles", photo: "Hidden" },
-  { key: "move", name: "Move", bestFor: "Logistics and retail", photo: "Optional" },
-  { key: "corner", name: "Corner", bestFor: "Executive and management roles", photo: "Optional" },
+  { key: "ats-clean", name: "Clear", badge: "start.badgeNew", photo: "start.photoHidden" },
+  { key: "classic", name: "Classic GCC", badge: "start.badgeGulf", photo: "start.photoOptional" },
+  { key: "site", name: "Site", photo: "start.photoOptional" },
+  { key: "service", name: "Service", photo: "start.photoProminent" },
+  { key: "care", name: "Care", photo: "start.photoOptional" },
+  { key: "ledger", name: "Ledger", photo: "start.photoOptional" },
+  { key: "crew", name: "Crew", photo: "start.photoProminent" },
+  { key: "stack", name: "Stack", photo: "start.photoHidden" },
+  { key: "move", name: "Move", photo: "start.photoOptional" },
+  { key: "corner", name: "Corner", photo: "start.photoOptional" },
 ];
 
 const FEATURES = [
@@ -85,8 +108,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
-    title: "Practical Hiring Guidance",
-    desc: "Clear prompts shaped by more than 20 years of HR experience across the Gulf and Africa.",
+    title: "start.feature.hrTitle",
+    desc: "start.feature.hrBody",
   },
   {
     icon: (
@@ -94,8 +117,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
     ),
-    title: "Free PDF & Word Export",
-    desc: "Free PDF and editable Word downloads after one email unlock. No watermark. No credit card.",
+    title: "start.feature.exportTitle",
+    desc: "start.feature.exportBody",
   },
   {
     icon: (
@@ -103,8 +126,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: "Gulf/MENA Ready",
-    desc: "Built for GCC applications, with a dedicated Gulf template, photo support and Arabic-friendly layouts.",
+    title: "start.feature.gulfTitle",
+    desc: "start.feature.gulfBody",
   },
   {
     icon: (
@@ -112,8 +135,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
-    title: "AI-Powered",
-    desc: "Upload your existing CV and our AI rewrites it with achievement-focused language.",
+    title: "feature.aiPowered",
+    desc: "feature.aiPoweredDesc",
   },
   {
     icon: (
@@ -122,8 +145,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
       </svg>
     ),
-    title: "Live Preview",
-    desc: "See your CV update in real-time as you type. What you see is what you get.",
+    title: "feature.livePreview",
+    desc: "feature.livePreviewDesc",
   },
   {
     icon: (
@@ -131,8 +154,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    title: "Commonly Forgotten Sections",
-    desc: "We prompt you for achievements, volunteering, certifications and memberships that are easy to overlook.",
+    title: "feature.forgottenSections",
+    desc: "feature.forgottenSectionsDesc",
   },
 ];
 
@@ -321,6 +344,11 @@ function applyAiDataToCvState(prev: CVState, aiData: Record<string, unknown>): C
 
 export default function StepStart({ initialUpload = false }: { initialUpload?: boolean }) {
   const { nextStep, updateField, setState, hydrated } = useCVState();
+  const { t } = useLocale();
+  const localiseFixedMessage = (message: string) => {
+    const key = STATIC_FEEDBACK_KEYS.get(message);
+    return key ? t(key) : message;
+  };
   const [mode, setMode] = useState<Mode>(initialUpload ? "upload" : "hero");
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -425,10 +453,10 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
       <div className="flex flex-col items-center justify-center py-20 space-y-6">
         <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin" />
         <p className="text-lg font-medium text-gray-700">
-          Analysing your CV...
+          {t("start.analysing")}
         </p>
         <p className="text-sm text-gray-500">
-          This usually takes 10-20 seconds
+          {t("start.analysisTime")}
         </p>
       </div>
     );
@@ -453,15 +481,13 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
                 hasAiResult ? "bg-emerald-500" : "bg-amber-500"
               }`}
             />
-            {hasAiResult ? "CV read successfully" : "Manual build is still available"}
+            {t(hasAiResult ? "start.readSuccess" : "start.manualAvailable")}
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl font-bold text-gray-900">
-            AI Analysis Complete
+            {t("start.analysisComplete")}
           </h2>
           <p className="mt-3 text-base md:text-lg text-gray-600">
-            {hasAiResult
-              ? "We pulled out the main CV details and found the highest-impact fixes to make before export."
-              : "The AI could not complete this file, but you can still build your CV manually with the guided steps."}
+            {t(hasAiResult ? "start.analysisSuccess" : "start.analysisFallback")}
           </p>
         </div>
 
@@ -469,14 +495,14 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-xl font-bold text-gray-900">
-                Recommended fixes
+                {t("start.recommendedFixes")}
               </h3>
               <p className="text-sm text-gray-500">
-                Start with these before downloading or sharing your CV.
+                {t("start.fixBeforeSharing")}
               </p>
             </div>
             <span className="w-fit rounded-full bg-gold-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gold-700">
-              {feedback.length} {feedback.length === 1 ? "tip" : "tips"}
+              {t(feedback.length === 1 ? "start.oneTip" : "start.manyTips", { count: feedback.length })}
             </span>
           </div>
 
@@ -491,11 +517,11 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
                     {index + 1}
                   </span>
                   <div className="space-y-1">
-                    <h4 className="text-base font-semibold text-gray-900">
-                      {item.title}
+                    <h4 className="text-base font-semibold text-gray-900" dir="auto">
+                      {localiseFixedMessage(item.title)}
                     </h4>
-                    <p className="text-sm md:text-base leading-7 text-gray-600">
-                      {item.body}
+                    <p className="text-sm md:text-base leading-7 text-gray-600" dir="auto">
+                      {localiseFixedMessage(item.body)}
                     </p>
                   </div>
                 </div>
@@ -508,13 +534,13 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
           <div className="rounded-2xl bg-gray-900 p-5 md:p-6 text-white shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-lg font-bold">Ready to edit the improved CV?</h3>
+                <h3 className="text-lg font-bold">{t("start.editImproved")}</h3>
                 <p className="mt-1 text-sm leading-6 text-gray-300">
-                  The next step imports the extracted details into the builder. You can edit every section before exporting.
+                  {t("start.importExplanation")}
                 </p>
               </div>
               <div className="rounded-xl bg-white/10 px-4 py-3 text-sm text-gray-200">
-                No changes are final yet.
+                {t("start.notFinal")}
               </div>
             </div>
           </div>
@@ -526,14 +552,14 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
               onClick={handleUseImproved}
               className="bg-gold-500 hover:bg-gold-600 text-white font-semibold px-7 py-3 rounded-xl shadow-lg shadow-gold-500/20 transition-colors"
             >
-              Use Improved Version
+              {t("start.useImproved")}
             </button>
           )}
           <button
             onClick={handleBuildManually}
             className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-7 py-3 rounded-xl transition-colors"
           >
-            Build Manually
+            {t("start.buildManually")}
           </button>
         </div>
       </div>
@@ -541,57 +567,59 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
   }
 
   // --- Hero / Upload mode ---
+  const showHero = mode === "hero";
+  const showUpload = mode === "upload";
   return (
     <div className="space-y-20">
       {/* ===== HERO SECTION ===== */}
       <section className="text-center max-w-3xl mx-auto pt-8">
         {/* Badge */}
         <span className="inline-block bg-gold-50 text-gold-700 text-xs font-semibold tracking-wide uppercase px-4 py-1.5 rounded-full border border-gold-200 mb-6">
-          Built by an HR Career Specialist
+          {t("hero.badge")}
         </span>
 
         {/* Headline */}
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-          Build a CV That Gets You Hired
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight text-balance">
+          {t("hero.headline")}
         </h1>
 
         {/* Subheadline */}
         <p className="mt-5 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Build a clear, evidence-led CV for UAE and international roles. Free PDF and Word downloads after one email unlock. No watermark. No credit card.
+          {t("start.tagline")}
         </p>
 
         {/* CTAs */}
-        {mode === "hero" && TALK_MODE_ENABLED && <div className="mx-auto mt-8 grid max-w-md gap-3">
-          <button disabled={!hydrated} className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white disabled:cursor-wait disabled:opacity-60" onClick={() => updateField({ builderMode: "talk", talk: defaultTalkProgress, step: 1 })}>Answer simple questions <span className="block text-sm">Recommended</span></button>
-          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleUploadMode}>I already have a CV</button>
-          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleBuildManually}>Fill in the full form</button>
+        {showHero && TALK_MODE_ENABLED && <div className="mx-auto mt-8 grid max-w-md gap-3">
+          <button disabled={!hydrated} className="min-h-12 rounded-lg bg-accent px-4 py-3 font-bold text-white disabled:cursor-wait disabled:opacity-60" onClick={() => updateField({ builderMode: "talk", talk: defaultTalkProgress, step: 1 })}>{t("start.talk")}{" "}<span className="block text-sm">{t("start.recommended")}</span></button>
+          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleUploadMode}>{t("start.haveCV")}</button>
+          <button disabled={!hydrated} className="min-h-12 rounded-lg border border-gray-300 px-4 py-3 disabled:cursor-wait disabled:opacity-60" onClick={handleBuildManually}>{t("start.manualForm")}</button>
         </div>}
-        {mode === "hero" && !TALK_MODE_ENABLED && (
+        {showHero && !TALK_MODE_ENABLED && (
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={handleBuildManually}
               disabled={!hydrated}
               className="bg-gold-500 hover:bg-gold-600 text-white font-semibold text-lg px-8 py-3.5 rounded-xl shadow-lg shadow-gold-500/20 transition-all hover:shadow-xl hover:shadow-gold-500/30 disabled:cursor-wait disabled:opacity-60"
             >
-              Build My CV for Free
+              {t("hero.buildCta")}
             </button>
             <button
               onClick={handleUploadMode}
               disabled={!hydrated}
               className="border-2 border-gray-300 hover:border-gold-400 text-gray-700 hover:text-gold-700 font-semibold text-lg px-8 py-3.5 rounded-xl transition-all disabled:cursor-wait disabled:opacity-60"
             >
-              I already have a CV
+              {t("start.haveCV")}
             </button>
           </div>
         )}
-        {mode === "hero" && (
+        {showHero && (
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">
-            Already have a CV? Upload it and check it against a job advert.
+            {t("start.uploadHint")}
           </p>
         )}
 
         {/* Upload zone (inline) */}
-        {mode === "upload" && (
+        {showUpload && (
           <div className="mt-8 max-w-xl mx-auto space-y-4">
             <div
               onDragOver={(e) => {
@@ -621,10 +649,10 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
                 />
               </svg>
               <p className="text-sm font-medium text-gray-700">
-                Drag &amp; drop your file here, or click to browse
+                {t("start.uploadPrompt")}
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                PDF, DOCX, TXT, RTF, JPG, PNG, WEBP or iPhone HEIC. Max 5 MB.
+                {t("start.uploadFormats")}
               </p>
               <input
                 ref={fileInputRef}
@@ -636,14 +664,14 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 text-center">{error}</p>
+              <p className="text-sm text-red-600 text-center" dir="auto">{localiseFixedMessage(error)}</p>
             )}
 
             <button
               onClick={() => setMode("hero")}
               className="block mx-auto text-sm text-gray-500 hover:text-gray-700 underline"
             >
-              Go back
+              {t("start.goBack")}
             </button>
           </div>
         )}
@@ -652,19 +680,19 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-            Free forever
+            {t("hero.trust1")}
           </span>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-            No credit card
+            {t("hero.trust2")}
           </span>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-            Built from real hiring experience
+            {t("start.realHiring")}
           </span>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-            GCC/MENA optimised
+            {t("start.gulfReady")}
           </span>
         </div>
       </section>
@@ -672,58 +700,58 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
       {/* ===== TEMPLATE PREVIEW GALLERY ===== */}
       <section className="max-w-6xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-          Professional CV designs. Choose how recruiters should read you.
+          {t("start.galleryHeading")}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TEMPLATES.map((t) => {
+          {TEMPLATES.map((template) => {
             return (
               <button
                 type="button"
-                key={t.key}
+                key={template.key}
                 onClick={() => {
-                  updateField({ template: t.key, templateConfirmed: true });
+                  updateField({ template: template.key, templateConfirmed: true });
                   nextStep();
                 }}
                 className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white text-start shadow-rest transition hover:-translate-y-0.5 hover:border-gold-600 hover:shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2"
-                aria-label={`Choose ${t.name} template`}
+                aria-label={t("start.templateChoose", { name: template.name })}
               >
                 <div className="relative h-[360px] w-full overflow-hidden bg-gray-100 p-4">
                   <div className="h-[430px] overflow-hidden border border-gray-200 shadow-rest">
-                    <TemplatePreview template={t.key} />
+                    <TemplatePreview template={template.key} />
                   </div>
                 </div>
 
                 {/* Badge */}
-                {t.badge && (
+                {template.badge && (
                   <span className="absolute top-3 end-3 bg-green-800 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
-                    {t.badge}
+                    {t(template.badge)}
                   </span>
                 )}
 
                 {/* Info */}
                 <div className="border-t border-gray-100 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-semibold text-gray-900">{t.name}</h3>
-                    <span className="text-xs font-semibold text-gold-700">Choose</span>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="font-semibold text-gray-900" lang="en" dir="ltr">{template.name}</h3>
+                    <span className="text-xs font-semibold text-gold-700">{t("start.choose")}</span>
                   </div>
-                  <p className="mt-1 min-h-10 text-xs leading-5 text-gray-500">Best for: {t.bestFor}</p>
+                  <p className="mt-1 min-h-10 text-xs leading-5 text-gray-500">{t("start.bestFor", { role: t(`start.best.${template.key}`) })}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase text-gray-600">
-                    <span className="rounded-full bg-gray-100 px-2 py-1">Photo: {t.photo}</span>
-                    <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">easy for company computers to read</span>
+                    <span className="rounded-full bg-gray-100 px-2 py-1">{t("start.photoStatus", { status: t(template.photo) })}</span>
+                    <span className="rounded-full bg-green-50 px-2 py-1 text-green-800">{t("start.easyRead")}</span>
                   </div>
                 </div>
               </button>
             );
           })}
         </div>
-        <p className="mt-5 text-center text-xs text-gray-500">Sample data is used in all previews so you can compare the design fairly.</p>
+        <p className="mt-5 text-center text-xs text-gray-500">{t("start.sampleNote")}</p>
       </section>
 
       {/* ===== FEATURES SECTION ===== */}
       <section className="max-w-5xl mx-auto pb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-10">
-          Why InspireAmbitions?
+          {t("hero.whyTitle")}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -735,8 +763,8 @@ export default function StepStart({ initialUpload = false }: { initialUpload?: b
               <div className="flex items-center justify-center w-11 h-11 bg-gold-50 text-gold-600 rounded-lg mb-4">
                 {f.icon}
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1.5">{f.title}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
+              <h3 className="font-semibold text-gray-900 mb-1.5">{t(f.title)}</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">{t(f.desc)}</p>
             </div>
           ))}
         </div>

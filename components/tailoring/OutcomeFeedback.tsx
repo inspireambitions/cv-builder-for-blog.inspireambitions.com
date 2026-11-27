@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { trackToolEvent } from "@/lib/analytics";
+import { useLocale } from "@/lib/locale";
 
-const OUTCOMES = ["Applied", "Interview", "No response", "Rejected", "Offer"] as const;
+const OUTCOMES = [
+  ["Applied", "outcome.applied"], ["Interview", "outcome.interview"], ["No response", "outcome.noResponse"],
+  ["Rejected", "outcome.rejected"], ["Offer", "outcome.offer"],
+] as const;
 
 export default function OutcomeFeedback() {
+  const { t } = useLocale();
   const [selected, setSelected] = useState<string | null>(null);
 
   function record(outcome: string) {
@@ -22,11 +27,11 @@ export default function OutcomeFeedback() {
 
   return (
     <div className="border-t border-gray-200 pt-6">
-      <h4 className="text-sm font-bold text-gray-950">What happened with this application?</h4>
-      <p className="mt-1 text-xs leading-5 text-gray-500">Stored only in this browser. No CV content is sent with this feedback.</p>
+      <h4 className="text-sm font-bold text-gray-950">{t("outcome.title")}</h4>
+      <p className="mt-1 text-xs leading-5 text-gray-500">{t("outcome.privacy")}</p>
       <div className="mt-3 flex flex-wrap gap-2">
-        {OUTCOMES.map((outcome) => (
-          <button key={outcome} type="button" onClick={() => record(outcome)} className={`min-h-10 border px-3 text-xs font-semibold ${selected === outcome ? "border-emerald-700 bg-emerald-700 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>{outcome}</button>
+        {OUTCOMES.map(([outcome, label]) => (
+          <button key={outcome} type="button" aria-pressed={selected === outcome} onClick={() => record(outcome)} className={`min-h-10 border px-3 text-xs font-semibold ${selected === outcome ? "border-emerald-700 bg-emerald-700 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}>{t(label)}</button>
         ))}
       </div>
     </div>

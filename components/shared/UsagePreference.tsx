@@ -1,5 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
+import { useRootControlLocale } from "@/lib/root-control-locale";
 
 function readPreference() {
   try { return localStorage.getItem("ia-usage-consent") === "yes"; } catch { return false; }
@@ -14,9 +15,10 @@ function subscribe(listener: () => void) {
 }
 
 export default function UsagePreference() {
+  const { locale, dir, t } = useRootControlLocale();
   const allowed = useSyncExternalStore(subscribe, readPreference, () => false);
   if (process.env.NEXT_PUBLIC_POSTHOG_ENABLED !== "true") return null;
-  return <div className="mx-auto max-w-xl px-4 pt-4 pb-[calc(112px+env(safe-area-inset-bottom,0px))] text-sm text-gray-600 sm:pb-4">
+  return <div lang={locale} dir={dir} className="mx-auto max-w-xl px-4 pt-4 pb-[calc(112px+env(safe-area-inset-bottom,0px))] text-sm text-gray-600 sm:pb-4">
     <label className="flex min-h-12 items-center gap-3">
       <input type="checkbox" checked={allowed} onChange={(event) => {
         const checked = event.target.checked;
@@ -26,8 +28,8 @@ export default function UsagePreference() {
           window.dispatchEvent(new Event("ia-usage-preference"));
         } catch { /* Optional preference. */ }
       }} />
-      Help improve this free tool
+      {t("sharedUi.usageLabel")}
     </label>
-    <p>Share usage counts, not your CV or contact details.</p>
+    <p>{t("sharedUi.usageHelp")}</p>
   </div>;
 }

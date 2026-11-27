@@ -11,6 +11,35 @@ test("Talk controls have authored labels in all five languages", () => {
   }
 });
 
+test("authored interface packs preserve every declared placeholder", () => {
+  const { authoredTranslations } = loadTS("lib/i18n.ts");
+  const placeholders = (value) => [...new Set([...value.matchAll(/\{([a-zA-Z]+)\}/g)].map((match) => match[1]))].sort();
+  for (const locale of ["ar", "hi", "ur", "tl"]) {
+    for (const [key, value] of Object.entries(authoredTranslations.en)) {
+      const translated = authoredTranslations[locale][key];
+      assert.ok(translated?.trim(), `${locale}: ${key}`);
+      assert.deepEqual(placeholders(translated), placeholders(value), `${locale}: ${key}`);
+    }
+  }
+});
+
+test("Talk work-choice labels cover what the state flow offers without changing saved facts", () => {
+  const { authoredTranslations } = loadTS("lib/i18n.ts");
+  const { getRoleFamilies } = loadTS("lib/role-suggestions.ts");
+  const { getTalkTitles, getTalkWorkplaces, getTalkAchievements } = loadTS("lib/talk-flow.ts");
+  const { talkWorkChoiceKey } = loadTS("lib/locales/talk-work-choices.ts");
+  const found = new Set(getRoleFamilies().flatMap(({ key }) =>
+    [...getTalkTitles(key), ...getTalkWorkplaces(key), ...getTalkAchievements(key)]));
+  assert.ok(found.size >= 80);
+  for (const english of found) {
+    const key = talkWorkChoiceKey(english);
+    assert.ok(key, english);
+    assert.equal(authoredTranslations.en[key], english);
+    for (const locale of ["ar", "hi", "ur", "tl"]) assert.ok(authoredTranslations[locale][key]?.trim(), key);
+  }
+  assert.equal(talkWorkChoiceKey("Example Cedar Hotel"), undefined);
+});
+
 test("Talk duty choices preserve English output and offer Arabic output separately", () => {
   const { getTalkDutyOptions } = loadTS("lib/talk-sentence-options.ts");
   const { getRoleFamilies, getTalkSentences } = loadTS("lib/role-suggestions.ts");
@@ -26,7 +55,7 @@ test("Talk duty choices preserve English output and offer Arabic output separate
     assert.deepEqual(getTalkDutyOptions(family.key, "ur"), english);
   }
   assert.ok(getTalkDutyOptions("housekeeping", "ar").length > 0);
-  assert.deepEqual(getTalkDutyOptions("reservations", "ar"), []);
+  assert.ok(getTalkDutyOptions("reservations", "ar").length > 0);
 });
 
 test("detects visible text, labels, errors and interpolated English", () => {
@@ -40,6 +69,10 @@ test("ignores translation keys, class names, saved enum values and candidate tex
 test("conditional layout and canonical input values are not visible labels", () => {
   const source = `<input dir={arabic ? "rtl" : "ltr"} className={active ? "bg-white" : "text-red"} value={current ? "Employment" : "Visit"} aria-label={active ? "Remove" : "Add"}/>`;
   assert.deepEqual(untranslatedLiterals(source, "example.tsx").map((issue) => issue.text), ["Remove", "Add"]);
+});
+test("conditional predicates are not copy but their displayed branches are", () => {
+  const source = '<>{status === "pending" && "Save your changes"}{mode === "live" ? title : `Question ${number} of three`}</>';
+  assert.deepEqual(untranslatedLiterals(source, "example.tsx").map((issue) => issue.text), ["Save your changes", "Question of three"]);
 });
 test("does not mistake a non-Latin keyless label for translated coverage", () => {
   // Locale completeness remains a separate mandatory check.
@@ -74,7 +107,7 @@ test("all authored form control packs cover their English source keys", () => {
   }
 });
 test("a sentence translation cannot be borrowed from an older sentence at the same index", () => {
-  const { roleLibraryTranslations } = loadTS("lib/locales/role-library.ts");
+  const { roleLibraryTranslations, newRoleSentenceTranslations } = loadTS("lib/locales/role-library.ts");
   const { translatedRoleSentenceSources } = loadTS("lib/locales/role-sentence-source.ts");
   const { getRoleFamilies } = loadTS("lib/role-suggestions.ts");
   const { getRoleExamplesForFamily } = loadTS("lib/role-examples.ts");
@@ -86,13 +119,31 @@ test("a sentence translation cannot be borrowed from an older sentence at the sa
     for (let index = 0; index < family.sentences.length; index++) {
       const key = `role.sentence.${family.key}.${index}`;
       assert.equal(roleLibraryTranslations.en[key], family.sentences[index]);
-      const sourceMatches = (translatedRoleSentenceSources[family.key] ?? []).includes(family.sentences[index]);
+      const sourceMatches = (translatedRoleSentenceSources[family.key] ?? []).includes(family.sentences[index]) ||
+        Boolean(newRoleSentenceTranslations[family.key]?.some(([source]) => source === family.sentences[index]));
       for (const locale of ["ar", "hi", "ur", "tl"]) assert.equal(Boolean(roleLibraryTranslations[locale][key]?.trim()), sourceMatches, key);
     }
   }
   assert.equal(roleLibraryTranslations.en["example.title.construction"], "Site Worker");
   assert.equal(roleLibraryTranslations.en["example.company.construction"], "Building contractor");
   assert.notEqual(roleLibraryTranslations.ar["role.sentence.housekeeping.0"], undefined);
+});
+
+test("new role translation rows bind to unique current source material", () => {
+  const { newRoleSentenceTranslations } = loadTS("lib/locales/role-library.ts");
+  const { getRoleFamilies } = loadTS("lib/role-suggestions.ts");
+  for (const [family, rows] of Object.entries(newRoleSentenceTranslations)) {
+    const source = getRoleFamilies().find((role) => role.key === family)?.sentences;
+    assert.ok(source, family);
+    const seen = new Set();
+    for (const [english, ...translated] of rows) {
+      assert.ok(source.includes(english), `${family}: ${english}`);
+      assert.ok(!seen.has(english), `${family}: duplicate source ${english}`);
+      seen.add(english);
+      assert.equal(translated.length, 4);
+      assert.ok(translated.every((value) => value.trim() && value !== english));
+    }
+  }
 });
 test("localised date controls preserve canonical month values and saved CV dates", () => {
   const { experienceTranslations } = loadTS("lib/locales/experience.ts");

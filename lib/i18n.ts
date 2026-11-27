@@ -4,6 +4,20 @@ import { skillExampleTranslations } from "./locales/skill-examples";
 import { experienceTranslations } from "./locales/experience";
 import { talkControlTranslations } from "./locales/talk-controls";
 import { roleLibraryTranslations } from "./locales/role-library";
+import { baseCompletion } from "./locales/base-completion";
+import { personalControlTranslations } from "./locales/personal-controls";
+import { downloadControlTranslations } from "./locales/download-controls";
+import { extrasControlTranslations } from "./locales/extras-controls";
+import { startControls } from "./locales/start-controls";
+import { tailorControlTranslations } from "./locales/tailor-controls";
+import { workSkillControlTranslations } from "./locales/work-skill-controls";
+import { designControls } from "./locales/design-controls";
+import { builderSharedControls } from "./locales/builder-shared-controls";
+import { suggestionControlTranslations } from "./locales/suggestions-controls";
+import { sharedUtilityControlTranslations } from "./locales/shared-utility-controls";
+import { scoreControls } from "./locales/score-controls";
+import { talkBasicChoices } from "./locales/talk-basic-choices";
+import { talkWorkChoices } from "./locales/talk-work-choices";
 
 export type Locale = "en" | "ar" | "hi" | "ur" | "tl";
 
@@ -164,8 +178,6 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "download.wordDesc": "Editable .docx format. Easy to customize further.",
     "download.free": "FREE",
     "download.included": "INCLUDED",
-    "download.payDownload": "Pay & Download",
-    "download.annualUpsell": "Save with the Annual Plan \u2014 $86.40/year",
 
     // Toast
     "toast.saved": "Progress saved",
@@ -343,8 +355,6 @@ const baseTranslations: Record<"en" | "ar", Record<string, string>> = {
     "download.wordDesc": "\u062a\u0646\u0633\u064a\u0642 .docx \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0639\u062f\u064a\u0644.",
     "download.free": "\u0645\u062c\u0627\u0646\u064a",
     "download.included": "\u0645\u0634\u0645\u0648\u0644",
-    "download.payDownload": "\u0627\u062f\u0641\u0639 \u0648\u062d\u0645\u0651\u0644",
-    "download.annualUpsell": "\u0648\u0641\u0651\u0631 \u0645\u0639 \u0627\u0644\u062e\u0637\u0629 \u0627\u0644\u0633\u0646\u0648\u064a\u0629 \u2014 $86.40/\u0633\u0646\u0629",
 
     // Toast
     "toast.saved": "\u062a\u0645 \u062d\u0641\u0638 \u0627\u0644\u062a\u0642\u062f\u0645",
@@ -452,12 +462,24 @@ const languageOverrides: Record<Exclude<Locale, "en" | "ar">, Record<string, str
 
 // These maps contain authored translations only. Do not merge English into them:
 // the release check and language switcher must be able to see missing keys.
+const formPacks = [
+  talkQuestionTranslations, formTranslations, skillExampleTranslations,
+  experienceTranslations, roleLibraryTranslations, talkControlTranslations,
+  personalControlTranslations, downloadControlTranslations, extrasControlTranslations,
+  startControls, tailorControlTranslations, workSkillControlTranslations, designControls,
+  builderSharedControls, suggestionControlTranslations,
+  sharedUtilityControlTranslations,
+  scoreControls,
+  talkBasicChoices, talkWorkChoices,
+];
+const formPack = (locale: Locale) => Object.assign({}, ...formPacks.map(pack => pack[locale])) as Record<string, string>;
+
 export const authoredTranslations: Record<Locale, Record<string, string>> = {
-  en: { ...baseTranslations.en, ...talkQuestionTranslations.en, ...formTranslations.en, ...skillExampleTranslations.en, ...experienceTranslations.en, ...roleLibraryTranslations.en, ...talkControlTranslations.en },
-  ar: { ...baseTranslations.ar, ...talkQuestionTranslations.ar, ...formTranslations.ar, ...skillExampleTranslations.ar, ...experienceTranslations.ar, ...roleLibraryTranslations.ar, ...talkControlTranslations.ar },
-  hi: { ...languageOverrides.hi, ...talkQuestionTranslations.hi, ...formTranslations.hi, ...skillExampleTranslations.hi, ...experienceTranslations.hi, ...roleLibraryTranslations.hi, ...talkControlTranslations.hi },
-  ur: { ...languageOverrides.ur, ...talkQuestionTranslations.ur, ...formTranslations.ur, ...skillExampleTranslations.ur, ...experienceTranslations.ur, ...roleLibraryTranslations.ur, ...talkControlTranslations.ur },
-  tl: { ...languageOverrides.tl, ...talkQuestionTranslations.tl, ...formTranslations.tl, ...skillExampleTranslations.tl, ...experienceTranslations.tl, ...roleLibraryTranslations.tl, ...talkControlTranslations.tl },
+  en: { ...baseTranslations.en, ...formPack("en") },
+  ar: { ...baseTranslations.ar, ...formPack("ar") },
+  hi: { ...languageOverrides.hi, ...baseCompletion.hi, ...formPack("hi") },
+  ur: { ...languageOverrides.ur, ...baseCompletion.ur, ...formPack("ur") },
+  tl: { ...languageOverrides.tl, ...baseCompletion.tl, ...formPack("tl") },
 };
 
 export const translations: Record<Locale, Record<string, string>> = {

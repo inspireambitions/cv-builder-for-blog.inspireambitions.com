@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
+import { useRootControlLocale } from "@/lib/root-control-locale";
 
 type Theme = "light" | "dark";
 
@@ -11,6 +12,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
+  const { locale, t } = useRootControlLocale();
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -28,14 +30,16 @@ export default function ThemeToggle() {
     localStorage.setItem("ia-theme", next);
     applyTheme(next);
   };
+  const label = t(theme === "dark" ? "sharedUi.themeLight" : "sharedUi.themeDark");
 
   return (
     <button
       type="button"
       onClick={toggle}
       className="theme-toggle"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      lang={locale}
+      aria-label={label}
+      title={label}
     >
       {theme === "dark" ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
     </button>

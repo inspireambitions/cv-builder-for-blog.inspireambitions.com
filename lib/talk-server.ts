@@ -7,8 +7,11 @@ import { finishCV } from "./cv-finish";
 import { findBannedCVPhrase } from "./banned-phrases";
 import { defaultCVState } from "./types";
 import type { CVState } from "./types";
+import { UI_LOCALES, type UILocale } from "./locale-coverage";
+import { translateTalkCatalogueInput } from "./talk-translation-evidence";
 
 const ERROR = "We could not write this right now. Your answers are saved. Tap the sentences instead.";
+const TRANSLATION_ERROR = "We could not translate these lines safely. Your original words are saved. Try the example sentences instead.";
 const windows = new Map<string, { count: number; expires: number }>();
 // No disk cache, logs, names, contact details or photos. Entries expire in 60s.
 const cache = new Map<string, { output: string[]; expires: number }>();
@@ -55,7 +58,12 @@ function parseSummaryAnswers(value: unknown): CVState {
 export async function handleTalkRequest(req: NextRequest, kind: "bullets" | "summary") {
   if (process.env.NEXT_PUBLIC_TALK_MODE !== "true") return json({ error: "Not enabled" }, 404);
   const origin = req.headers.get("origin");
-  if (origin && origin !== req.nextUrl.origin) return json({ error: "Open this page and try again." }, 403);
+  // An explicit deployment origin also works when the reverse proxy gives
+  // Next.js an internal hostname. Never infer it from forwarded headers.
+  const deploymentOrigin = process.env.CV_BUILDER_TALK_ALLOWED_ORIGIN;
+  if (origin && origin !== req.nextUrl.origin && origin !== deploymentOrigin) {
+    return json({ error: "Open this page and try again." }, 403);
+  }
   if (!rateLimit(req)) return json({ error: ERROR }, 429);
   let source: string;
   let metadata: Record<string, string>;
@@ -65,12 +73,19 @@ export async function handleTalkRequest(req: NextRequest, kind: "bullets" | "sum
     if (raw.length > 24000) return json({ error: "Use fewer words and try again." }, 413);
     const body = JSON.parse(raw);
     const inputLang = text(body.inputLang, 5);
-    if (!["en", "ar", "ur", "hi", "tl"].includes(inputLang)) throw new Error("invalid");
+    if (!UI_LOCALES.includes(inputLang as UILocale)) throw new Error("invalid");
     if (kind === "bullets") {
       source = text(body.text, 4000);
       const familyKey = text(body.familyKey, 50);
       if (!getRoleFamilies().some((family) => family.key === familyKey) || !source) throw new Error("invalid");
       metadata = { familyKey, jobTitle: text(body.jobTitle, 100), inputLang };
+      // English is the only rewrite output for now. Non-English requests are
+      // local-only and return before the provider or its cache can be used.
+      if (inputLang !== "en") {
+        const translated = translateTalkCatalogueInput(familyKey, inputLang as Exclude<UILocale, "en">, body.text);
+        if (!translated) return json({ error: TRANSLATION_ERROR, code: "unsupported_translation" }, 422);
+        return json({ ...translated, method: "catalogue_translation" });
+      }
     } else {
       const cv = parseSummaryAnswers(body.answers);
       cv.cvLanguage = body.cvLanguage === "ar" ? "ar" : "en";

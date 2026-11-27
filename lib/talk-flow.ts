@@ -1,4 +1,5 @@
 import type { CVState, ExpEntry } from "./types";
+import { UI_LOCALES, type UILocale } from "./locale-coverage";
 import { getRoleFamilies, getRoleFamilyForJob } from "./role-suggestions";
 
 export const TALK_MODE_ENABLED = process.env.NEXT_PUBLIC_TALK_MODE === "true";
@@ -6,8 +7,9 @@ export type TalkKind = "language" | "family" | "title" | "company" | "location" 
 export type TalkProgress = {
   questionId: string;
   families: Record<string, string>;
-  suggestions: Record<string, { text: string; status: "pending" | "kept" | "removed" }[]>;
+  suggestions: Record<string, { text: string; status: "pending" | "kept" | "removed"; original?: { text: string; lang: UILocale } }[]>;
   noEmail: boolean;
+  answerLanguages?: Record<string, UILocale>;
   completed?: boolean;
   summaryInitialized?: boolean;
   summarySuggestion?: string;
@@ -122,6 +124,18 @@ export function normalizeTalk(value: unknown, experience: ExpEntry[]): TalkProgr
   const incoming = value as Partial<TalkProgress>;
   const ids = new Set(experience.map((job) => job.id));
   const families = Object.fromEntries(Object.entries(incoming.families ?? {}).filter(([id, key]) => ids.has(id) && typeof key === "string" && getRoleFamilies().some((family) => family.key === key)));
-  const suggestions = Object.fromEntries(Object.entries(incoming.suggestions ?? {}).filter(([id, list]) => ids.has(id) && Array.isArray(list)).map(([id, list]) => [id, list.filter((item) => item && typeof item.text === "string" && ["pending", "kept", "removed"].includes(item.status)).slice(0, 5)]));
-  return { questionId: typeof incoming.questionId === "string" ? incoming.questionId : "language", families, suggestions, noEmail: incoming.noEmail === true, completed: incoming.completed === true, summaryInitialized: incoming.summaryInitialized === true, summarySuggestion: typeof incoming.summarySuggestion === "string" ? incoming.summarySuggestion.slice(0, 2000) : undefined };
+  const suggestions = Object.fromEntries(Object.entries(incoming.suggestions ?? {})
+    .filter(([id, list]) => ids.has(id) && Array.isArray(list))
+    .map(([id, list]) => [id, list
+      .filter((item) => item && typeof item.text === "string" && ["pending", "kept", "removed"].includes(item.status))
+      .slice(0, 5)
+      .map(({ text, status, original }) => ({ text: text.slice(0, 2000), status,
+        original: original && typeof original.text === "string" && UI_LOCALES.includes(original.lang)
+          ? { text: original.text.slice(0, 2000), lang: original.lang } : undefined,
+      }))]));
+  const answerLanguages = Object.fromEntries(Object.entries(incoming.answerLanguages ?? {})
+    .filter(([id, locale]) => ids.has(id) && UI_LOCALES.includes(locale)));
+  return { questionId: typeof incoming.questionId === "string" ? incoming.questionId : "language", families, suggestions, answerLanguages,
+    noEmail: incoming.noEmail === true, completed: incoming.completed === true, summaryInitialized: incoming.summaryInitialized === true,
+    summarySuggestion: typeof incoming.summarySuggestion === "string" ? incoming.summarySuggestion.slice(0, 2000) : undefined };
 }

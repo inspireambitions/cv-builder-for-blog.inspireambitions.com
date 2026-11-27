@@ -1,6 +1,18 @@
 import { getRoleFamilies } from "../role-suggestions";
 import { getRoleExamplesForFamily } from "../role-examples";
 import { translatedRoleSentenceSources } from "./role-sentence-source";
+import { roleLabelCompletion } from "./role-label-completion";
+import { serviceRoleSentenceBatch } from "./role-sentence-batch-service";
+import { operationsRoleSentenceRows } from "./role-sentence-batch-operations";
+import { tradeRoleSentenceRows } from "./role-sentence-batch-trades";
+import { legacyRoleSentenceRows } from "./role-sentence-batch-legacy";
+
+export const newRoleSentenceTranslations = {
+  ...serviceRoleSentenceBatch,
+  ...operationsRoleSentenceRows,
+  ...tradeRoleSentenceRows,
+  ...legacyRoleSentenceRows,
+};
 
 // Machine-translated first pass. Native-speaker review pending for ar, hi, ur and tl.
 // Keep the existing English library as the source of truth. Translation rows use
@@ -228,11 +240,18 @@ function pack(index?: number): Record<string, string> {
       if (workplaces[family.key]) result[`example.company.${family.key}`] = workplaces[family.key][index];
       const sources = translatedRoleSentenceSources[family.key] ?? [];
       family.sentences.forEach((sentence, number) => {
-        const translation = sentences[family.key]?.[sources.indexOf(sentence)]?.[index];
+        const row = newRoleSentenceTranslations[family.key]?.find((item) => item[0] === sentence);
+        const translation = row?.[index + 1] ?? sentences[family.key]?.[sources.indexOf(sentence)]?.[index];
         if (translation) result[`role.sentence.${family.key}.${number}`] = translation;
       });
     }
   }
   return result;
 }
-export const roleLibraryTranslations = { en: pack(), ar: pack(0), hi: pack(1), ur: pack(2), tl: pack(3) };
+export const roleLibraryTranslations = {
+  en: pack(),
+  ar: { ...pack(0), ...roleLabelCompletion.ar },
+  hi: { ...pack(1), ...roleLabelCompletion.hi },
+  ur: { ...pack(2), ...roleLabelCompletion.ur },
+  tl: { ...pack(3), ...roleLabelCompletion.tl },
+};

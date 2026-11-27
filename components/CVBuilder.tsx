@@ -29,7 +29,8 @@ import SaveToast from "./shared/SaveToast";
 import { defaultTalkProgress, TALK_MODE_ENABLED } from "@/lib/talk-flow";
 
 /** Maps step keys from STEPS to i18n translation keys */
-const STEP_I18N_KEY: Record<string, string> = {
+const STEP_I18N_KEY: Record<(typeof STEPS)[number]["key"], string> = {
+  start: "builder.nav.start",
   template: "step.template",
   personal: "step.personal",
   summary: "step.summary",
@@ -39,6 +40,14 @@ const STEP_I18N_KEY: Record<string, string> = {
   extras: "step.extras",
   score: "step.score",
 };
+
+// Keep the wordmark unchanged in every interface language.
+const BRAND_WORDMARK = { first: "Inspire", second: "Ambitions" };
+const RESUME_LINK_STATUS_KEY = {
+  copying: "builder.link.copying",
+  copied: "builder.link.copied",
+  error: "builder.link.retry",
+} as const;
 
 const STEP_COMPONENTS = [
   StepStart,
@@ -72,23 +81,36 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.4);
   const [mobileMode, setMobileMode] = useState<"edit" | "preview" | "score">("edit");
+  const [returnToCheck, setReturnToCheck] = useState(false);
+  const reviewFocus = useRef(false);
   const nextFix = useRef<CVIssue | null>(null);
   function fixIssue(issue: CVIssue) {
     nextFix.current = issue;
-    if (issue.step === 1) updateField({ mobilePersonalPage: issue.field === "location" ? 1 : 0 });
+    setReturnToCheck(true);
+    if (issue.step === 1) updateField({ mobilePersonalPage: 0 });
     setMobileMode("edit");
     goToStep(issue.step);
   }
+  function returnToRecruiterCheck() {
+    nextFix.current = null;
+    reviewFocus.current = true;
+    setReturnToCheck(false);
+    setMobileMode("score");
+    goToStep(8);
+  }
   useEffect(() => {
     const issue = nextFix.current;
-    if (!issue?.field || issue.step !== state.step) return;
+    const focusReview = reviewFocus.current && state.step === 8;
+    if (!focusReview && (!issue?.field || issue.step !== state.step)) return;
     const focus = () => {
-      const element = Array.from(document.querySelectorAll<HTMLElement>("[data-cv-fix]"))
-        .find((field) => field.dataset.cvFix === issue.field && field.getClientRects().length);
+      const selector = focusReview ? "[data-recruiter-check-heading]" : "[data-cv-fix]";
+      const element = Array.from(document.querySelectorAll<HTMLElement>(selector))
+        .find((field) => (focusReview || field.dataset.cvFix === issue?.field) && field.getClientRects().length);
       if (!element) return false;
       element.focus({ preventScroll: true });
       element.scrollIntoView({ block: "center" });
       nextFix.current = null;
+      reviewFocus.current = false;
       return true;
     };
     if (focus()) return;
@@ -99,6 +121,8 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
   const [resumeLinkStatus, setResumeLinkStatus] = useState<
     "idle" | "copying" | "copied" | "error"
   >("idle");
+  const resumeLinkStatusText = resumeLinkStatus === "idle" ? "" : t(RESUME_LINK_STATUS_KEY[resumeLinkStatus]);
+  const displayLocale = locale === "tl" ? "fil" : locale;
   const started = useRef(false);
   useEffect(() => {
     if (!hydrated || state.step === 0) return;
@@ -170,18 +194,20 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
 
   const handleDeleteDraft = useCallback(() => {
     const confirmed = window.confirm(
-      "Delete this saved CV draft from this browser? This cannot be undone."
+      t("builder.draft.deleteConfirm")
     );
     if (!confirmed) return;
     resetState();
     setMobileMode("edit");
+    setReturnToCheck(false);
     goToStep(1);
     trackToolEvent("cv_draft_deleted", { surface: "cv_builder_header" });
-  }, [goToStep, resetState]);
+  }, [goToStep, resetState, t]);
 
   const handleStartFresh = useCallback(() => {
     resetState();
     setMobileMode("edit");
+    setReturnToCheck(false);
     goToStep(1);
   }, [goToStep, resetState]);
 
@@ -194,14 +220,15 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
             <a
               href="https://inspireambitions.com"
               dir="ltr"
+              lang="en"
               data-testid="brand"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xl font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity"
             >
               <span className="w-5 h-5 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
-              <span className="text-[#6f5314] font-bold">Inspire</span>
-              <span className="text-[#1a2744] font-bold -ms-1">Ambitions</span>
+              <span className="text-[#6f5314] font-bold">{BRAND_WORDMARK.first}</span>
+              <span className="text-[#1a2744] font-bold -ms-1">{BRAND_WORDMARK.second}</span>
             </a>
             <span className="bg-gold-500/10 text-gold-600 text-xs font-medium px-2 py-0.5 rounded-full hidden sm:inline">
               {t("header.cvBuilder")}
@@ -217,15 +244,9 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                 onClick={handleCopyResumeLink}
                 disabled={resumeLinkStatus === "copying"}
                 className="hidden min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-60 sm:inline-flex"
-                aria-label="Copy link to continue on another phone"
+                aria-label={t("builder.link.copyLabel")}
               >
-                {resumeLinkStatus === "copying"
-                  ? "Saving..."
-                  : resumeLinkStatus === "copied"
-                  ? "Link copied"
-                  : resumeLinkStatus === "error"
-                  ? "Try again"
-                  : "Continue on another phone"}
+                {resumeLinkStatusText || t("builder.link.continueElsewhere")}
               </button>
             )}
             {state.step > 0 && (
@@ -234,7 +255,7 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                 onClick={handleDeleteDraft}
                 className="hidden min-h-10 items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 md:inline-flex"
               >
-                Delete draft
+                {t("builder.draft.delete")}
               </button>
             )}
             <span className={state.step > 0 ? "hidden md:inline-flex" : "inline-flex"}><ThemeToggle /></span>
@@ -243,17 +264,21 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
           </div>
         </div>
       </header>
+      <p className="sr-only" role="status">
+        {resumeLinkStatus === "error" ? t("builder.link.error") : resumeLinkStatusText}
+      </p>
 
       {/* Restore banner */}
       {restoredAt && (
         <div className="border-b border-emerald-100 bg-emerald-50">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 text-sm text-emerald-950 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              We restored your CV from{" "}
-              {new Date(restoredAt).toLocaleString()}.
+              {t("builder.draft.restored", {
+                date: new Date(restoredAt).toLocaleString(locale === "en" ? undefined : displayLocale),
+              })}
             </p>
             <p className="text-xs text-emerald-800 sm:ms-auto">
-              Your changes save on this device. Keep shared CV links private.
+              {t("builder.draft.privateLink")}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -261,14 +286,14 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                 onClick={dismissRestoreBanner}
                 className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white hover:bg-emerald-800"
               >
-                Continue
+                {t("talk.continue")}
               </button>
               <button
                 type="button"
                 onClick={handleStartFresh}
                 className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100"
               >
-                Start fresh
+                {t("builder.draft.startFresh")}
               </button>
             </div>
           </div>
@@ -326,7 +351,7 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                   >
                     {s.index < state.step ? "✓" : s.index}
                   </span>
-                  <span className="hidden sm:inline">{STEP_I18N_KEY[s.key] ? t(STEP_I18N_KEY[s.key]) : s.label}</span>
+                  <span className="hidden sm:inline">{t(STEP_I18N_KEY[s.key])}</span>
                 </button>
               ))}
             </div>
@@ -346,6 +371,12 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
         <div className="flex gap-6">
           {/* Form Panel */}
           <div className={`flex-1 min-w-0 ${mobileMode === "edit" || (mobileMode === "score" && state.step === 8) ? "block" : "hidden lg:block"}`}>
+            {returnToCheck && !isLastStep && state.step > 0 && (
+              <button type="button" onClick={returnToRecruiterCheck}
+                className="mb-4 hidden min-h-12 items-center rounded-lg border border-gold-500 bg-white px-4 py-2 text-sm font-semibold text-ink sm:inline-flex">
+                {t("builder.returnToCheck")}
+              </button>
+            )}
             <div className="mb-6 bg-transparent p-0 shadow-none sm:rounded-xl sm:border sm:border-gray-200 sm:bg-white sm:p-6 sm:shadow-sm [&_input]:text-base [&_textarea]:text-base [&_select]:text-base">
               {state.step === 8 ? <StepScore onFix={fixIssue} /> : state.step === 0 ? <StepStart initialUpload={initialUpload} /> : <CurrentStep />}
             </div>
@@ -355,33 +386,27 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                 <div className="flex flex-col gap-3">
                   <div>
                     <p className="text-sm font-semibold text-emerald-950">
-                      Continue on another phone
+                      {t("builder.link.continueElsewhere")}
                     </p>
                     <p className="mt-1 text-xs leading-5 text-emerald-800">
-                      Save this link to open your CV on another phone.
+                      {t("builder.link.hint")}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleCopyResumeLink}
                     disabled={resumeLinkStatus === "copying"}
-                    aria-label="Copy link to continue on another phone"
+                    aria-label={t("builder.link.copyLabel")}
                     className="min-h-11 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
                   >
-                    {resumeLinkStatus === "copying"
-                      ? "Saving..."
-                      : resumeLinkStatus === "copied"
-                      ? "Link copied"
-                      : resumeLinkStatus === "error"
-                      ? "Try again"
-                      : "Copy link for another phone"}
+                    {resumeLinkStatusText || t("builder.link.copy")}
                   </button>
                   <button
                     type="button"
                     onClick={handleDeleteDraft}
                     className="min-h-11 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
                   >
-                    Delete saved draft
+                    {t("builder.draft.deleteSaved")}
                   </button>
                 </div>
               </div>
@@ -417,7 +442,11 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
                     {t("nav.preview")}
                   </h3>
                   <span className="text-xs text-gray-400">
-                    {scale < 1 ? `${Math.round(scale * 100)}% zoom` : "Full size"}
+                    {scale < 1
+                      ? t("builder.canvas.zoom", {
+                        percent: new Intl.NumberFormat(displayLocale, { style: "percent", maximumFractionDigits: 0 }).format(scale),
+                      })
+                      : t("builder.canvas.fullSize")}
                   </span>
                 </div>
                 <div
@@ -442,10 +471,10 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
         </div>
 
         {state.step > 0 && mobileMode === "preview" && (
-          <section className="lg:hidden" aria-label="CV preview">
-            <div className="mb-3 flex items-center justify-between">
+          <section className="lg:hidden" aria-label={t("builder.canvas.previewLabel")}>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-gray-700">{t("nav.preview")}</h2>
-              <span className="text-xs text-gray-500">Pinch to zoom</span>
+              <span className="text-xs text-gray-500">{t("builder.canvas.pinch")}</span>
             </div>
             <div className="paper-surface overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg touch-pinch-zoom">
               <div
@@ -466,13 +495,13 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
               className="fixed end-4 z-30 min-h-12 rounded-full bg-gold-500 px-5 font-semibold text-white shadow-lg"
               style={{ bottom: "calc(16px + var(--ia-safe-bottom))" }}
             >
-              Export
+              {t("builder.canvas.export")}
             </button>
           </section>
         )}
 
         {state.step > 0 && state.step !== 8 && mobileMode === "score" && (
-          <section className="lg:hidden" aria-label="CV score and export">
+          <section className="lg:hidden" aria-label={t("builder.canvas.reviewLabel")}>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <StepScore onFix={fixIssue} />
             </div>
@@ -493,10 +522,10 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
           </button>
           <button
             type="button"
-            onClick={handleMobileNext}
+            onClick={returnToCheck ? returnToRecruiterCheck : handleMobileNext}
             className="min-h-12 flex-1 rounded-lg bg-gold-500 px-5 text-sm font-semibold text-white"
           >
-            <span className="flex items-center justify-center gap-2">{t("builder.saveContinue")}<ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" /></span>
+            <span className="flex items-center justify-center gap-2">{t(returnToCheck ? "builder.returnToCheck" : "builder.saveContinue")}<ArrowRight className="h-4 w-4 shrink-0 rtl:rotate-180" aria-hidden="true" /></span>
           </button>
           </div>
         </div>
@@ -510,48 +539,50 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
             <div className="space-y-3">
               <a
                 href="https://inspireambitions.com"
+                dir="ltr"
+                lang="en"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                className="flex w-fit items-center gap-1.5 hover:opacity-80 transition-opacity"
               >
                 <span className="w-4 h-4 bg-[#806017] rotate-45 rounded-sm inline-block shrink-0" />
-                <span className="text-[#d7bd78] font-bold text-lg">Inspire</span>
-                <span className="text-white font-bold text-lg -ms-1">Ambitions</span>
+                <span className="text-[#d7bd78] font-bold text-lg">{BRAND_WORDMARK.first}</span>
+                <span className="text-white font-bold text-lg -ms-1">{BRAND_WORDMARK.second}</span>
               </a>
               <p className="text-sm text-gray-300 leading-relaxed">
-                Free career tools built by an HR Career Specialist with 20+ years of GCC experience.
+                {t("builder.footer.description")}
               </p>
             </div>
 
             {/* Career Tools */}
             <div className="space-y-3">
-              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Career Tools</h4>
+              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">{t("builder.footer.tools")}</h4>
               <ul className="space-y-2">
-                <li><Link href="/why-free" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">Why it is free</Link></li>
-                <li><Link href="/vs/zety" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">Compare CV builders</Link></li>
+                <li><Link href="/why-free" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">{t("builder.footer.whyFree")}</Link></li>
+                <li><Link href="/vs/zety" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">{t("builder.footer.compare")}</Link></li>
                 <li>
                   <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    More free career tools
+                    {t("builder.moreTools")}
                   </a>
                 </li>
                 <li>
                   <a href="https://inspireambitions.com/should-i-take-this-dubai-job/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    Should I Take This Dubai Job?
+                    {t("builder.footer.dubaiJob")}
                   </a>
                 </li>
                 <li>
                   <a href="https://inspireambitions.com/dubai-internship-eligibility-checker/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    Dubai Internship Eligibility Checker
+                    {t("builder.footer.internship")}
                   </a>
                 </li>
                 <li>
                   <a href="https://inspireambitions.com/uae-salary-benchmarking-tool/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    UAE Salary Benchmarking Tool
+                    {t("builder.footer.salary")}
                   </a>
                 </li>
                 <li>
                   <a href="https://inspireambitions.com/uae-resignation-letter-generator/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    UAE Resignation Letter Generator
+                    {t("builder.footer.resignation")}
                   </a>
                 </li>
               </ul>
@@ -559,16 +590,16 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
 
             {/* Quick Links */}
             <div className="space-y-3">
-              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">Quick Links</h4>
+              <h4 className="text-white font-semibold text-sm uppercase tracking-wide">{t("builder.footer.quickLinks")}</h4>
               <ul className="space-y-2">
                 <li>
                   <a href="https://inspireambitions.com/career-tools/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    All Career Tools
+                    {t("builder.footer.allTools")}
                   </a>
                 </li>
                 <li>
                   <a href="https://inspireambitions.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center py-1.5 text-sm hover:text-white transition-colors">
-                    Blog &amp; Articles
+                    {t("builder.footer.blog")}
                   </a>
                 </li>
               </ul>
@@ -578,7 +609,7 @@ export default function CVBuilder({ initialUpload = false }: { initialUpload?: b
           {/* Bottom bar */}
           <div className="border-t border-gray-800 mt-8 pt-6 text-center">
             <p className="text-xs text-gray-400">
-              &copy; {new Date().getFullYear()} InspireAmbitions.com. All rights reserved.
+              {t("builder.footer.copyright", { year: new Date().getFullYear() })}
             </p>
           </div>
         </div>

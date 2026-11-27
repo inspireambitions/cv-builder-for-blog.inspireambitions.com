@@ -27,6 +27,28 @@ export function untranslatedLiterals(source, filename) {
     result.push({ file: filename, line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1,
       text: text.replace(/\s+/g, " ").trim() });
   }
+  function displayedExpression(node) {
+    let value = node;
+    for (let parent = node.parent; parent; parent = parent.parent) {
+      if (ts.isConditionalExpression(parent)) {
+        if (parent.condition === value) return false;
+      } else if (ts.isBinaryExpression(parent)) {
+        const operator = parent.operatorToken.kind;
+        if (operator === ts.SyntaxKind.AmpersandAmpersandToken) {
+          if (parent.left === value) return false;
+        } else if (operator !== ts.SyntaxKind.BarBarToken && operator !== ts.SyntaxKind.QuestionQuestionToken) {
+          return false;
+        }
+      } else if (ts.isJsxExpression(parent)) {
+        const attribute = ts.isJsxAttribute(parent.parent) ? parent.parent : undefined;
+        return !attribute || visibleAttributes.has(attribute.name.getText(ast));
+      } else if (!ts.isParenthesizedExpression(parent)) {
+        return false;
+      }
+      value = parent;
+    }
+    return false;
+  }
   // Literal data values (saved job titles, enums and user data) are not UI copy.
   // Once they appear in JSX, their display label needs a translation key.
   function visit(node) {
@@ -35,17 +57,11 @@ export function untranslatedLiterals(source, filename) {
       report(node.initializer, node.initializer.text);
     }
     if (ts.isStringLiteralLike(node)) {
-      let parent = node.parent;
-      while (parent && (ts.isConditionalExpression(parent) || ts.isBinaryExpression(parent) || ts.isParenthesizedExpression(parent))) parent = parent.parent;
-      if (parent && ts.isJsxExpression(parent)) {
-        const attribute = ts.isJsxAttribute(parent.parent) ? parent.parent : undefined;
-        if (!attribute || visibleAttributes.has(attribute.name.getText(ast))) report(node, node.text);
-      }
+      if (displayedExpression(node)) report(node, node.text);
       if (ts.isCallExpression(node.parent) && /^(setError|alert|confirm)$/.test(node.parent.expression.getText(ast))) report(node, node.text);
     }
-    if (ts.isTemplateExpression(node) && ts.isJsxExpression(node.parent)) {
-      const attribute = ts.isJsxAttribute(node.parent.parent) ? node.parent.parent : undefined;
-      if (!attribute || visibleAttributes.has(attribute.name.getText(ast))) report(node, [node.head.text, ...node.templateSpans.map((span) => span.literal.text)].join(" "));
+    if (ts.isTemplateExpression(node) && displayedExpression(node)) {
+      report(node, [node.head.text, ...node.templateSpans.map((span) => span.literal.text)].join(" "));
     }
     ts.forEachChild(node, visit);
   }
@@ -68,8 +84,9 @@ export function translationReport() {
     const missing = missingLocaleKeys(authoredTranslations.en, authoredTranslations[locale]);
     return [locale, { authored: Object.keys(authoredTranslations.en).length - missing.length, missing }];
   }));
-  const literals = ["components/steps", "components/modals", "components/tailoring", "components/talk"]
-    .flatMap(sourceFiles).flatMap((file) => untranslatedLiterals(fs.readFileSync(file, "utf8"), file.replaceAll(path.sep, "/")));
+  const files = ["components/CVBuilder.tsx", ...["components/steps", "components/modals", "components/tailoring", "components/talk", "components/shared"]
+    .flatMap(sourceFiles)];
+  const literals = files.flatMap((file) => untranslatedLiterals(fs.readFileSync(file, "utf8"), file.replaceAll(path.sep, "/")));
   return { sourceKeys: Object.keys(authoredTranslations.en).length, locales, literals };
 }
 

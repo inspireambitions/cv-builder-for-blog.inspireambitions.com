@@ -35,6 +35,7 @@ export default defineConfig({
             RESEND_FROM_EMAIL: "Inspire Ambitions <info@inspireambitions.com>",
             ANTHROPIC_API_KEY: "test-anthropic-key",
             ANTHROPIC_API_BASE: "http://127.0.0.1:3216",
+            CV_BUILDER_TALK_ALLOWED_ORIGIN: baseURL,
           },
         },
       ],
