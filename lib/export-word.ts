@@ -59,7 +59,7 @@ function photoRunFromDataUrl(value: string, size: number) {
 }
 
 export async function buildWord(draft: CVState, options: ExportOptions = {}) {
-  const { cv } = finishCV(draft);
+  const { cv } = finishCV(draft, options.asOf);
   const layout = documentBodyLayout(cv);
   const body = Math.round(layout.size * 2);
   const labels = SECTION_LABELS[cv.cvLanguage];

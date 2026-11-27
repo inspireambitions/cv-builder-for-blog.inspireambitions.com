@@ -2,13 +2,15 @@ import { readFileSync, readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { PDFParse } from "pdf-parse";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import mammoth from "mammoth";
 import { finishCV } from "../lib/cv-finish";
 import { buildProfile, getRoleMove } from "../lib/profile-builder";
+import { checkCV } from "../lib/cv-quality";
 import { findBannedCVPhrase } from "../lib/banned-phrases";
 import { buildPDF } from "../lib/export-pdf";
 import { buildWord } from "../lib/export-word";
-import { TEMPLATE_CONFIG } from "../lib/template-config";
+import { SECTION_LABELS, TEMPLATE_CONFIG } from "../lib/template-config";
 import { defaultCVState, type CVState, type TemplateType } from "../lib/types";
 import person1 from "./fixtures/people/01-reservation-agent.json";
 import person3 from "./fixtures/people/03-driver.json";
@@ -26,6 +28,7 @@ type Person = {
   education?: Partial<CVState["education"][number]>[];
   skills: string[];
   languages?: { id: string; language: string; level: string }[];
+  certifications?: CVState["certifications"];
 };
 
 function draftFor(person: Person, template: TemplateType = "ats-clean"): CVState {
@@ -44,6 +47,7 @@ function draftFor(person: Person, template: TemplateType = "ats-clean"): CVState
       ...defaultCVState.education[0], ...entry, id: `education-${index}`,
     })),
     skills: [...person.skills],
+    certifications: person.certifications ?? [],
     languages: (person.languages ?? []).map((language) => ({
       ...language,
       level: ["Native", "Fluent", "Professional", "Conversational", "Basic"].includes(language.level)
@@ -62,7 +66,7 @@ async function pdfText(blob: Blob) {
 }
 
 function flat(text: string) {
-  return text.replace(/\s+/g, " ").trim();
+  return text.normalize("NFKC").replace(/[\u061c\u200e\u200f]/g, "").replace(/\s+/g, " ").trim();
 }
 
 test("fits short CVs on one balanced page and avoids a near-empty last page", async () => {
@@ -88,12 +92,22 @@ test("moves full groups onto an otherwise short final page and wraps contacts be
     .toEqual(["Dubai, UAE | +971 50 000 0001", "amina@example.com"]);
 });
 
+test("produce fictional Word files for the native layout audit", async ({}, testInfo) => {
+  const directory = process.env.CV_WORD_VISUAL_DIR;
+  test.skip(!directory || testInfo.project.name !== "desktop-1440", "Optional native Word audit artefacts.");
+  await mkdir(directory!, { recursive: true });
+  for (const [id, person] of [[6, person6], [15, person15], [19, person19]] as const) {
+    const { blob } = await buildWord(draftFor(person), { asOf: reference });
+    await writeFile(`${directory}/person-${id}.docx`, Buffer.from(await blob.arrayBuffer()));
+  }
+});
+
 test("renderers consume the finished view, including both capture exports", () => {
   const sharedViews = new Set(["TemplatePreview.tsx", "DocumentContact.tsx", "DocumentWorkEntry.tsx"]);
   const entries = readdirSync("components/templates").filter((name) => name.endsWith(".tsx") && !sharedViews.has(name));
   for (const path of [...entries.map((name) => `components/templates/${name}`), "lib/export-pdf.ts", "lib/export-word.ts"]) {
     const source = readFileSync(path, "utf8");
-    expect(source, path).toMatch(/const \{ cv \} = finishCV\(draft\)/);
+    expect(source, path).toMatch(/const \{ cv \} = finishCV\(draft(?:, options\.asOf)?\)/);
     expect(source, path).not.toMatch(/\b(?:state|draft)(?:\?\.|\.)experience\b|\{[^}]*\bexperience\b[^}]*\}\s*=\s*(?:state|draft)\b/);
   }
   expect(readFileSync("lib/export-jpeg.ts", "utf8")).toContain("captureCV(draft)");
@@ -160,6 +174,23 @@ test("keeps noun phrases and exact quantities in the exported content", () => {
   ]);
 });
 
+test("fixes coordinated action verbs without changing nouns or padding weak duties", () => {
+  const draft = draftFor(person8);
+  draft.experience[0].description = [
+    "Reconcile bills and summarise unmatched invoices",
+    "Review accounts and record the approvals",
+    "Check stock and order records",
+    "Responsible for cash",
+    "- RESPONSIBLE FOR CASH!",
+  ].join("\n");
+  expect(finishCV(draft).cv.experience[0].description).toBe([
+    "Reconciled bills and summarised unmatched invoices.",
+    "Reviewed accounts and recorded the approvals.",
+    "Checked stock and order records.",
+    "Handled cash.",
+  ].join("\n"));
+});
+
 test("prefers named systems and typed duties within the six-bullet limit and preserves negation", () => {
   const draft = draftFor(person5);
   draft.experience[0].description = [
@@ -212,13 +243,103 @@ async function openPreview(page: Page) {
   return paper;
 }
 
-for (const person of [person1, person3, person5, person8]) {
+const reference = new Date("2026-11-27T12:00:00Z");
+const fixtureDir = "tests/fixtures/people";
+const fixtureFiles = readdirSync(fixtureDir).filter((name) => /^\d{2}-.+\.json$/.test(name)).sort();
+const fonts = async (file: string) => readFileSync(`public/cv-fonts/${file}`).toString("base64");
+
+async function assertPDFGeometry(blob: Blob, expectedName: string, phone: string) {
+  const document = await getDocument({ data: new Uint8Array(await blob.arrayBuffer()), useSystemFonts: true }).promise;
+  try {
+    for (let number = 1; number <= document.numPages; number += 1) {
+      const page = await document.getPage(number);
+      const view = page.getViewport({ scale: 1 });
+      const items = (await page.getTextContent()).items.flatMap((item) => {
+        if (!("str" in item) || !item.str.trim()) return [];
+        const [, , , , x, y] = item.transform;
+        return [{ x, y, width: item.width, height: item.height, text: item.str }];
+      });
+      expect(items.length, "Blank PDF page").toBeGreaterThan(0);
+      if (number === 1) {
+        const firstText = flat(items.map((item) => item.text).join(" "));
+        expect(firstText).toContain(expectedName);
+        if (phone) expect(firstText).toContain(phone);
+      }
+      if (number > 1 && number === document.numPages) {
+        expect(new Set(items.map((item) => Math.round(item.y))).size).toBeGreaterThanOrEqual(6);
+      }
+      for (const item of items) {
+        expect(item.x).toBeGreaterThanOrEqual(20);
+        expect(item.x + item.width).toBeLessThanOrEqual(view.width - 19);
+        expect(item.y).toBeGreaterThanOrEqual(20);
+        expect(item.y + item.height).toBeLessThanOrEqual(view.height);
+      }
+      const baselines = new Map<number, typeof items>();
+      for (const item of items) {
+        const key = Math.round(item.y * 10);
+        baselines.set(key, [...(baselines.get(key) ?? []), item]);
+      }
+      for (const group of baselines.values()) {
+        group.sort((a, b) => a.x - b.x);
+        for (let index = 1; index < group.length; index++) {
+          expect(group[index].x + 0.8).toBeGreaterThanOrEqual(group[index - 1].x + group[index - 1].width);
+        }
+      }
+    }
+  } finally {
+    await document.destroy();
+  }
+}
+
+function checkCoreSectionOrder(text: string, cv: CVState) {
+  const labels = SECTION_LABELS[cv.cvLanguage];
+  const sections = [
+    cv.summary.trim() && labels.summary,
+    cv.experience.some((job) => job.role || job.company) && labels.experience,
+    cv.education.some((entry) => entry.degree || entry.institution) && labels.education,
+    cv.skills.length > 0 && labels.skills,
+    cv.languages.some((entry) => entry.language) && labels.languages,
+  ].flatMap((section) => section ? [section] : []);
+  let index = -1;
+  for (const section of sections) {
+    const next = text.toLowerCase().indexOf(section.toLowerCase(), index + 1);
+    expect(next, section).toBeGreaterThan(index);
+    index = next;
+  }
+}
+
+test("the quality matrix contains exactly 20 fictional people", () => {
+  expect(fixtureFiles.map((file) => Number(file.slice(0, 2)))).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
+});
+
+test("canonical ATS text matches all 20 reviewed snapshots", async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-1440", "Snapshots do not depend on the viewport.");
+  const update = process.env.UPDATE_CV_GOLDENS === "1" && !process.env.CI;
+  if (update) await mkdir("tests/golden", { recursive: true });
+  for (const file of fixtureFiles) {
+    const person = JSON.parse(readFileSync(`${fixtureDir}/${file}`, "utf8")) as Person;
+    const pdf = await buildPDF(draftFor(person), { asOf: reference }, fonts);
+    const text = (await pdfText(pdf.blob)).replace(/^-- \d+ of \d+ --$/gm, "");
+    const snapshot = `tests/golden/${file.replace(/\.json$/, ".txt")}`;
+    const content = flat(text) + "\n";
+    if (update) await writeFile(snapshot, content);
+    expect(content, snapshot).toBe(readFileSync(snapshot, "utf8").replace(/\r\n/g, "\n"));
+  }
+});
+
+for (const file of fixtureFiles) {
+  const person = JSON.parse(readFileSync(`${fixtureDir}/${file}`, "utf8")) as Person;
   test(`finished preview and text downloads agree for ${person.personal.name} across ten designs`, async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(150_000);
+    await page.clock.setFixedTime(reference);
     await page.goto("/");
     for (const key of Object.keys(TEMPLATE_CONFIG) as TemplateType[]) {
       const draft = draftFor(person, key);
-      const { cv } = finishCV(draft);
+      const before = structuredClone(draft);
+      const { cv } = finishCV(draft, reference);
+      const findings = checkCV(cv, reference);
+      expect(draft).toEqual(before);
+      expect(finishCV(cv, reference).cv).toEqual(cv);
       await page.evaluate((state) => {
         localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 7, savedAt: new Date().toISOString(), state }));
       }, draft);
@@ -226,29 +347,70 @@ for (const person of [person1, person3, person5, person8]) {
       await page.getByRole("button", { name: "Continue", exact: true }).click();
       const paper = await openPreview(page);
       const previewContent = flat(await paper.innerText());
-      const pdf = await buildPDF(draft);
-      const word = await buildWord(draft);
-      const pdfContent = flat(await pdfText(pdf.blob));
-      const wordContent = flat((await mammoth.extractRawText({ buffer: Buffer.from(await word.blob.arrayBuffer()) })).value);
+      const pdf = await buildPDF(draft, { asOf: reference }, fonts);
+      const word = await buildWord(draft, { asOf: reference });
+      const extractedPDF = (await pdfText(pdf.blob)).replace(/^-- \d+ of \d+ --$/gm, "");
+      const pdfContent = flat(extractedPDF);
+      const wordBuffer = Buffer.from(await word.blob.arrayBuffer());
+      const wordContent = flat((await mammoth.extractRawText({ buffer: wordBuffer })).value);
+      const wordMarkup = await mammoth.convertToHtml({ buffer: wordBuffer });
+      const expectedBullets = cv.experience.flatMap((job) => job.description.split("\n").filter(Boolean));
+      expect((wordMarkup.value.match(/<li>/g) ?? []).length, key).toBe(expectedBullets.length);
+      await expect(paper.locator("article ul > li")).toHaveCount(expectedBullets.length);
+      expect(pdf.needsUnicodeRendering).toBe(false);
       for (const output of [previewContent, pdfContent, wordContent]) {
+        expect(findBannedCVPhrase(output), key).toBeUndefined();
+        checkCoreSectionOrder(output, cv);
         expect(output, key).toContain(cv.personal.title);
         expect(output, key).toContain(cv.summary);
-        expect(output, key).toContain(cv.personal.phone);
-        let previousJob = 0;
+        if (cv.personal.phone) expect(output, key).toContain(cv.personal.phone);
+        let previousJob = Math.max(0, output.toLowerCase().indexOf("work experience"));
         for (const job of cv.experience) {
           const position = output.indexOf(job.company, previousJob);
           expect(position, key).toBeGreaterThanOrEqual(previousJob);
           previousJob = position + job.company.length;
-          for (const line of job.description.split("\n")) expect(output, key).toContain(line);
+          for (const line of job.description.split("\n").filter(Boolean)) expect(output, key).toContain(flat(line));
           expect(output.slice(position), key).toContain(job.dates);
         }
         for (const skill of cv.skills) expect(output, key).toContain(skill);
       }
-      const firstBullet = cv.experience[0].description.split("\n")[0];
-      expect(pdfContent).toContain(`• ${firstBullet}`);
+      for (const bullet of expectedBullets) {
+        expect(bullet).toMatch(/\.$/);
+        expect(bullet).not.toMatch(/^[-–—*•]\s/);
+        if (/^[a-z]/i.test(bullet)) expect(bullet).toMatch(/^[A-Z]/);
+        expect(pdfContent.includes(`• ${flat(bullet)}`) || pdfContent.includes(`${flat(bullet)} •`), bullet).toBe(true);
+      }
+      await assertPDFGeometry(pdf.blob, cv.personal.name, cv.personal.phone);
+      if (file.startsWith("12-")) expect(findings.some((issue) => issue.id.startsWith("gap-"))).toBe(true);
+      if (file.startsWith("02-")) expect(findings.some((issue) => issue.id.startsWith("library-"))).toBe(true);
+      if (file.startsWith("18-")) expect(pdfContent).toContain("فحصت 15 لوحة كهربائية");
+      if (file.startsWith("19-")) expect(pdfContent.toLowerCase()).not.toContain("work experience");
+      if (file.startsWith("20-")) expect(cv.summary).not.toContain("Now seeking");
     }
   });
 }
+
+test("browser PDF download keeps Arabic and numbers as selectable text", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-1440", "The same exporter runs in both viewports.");
+  const person = JSON.parse(readFileSync(`${fixtureDir}/18-electrician.json`, "utf8")) as Person;
+  const draft = draftFor(person, "site");
+  await page.addInitScript((state) => {
+    localStorage.setItem("ia-cv-download-email-unlocked", "fixture@example.com");
+    localStorage.setItem("inspireambitions-cv-state", JSON.stringify({ version: 8, state, savedAt: new Date().toISOString() }));
+  }, draft);
+  await page.route("**/api/ats-check", (route) => route.fulfill({ status: 503 }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Download my CV" }).click();
+  const pending = page.waitForEvent("download");
+  await page.getByRole("button", { name: /Download PDF for company computers/ }).click();
+  const download = await pending;
+  const path = await download.path();
+  const bytes = readFileSync(path);
+  const text = flat(await pdfText(new Blob([new Uint8Array(bytes)])));
+  expect(text).toContain("فحصت 15 لوحة كهربائية");
+  expect(text).toContain("Check 230 V circuits");
+});
 
 test("saved drafts show the finishing details while keeping typed answers", async ({ page }) => {
   const draft = draftFor(person1);
@@ -270,8 +432,6 @@ test("saved drafts show the finishing details while keeping typed answers", asyn
     .toEqual(draft.experience.map((job) => job.description));
   expect(saved.personal.title).toBe("Finance clerk");
 });
-
-const reference = new Date("2026-11-27T12:00:00Z");
 
 test("person one profile is grounded in dates, work, skills and target", async ({}, testInfo) => {
   const draft = draftFor(person1);

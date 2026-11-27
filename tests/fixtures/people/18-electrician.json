@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Nasir Fen",
+    "title": "Electrician",
+    "email": "case18@example.com",
+    "phone": "+971 50 000 0018",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Electrician",
+      "company": "Example Copper Works",
+      "location": "Dubai",
+      "dates": "Jan 2022 to Present",
+      "description": "فحصت 15 لوحة كهربائية\nCheck 230 V circuits using a multimeter\nRecord 48 test readings in Excel"
+    }
+  ],
+  "skills": [
+    "Electrical checks",
+    "قراءة المخططات",
+    "Microsoft Excel",
+    "Cable labelling"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

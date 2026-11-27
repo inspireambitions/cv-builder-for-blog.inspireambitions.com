@@ -1,0 +1,30 @@
+{
+  "personal": {
+    "name": "Fictional Meera Tess",
+    "title": "Storekeeper",
+    "email": "case13@example.com",
+    "phone": "+971 50 000 0013",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Storekeeper",
+      "company": "Example Dune Stores",
+      "location": "Dubai",
+      "dates": "Feb 2021 to Present",
+      "description": "Check received stock against delivery notes\nLog damaged boxes in Excel"
+    }
+  ],
+  "skills": [
+    "organising stock, checking deliveries; MICROSOFT office | stock counting\nWarehouse labelling",
+    "microsoft Office",
+    "stock counting"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

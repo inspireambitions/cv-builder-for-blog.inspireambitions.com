@@ -26,17 +26,43 @@ function imageTypeFromDataUrl(value: string): "JPEG" | "PNG" | "WEBP" {
   return "JPEG";
 }
 
-export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
-  const { cv } = finishCV(draft);
-  // This text exporter still uses Helvetica. Keep its readable English
-  // headings until the PDF layout step adds script-aware rendering.
-  const labels = SECTION_LABELS.en;
+const arabic = /\p{Script=Arabic}/u;
+const nativePdfText = /^[\x20-\x7e\xa0-\xff\n\r\t€‘’“”–—•…™œŒŠšŽžŸ]+$/u;
+const arabicFontNames = ["Amiri-Regular.ttf", "Amiri-Bold.ttf"];
+
+async function fetchArabicFont(file: string) {
+  const response = await fetch(`/cv-fonts/${file}`);
+  if (!response.ok) throw new Error("PDF typeface could not load");
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 12_000) binary += String.fromCharCode(...bytes.subarray(i, i + 12_000));
+  return btoa(binary);
+}
+
+export async function buildPDF(draft: CVState, options: ExportOptions = {}, loadArabicFont = fetchArabicFont) {
+  const { cv } = finishCV(draft, options.asOf);
+  const rtl = cv.cvLanguage === "ar";
+  const labels = SECTION_LABELS[cv.cvLanguage];
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4",
   });
+  const hasArabic = rtl || arabic.test(JSON.stringify(cv));
+  let arabicLoaded = false;
+  if (hasArabic) {
+    try {
+      const [regular, bold] = await Promise.all(arabicFontNames.map((name) => loadArabicFont(name)));
+      for (const [style, name, data] of [["normal", arabicFontNames[0], regular], ["bold", arabicFontNames[1], bold]]) {
+        pdf.addFileToVFS(name, data);
+        pdf.addFont(name, "amiri", style);
+      }
+      arabicLoaded = true;
+    } catch {
+      // Keep the preview-based fallback available if a font cannot load.
+    }
+  }
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -51,7 +77,7 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
       size?: number;
       style?: "normal" | "bold" | "italic";
       color?: [number, number, number] | string;
-      align?: "left" | "center";
+      align?: "left" | "right" | "center";
       before?: number;
       after?: number;
       keepWithNext?: boolean;
@@ -94,9 +120,11 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
   });
 
   function writeContact(parts: string[], color: string) {
-    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9.5);
-    for (const line of contactLines(parts, (text) => pdf.getTextWidth(text), maxWidth)) {
+    for (const line of contactLines(parts, (text) => {
+      pdf.setFont(arabicLoaded && arabic.test(text) ? "amiri" : "helvetica", "normal");
+      return pdf.getTextWidth(text);
+    }, maxWidth)) {
       writeLines(line, { size: 9.5, color, align: "center", contact: true });
     }
   }
@@ -229,8 +257,9 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
   function measure(layout: BodyLayout) {
     let section = 0;
     return rows.flatMap(({ text, options }) => {
-      const style = options.style ?? "normal";
-      const font = options.heading && recruiterReady && config.heading === "serif" ? "times" : "helvetica";
+      const scriptFont = arabicLoaded && arabic.test(text);
+      const style = scriptFont && options.style === "italic" ? "normal" : options.style ?? "normal";
+      const font = scriptFont ? "amiri" : options.heading && recruiterReady && config.heading === "serif" ? "times" : "helvetica";
       pdf.setFont(font, style);
       let size = options.size ?? layout.size;
       pdf.setFontSize(size);
@@ -249,6 +278,7 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
         const divider = !!options.heading && last;
         return {
           line, size, style, font, indent, top, divider, options,
+          rtl: rtl || /^[^\p{L}]*\p{Script=Arabic}/u.test(line),
           marker: options.bullet && first,
           keepWithNext: !last || options.keepWithNext,
           height: top + lineHeight + (last ? options.after ?? 0 : 0) + (divider ? 2 : 0),
@@ -274,9 +304,16 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
       const textColour = row.options.color ?? "#222222";
       if (typeof textColour === "string") pdf.setTextColor(textColour);
       else pdf.setTextColor(...textColour);
-      const align = row.options.align ?? "left";
-      if (row.marker) pdf.text("•", marginX, baseline);
-      pdf.text(row.line, align === "center" ? pageWidth / 2 : marginX + row.indent, baseline, { align });
+      const align = row.options.align ?? (row.rtl ? "right" : "left");
+      if (row.marker) {
+        pdf.setFont("helvetica", "normal");
+        pdf.text("•", row.rtl ? pageWidth - marginX : marginX, baseline, { align: row.rtl ? "right" : "left" });
+        pdf.setFont(row.font, row.style);
+      }
+      const x = align === "center" ? pageWidth / 2 : align === "right" ? pageWidth - marginX - row.indent : marginX + row.indent;
+      pdf.text(row.line, x, baseline, row.font === "amiri"
+        ? { align, isInputRtl: row.rtl, isInputVisual: false, isOutputVisual: true }
+        : { align });
       if (row.divider) {
         pdf.setDrawColor(colour);
         pdf.setLineWidth(0.3);
@@ -293,9 +330,10 @@ export async function buildPDF(draft: CVState, options: ExportOptions = {}) {
     pageCount: pdf.getNumberOfPages(),
     pageLineCounts,
     pageFills,
-    needsUnicodeRendering: cv.cvLanguage === "ar" || rows.some(({ text }) =>
-      /[^\x20-\x7e\xa0-\xff\n\r\t€‘’“”–—•…™œŒŠšŽžŸ]/u.test(text)
-    ),
+    needsUnicodeRendering: rows.some(({ text }) => {
+      const unsupported = arabicLoaded ? text.replace(/\p{Script=Arabic}|[\u061c\u200c-\u200f]/gu, "") : text;
+      return Boolean(unsupported && !nativePdfText.test(unsupported));
+    }),
   };
 }
 

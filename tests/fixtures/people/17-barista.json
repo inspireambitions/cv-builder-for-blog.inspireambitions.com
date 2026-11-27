@@ -1,0 +1,31 @@
+{
+  "personal": {
+    "name": "Fictional Milan Rae",
+    "title": "barrista",
+    "email": "case17@example.com",
+    "phone": "+971 50 000 0017",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "barrista",
+      "company": "Example Bean House",
+      "location": "Dubai",
+      "dates": "Mar 2022 to Present",
+      "description": "Steam milk to match the drink order\nRinse pitchers between different milk orders\nClean the espresso machine after service"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

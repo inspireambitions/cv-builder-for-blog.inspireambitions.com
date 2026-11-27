@@ -1,0 +1,40 @@
+{
+  "personal": {
+    "name": "Fictional Suha Daro",
+    "title": "Nurse Assistant",
+    "email": "case16@example.com",
+    "phone": "+971 50 000 0016",
+    "location": "Dubai, UAE"
+  },
+  "experience": [
+    {
+      "role": "Nurse Assistant",
+      "company": "Example Coral Clinic",
+      "location": "Dubai",
+      "dates": "Sep 2019 to Apr 2025",
+      "description": "Help patients move under nursing supervision\nPrepare paper observation charts for rounds"
+    }
+  ],
+  "skills": [
+    "Safety checks",
+    "Supply records",
+    "Team handovers",
+    "Service schedules"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-16",
+      "name": "Care Assistant Credential EX-00016",
+      "issuer": "Example Training Centre",
+      "date": "Sep 2024",
+      "expiry": "Sep 2027"
+    }
+  ]
+}

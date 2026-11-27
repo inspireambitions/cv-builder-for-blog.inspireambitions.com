@@ -42,6 +42,9 @@ function prepareJob(entry: ExpEntry) {
 
 function normaliseBullet(value: string, tense: Tense, knownSentence = false) {
   let line = value.trim().replace(/^(?:(?:[-–—](?!\.?\p{N})|[•*])\s*)+/u, "");
+  // Preserve the duty when a terse responsibility only supplies a noun.
+  line = line.replace(/^(?:(?:i (?:am|was) |my )?responsible for|(?:my )?duties included)\s*:?\s+(cash|payments|inventory|stock|bookings|emails)[.!?]*$/i,
+    (_, item: string) => `Handle ${item.toLowerCase()}`);
   line = cleanCVProse(line);
   const firstWord = line.match(/^[a-z]+(?=\s|$)/i)?.[0];
   if (firstWord && getVerbForms(firstWord)) line = cleanAllCaps(line);
@@ -53,15 +56,18 @@ function normaliseBullet(value: string, tense: Tense, knownSentence = false) {
   if (tense && forms) {
     const initial = tense === "present" ? forms.base : forms.past;
     const firstWasGerund = verb[1].toLowerCase() === forms.gerund;
-    const rest = line.slice(verb[1].length).replace(/(,\s+|\band\s+)([a-z]+)(?=\s|$)/gi, (match, join: string, word: string) => {
+    const rest = line.slice(verb[1].length).replace(/(,\s+|\band\s+)([a-z]+)(?=\s|$)/gi, (match, join: string, word: string, offset: number, input: string) => {
       const coordinated = getVerbForms(word);
       if (!coordinated) return match;
       const lower = word.toLowerCase();
-      // Ambiguous base forms can be nouns, as in "stock and order records".
-      // An edited line can use the same word as a noun. Only inflect base
-      // forms when a curated sentence or another verb gives us clear context.
       const clearAction = /^(?:check|confirm|record|report|flag|update|share|secure|explain|compare|prepare|send|save|report|inspect|correct)$/i.test(word);
-      if ((lower === coordinated.base && (!knownSentence || !clearAction)) ||
+      const following = input.slice(offset + match.length);
+      // Some base forms are also nouns. Change them only after a known
+      // clause or with an object that distinguishes the verb from the noun.
+      const plainAction = /^(?:summarise|summarize|reconcile|sanitise|explain|inspect|verify|sterilise)$/i.test(word);
+      const determiner = /^(?:check|record|balance|confirm|report|flag|update|share|prepare|clean)$/i.test(word) && /^\s+(?:the|each|every|a|an)\b/i.test(following);
+      const clearObject = /^(?:check\s+(?:tax codes|expiry dates)|record\s+(?:short deliveries|test readings)|flag\s+(?:claims|errors|missing items))\b/i.test(word + following);
+      if ((lower === coordinated.base && !((knownSentence && clearAction) || plainAction || determiner || clearObject)) ||
         (lower === coordinated.gerund && !firstWasGerund)) return match;
       return join + (tense === "present" ? coordinated.base : coordinated.past);
     });
@@ -142,7 +148,11 @@ export function finishCV(
     });
   if (experience.some((job, index) => job.id !== state.experience[index].id)) changes.push({ kind: "job-order" });
 
-  const education = [...state.education].sort((a, b) => educationYear(b.year) - educationYear(a.year));
+  const education = [...state.education].sort((a, b) => educationYear(b.year) - educationYear(a.year)).map((entry) => {
+    if (!/^high school certificate$/i.test(entry.degree.trim()) || entry.degree === "High School Certificate") return entry;
+    changes.push({ kind: "wording" });
+    return { ...entry, degree: "High School Certificate" };
+  });
   if (education.some((entry, index) => entry.id !== state.education[index].id)) changes.push({ kind: "education-order" });
 
   const title = latestHeldRole(experience, asOf)?.role ?? "";
