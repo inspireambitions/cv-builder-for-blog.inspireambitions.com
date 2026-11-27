@@ -1,5 +1,43 @@
 @import "tailwindcss";
 
+.cv-document {
+  overflow-wrap: anywhere;
+}
+
+.document-work-entry {
+  break-inside: avoid;
+}
+
+.document-work-entry + .document-work-entry {
+  margin-block-start: 11pt;
+}
+
+.document-work-entry ul {
+  list-style: disc outside;
+  padding-inline-start: 14pt;
+  margin-block-start: 3pt;
+}
+
+.document-work-entry li + li {
+  margin-block-start: 2.5pt;
+}
+
+.document-work-meta {
+  color: #555;
+  font-size: 9.5pt;
+}
+
+.document-contact {
+  font-size: 9.5pt;
+  line-height: 1.35;
+}
+
+.document-contact bdi {
+  display: inline-block;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
 @theme {
   --color-ground: var(--ia-ground);
   --color-surface: var(--ia-surface);

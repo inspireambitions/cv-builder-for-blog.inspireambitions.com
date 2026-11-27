@@ -1,0 +1,30 @@
+{
+  "personal": {
+    "name": "Tari Noor",
+    "title": "Office Assistant",
+    "email": "tari@example.com",
+    "phone": "+971 50 000 0019",
+    "location": "Dubai, UAE"
+  },
+  "experience": [],
+  "education": [
+    {
+      "degree": "High School Certificate",
+      "institution": "Example Horizon School",
+      "year": "2026"
+    }
+  ],
+  "skills": [
+    "Microsoft Word",
+    "Email handling",
+    "Budget tracking",
+    "Algebra"
+  ],
+  "languages": [
+    {
+      "id": "en",
+      "language": "English",
+      "level": "Conversational"
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 "use client";
 
+import DocumentWorkEntry from "./DocumentWorkEntry";
+import DocumentContact from "./DocumentContact";
+import { documentBodyLayout } from "@/lib/cv-page-layout";
+
 import { cvContactParts, finishCV } from "@/lib/cv-finish";
 import type { CVState } from "@/lib/types";
 import { SECTION_LABELS } from "@/lib/template-config";
@@ -26,18 +30,9 @@ function SectionHeading({ children, rtl }: { children: React.ReactNode; rtl: boo
   );
 }
 
-function BulletList({ value }: { value: string }) {
-  const lines = value.split("\n").filter(Boolean);
-  if (!lines.length) return null;
-  return (
-    <ul style={{ marginBlockStart: 4, paddingInlineStart: 18 }}>
-      {lines.map((line, index) => <li key={index}>{line}</li>)}
-    </ul>
-  );
-}
-
 export default function ATSCleanTemplate({ state: draft }: { state: CVState }) {
   const { cv } = finishCV(draft);
+  const layout = documentBodyLayout(cv);
   const rtl = cv.cvLanguage === "ar";
   const labels = SECTION_LABELS[cv.cvLanguage];
   const experiences = cv.experience.filter((item) => item.role.trim() || item.company.trim());
@@ -60,41 +55,35 @@ export default function ATSCleanTemplate({ state: draft }: { state: CVState }) {
       data-layout="single-column"
       dir={rtl ? "rtl" : "ltr"}
       lang={cv.cvLanguage}
-      className="w-[794px] min-h-[1123px] bg-white text-black"
-      style={{ fontFamily: rtl ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif", fontSize: 10.5, lineHeight: rtl ? 1.65 : 1.34 }}
+      className="cv-document w-[794px] min-h-[1123px] bg-white text-black"
+      style={{ fontFamily: rtl ? "Tahoma, Arial, sans-serif" : "Arial, sans-serif", fontSize: `${layout.size}pt`, lineHeight: layout.leading }}
     >
       <header style={{ padding: "32px 52px 10px", textAlign: "center" }}>
         <div style={{ fontSize: 25, lineHeight: 1.1, fontWeight: 800 }}>{cv.personal.name}</div>
         {cv.personal.title && <div style={{ marginBlockStart: 7, color: "#444", fontSize: 10.5 }}>{cv.personal.title}</div>}
-        {contact.length > 0 && <div style={{ marginBlockStart: 5, fontSize: 9.5 }}><bdi>{contact.join("  |  ")}</bdi></div>}
+        {contact.length > 0 && <div style={{ marginBlockStart: 5, fontSize: 9.5 }}><DocumentContact parts={contact} /></div>}
         {getUAEHeaderParts(cv).length > 0 && <div style={{ marginBlockStart: 4, color: "#444", fontSize: 9 }}>{getUAEHeaderParts(cv).join("  |  ")}</div>}
       </header>
 
       <main style={{ padding: "3px 52px 40px" }}>
         {cv.summary.trim() && (
-          <section style={{ marginBlockEnd: 14 }}>
+          <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}>
             <SectionHeading rtl={rtl}>{labels.summary}</SectionHeading>
             <p>{cv.summary}</p>
           </section>
         )}
 
         {experiences.length > 0 && (
-          <section style={{ marginBlockEnd: 14 }}>
+          <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}>
             <SectionHeading rtl={rtl}>{labels.experience}</SectionHeading>
             {experiences.map((item) => (
-              <article key={item.id} style={{ marginBlockEnd: 11, breakInside: "avoid" }}>
-                <div><strong>{item.role}</strong>{item.company && <span>, {item.company}</span>}{item.location && <span>, {item.location}</span>}</div>
-                {item.dates && <div style={{ color: "#666", fontStyle: "italic", marginBlockStart: 1 }}><bdi>{item.dates}</bdi></div>}
-                {item.companyDesc && <div style={{ color: "#444", marginBlockStart: 2 }}>{item.companyDesc}</div>}
-                <BulletList value={item.description} />
-                {item.gap && <div style={{ color: "#555", marginBlockStart: 3 }}><strong>{labels.careerNote}:</strong> {item.gap}</div>}
-              </article>
+              <DocumentWorkEntry key={item.id} item={item} note={labels.careerNote} />
             ))}
           </section>
         )}
 
         {education.length > 0 && (
-          <section style={{ marginBlockEnd: 14 }}>
+          <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}>
             <SectionHeading rtl={rtl}>{labels.education}</SectionHeading>
             {education.map((item) => (
               <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}>
@@ -106,15 +95,15 @@ export default function ATSCleanTemplate({ state: draft }: { state: CVState }) {
         )}
 
         {skills.length > 0 && (
-          <section style={{ marginBlockEnd: 14 }}>
+          <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}>
             <SectionHeading rtl={rtl}>{labels.skills}</SectionHeading>
             <ul style={{ paddingInlineStart: 18 }}>{skills.map((item) => <li key={item}>{item}</li>)}</ul>
           </section>
         )}
 
-        {languages.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.languages}</SectionHeading><ul style={{ paddingInlineStart: 18 }}>{languages.map((item) => <li key={item.id}><strong>{item.language}</strong>{item.level ? ` — ${item.level}` : ""}</li>)}</ul></section>}
+        {languages.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.languages}</SectionHeading><ul style={{ paddingInlineStart: 18 }}>{languages.map((item) => <li key={item.id}><strong>{item.language}</strong>{item.level ? ` — ${item.level}` : ""}</li>)}</ul></section>}
         {(credentials.length > 0 || certifications.length > 0) && (
-          <section style={{ marginBlockEnd: 14 }}>
+          <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}>
             <SectionHeading rtl={rtl}>{cv.cvLanguage === "en" ? "Certificates & Development" : labels.credentials}</SectionHeading>
             <ul style={{ paddingInlineStart: 18 }}>
               {credentials.map((item) => <li key={`sector-${item.authority}`}>{formatSectorCredential(item)}</li>)}
@@ -123,11 +112,11 @@ export default function ATSCleanTemplate({ state: draft }: { state: CVState }) {
           </section>
         )}
 
-        {achievements.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.achievements}</SectionHeading>{achievements.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.title}</strong><div>{item.body}</div><span style={{ color: "#666", fontStyle: "italic" }}>{[item.awardingBody, item.year].filter(Boolean).join("  |  ")}</span></div>)}</section>}
-        {volunteer.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.volunteer}</SectionHeading>{volunteer.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.role}</strong>{item.org && `, ${item.org}`}<div>{item.impact}</div><span style={{ color: "#666", fontStyle: "italic" }}>{item.dates}</span></div>)}</section>}
-        {projects.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.projects}</SectionHeading>{projects.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.name}</strong><div>{item.description}</div><div>{item.outcomes}</div>{item.url && <div style={{ color: BLUE }}>{item.url}</div>}</div>)}</section>}
-        {publications.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.publications}</SectionHeading>{publications.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.title}</strong>{item.outlet && ` — ${item.outlet}`}<div style={{ color: "#666", fontStyle: "italic" }}>{[item.date, item.url].filter(Boolean).join("  |  ")}</div></div>)}</section>}
-        {memberships.length > 0 && <section style={{ marginBlockEnd: 14 }}><SectionHeading rtl={rtl}>{labels.memberships}</SectionHeading>{memberships.map((item) => <div key={item.id}><strong>{item.org}</strong>{item.level && ` — ${item.level}`}{item.year && ` (${item.year})`}</div>)}</section>}
+        {achievements.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.achievements}</SectionHeading>{achievements.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.title}</strong><div>{item.body}</div><span style={{ color: "#666", fontStyle: "italic" }}>{[item.awardingBody, item.year].filter(Boolean).join("  |  ")}</span></div>)}</section>}
+        {volunteer.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.volunteer}</SectionHeading>{volunteer.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.role}</strong>{item.org && `, ${item.org}`}<div>{item.impact}</div><span style={{ color: "#666", fontStyle: "italic" }}>{item.dates}</span></div>)}</section>}
+        {projects.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.projects}</SectionHeading>{projects.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.name}</strong><div>{item.description}</div><div>{item.outcomes}</div>{item.url && <div style={{ color: BLUE }}>{item.url}</div>}</div>)}</section>}
+        {publications.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.publications}</SectionHeading>{publications.map((item) => <div key={item.id} style={{ marginBlockEnd: 7, breakInside: "avoid" }}><strong>{item.title}</strong>{item.outlet && ` — ${item.outlet}`}<div style={{ color: "#666", fontStyle: "italic" }}>{[item.date, item.url].filter(Boolean).join("  |  ")}</div></div>)}</section>}
+        {memberships.length > 0 && <section style={{ marginBlockEnd: `${layout.sectionGap}pt` }}><SectionHeading rtl={rtl}>{labels.memberships}</SectionHeading>{memberships.map((item) => <div key={item.id}><strong>{item.org}</strong>{item.level && ` — ${item.level}`}{item.year && ` (${item.year})`}</div>)}</section>}
       </main>
     </div>
   );
