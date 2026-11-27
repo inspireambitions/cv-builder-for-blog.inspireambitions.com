@@ -11,6 +11,9 @@ export type FinishChange = {
 
 type Tense = "present" | "past" | undefined;
 
+// These can start a noun phrase rather than describe an action.
+const nounPhrase = /^(?:booking (?:engine|system|errors?)|training (?:records?|materials?|sessions?)|driving licen[cs]e|cleaning (?:supplies|equipment|schedule)|filing system|processing time)\b/i;
+
 function monthKey(year?: string, month?: string) {
   if (!year || !/^[1-9]\d{3}$/.test(year)) return 0;
   if (!month) return Number(year) * 12;
@@ -38,7 +41,7 @@ function normaliseBullet(value: string, tense: Tense) {
   line = line.replace(/\s+/g, " ").replace(/[.!?۔。]+$/u, "");
   const filler = /(?:[\s,]+)(?:with precision|with care|as required|in a timely manner|to the best of my ability)$/i;
   while (filler.test(line)) line = line.replace(filler, "");
-  const verb = line.match(/^([a-z]+)\s+(?!of\b)/i);
+  const verb = nounPhrase.test(line) ? null : line.match(/^([a-z]+)\s+(?!of\b)/i);
   const forms = verb && getVerbForms(verb[1]);
   if (tense && forms) {
     const initial = tense === "present" ? forms.base : forms.past;

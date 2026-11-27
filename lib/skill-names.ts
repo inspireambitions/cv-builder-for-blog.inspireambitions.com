@@ -3,7 +3,7 @@ const names = [
   "Opera PMS", "Opera Cloud", "Opera", "Protel", "Micros", "SAP", "Oracle", "Tally",
   "QuickBooks", "HACCP", "POS", "Salesforce", "AutoCAD", "Power BI", "Google Sheets",
   "PMS", "CRM", "ERP", "SQL", "CPR", "UAE", "GCC", "PPE", "HSE", "AWS", "ISO",
-  "VAT", "CISSP", "FIFO", "FEFO", "CI/CD", "WhatsApp",
+  "VAT", "CISSP", "FIFO", "FEFO", "CI/CD", "WhatsApp", "iOS", "HotSOS", "MS Excel",
 ];
 
 const phrases: Record<string, string> = {
@@ -19,7 +19,7 @@ const phrases: Record<string, string> = {
 };
 
 const knownNames = new Map(names.map((name) => [name.toLowerCase(), name]));
-const namedSystem = /\b(?:microsoft office|microsoft excel|microsoft word|excel|opera(?: pms| cloud)?|protel|micros|sap|oracle|tally|quickbooks|haccp|pos|salesforce|autocad|power bi|google sheets|whatsapp)\b/i;
+const namedSystem = /\b(?:microsoft office|microsoft excel|microsoft word|excel|opera(?: pms| cloud)?|protel|micros|sap|oracle|tally|quickbooks|haccp|pos|salesforce|autocad|power bi|google sheets|whatsapp|hotsos)\b/i;
 const capitalisedName = new RegExp(`\\b(?:${names.join("|")})\\b`, "gi");
 
 export function hasNamedSystem(text: string) {

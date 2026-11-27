@@ -99,8 +99,27 @@ test("preserves unknown dates, missing facts, non-English duties and distinct am
   expect(cv.experience.at(-2)?.description).toBe("نقلت 15 صندوقًا.\nMet the 1.5 target.\nMet the 15 target.\n-5°C freezer checks.");
   expect(finishCV({ ...draft, experience: [], skills: ["Excel"] }).cv.personal.title).toBe("");
   expect(finishCV({ ...draft, skills: ["Excel"] }).cv.skills).toEqual(["Excel"]);
-  expect(finishCV({ ...draft, skills: ["C++", "C#", "CI/CD", ".NET", "CISSP"] }).cv.skills)
-    .toEqual(["C++", "C#", "CI/CD", ".NET", "CISSP"]);
+  expect(finishCV({ ...draft, skills: ["C++", "C#", "CI/CD", ".NET", "CISSP", "iOS", "ms excel", "MS Excel"] }).cv.skills)
+    .toEqual(["C++", "C#", "CI/CD", ".NET", "CISSP", "iOS", "MS Excel"]);
+});
+
+test("keeps noun phrases and exact quantities in the exported content", () => {
+  const draft = draftFor(person8);
+  draft.experience[0].description = [
+    "Booking engine errors reported to IT",
+    "Training records kept up to date for 12 staff",
+    "Housekeeping requests logged in HotSOS",
+    "Cut average wait from 1.5 minutes to 15 seconds",
+    "Handled 1,250 calls a month",
+  ].join("\n");
+  const lines = finishCV(draft).cv.experience[0].description.split("\n");
+  expect(lines).toEqual([
+    "Training records kept up to date for 12 staff.",
+    "Housekeeping requests logged in HotSOS.",
+    "Cut average wait from 1.5 minutes to 15 seconds.",
+    "Handled 1,250 calls a month.",
+    "Booking engine errors reported to IT.",
+  ]);
 });
 
 test("prefers named systems and typed duties within the six-bullet limit and preserves negation", () => {
